@@ -106,6 +106,7 @@ function renderGrid() {
 function makeSheetCard(sheet, i) {
   return `
     <div class="vault-card" data-type="sheet" data-index="${i}">
+    <button class="btn-delete" data-type="sheet" data-index="${i}" title="Elimina">×</button>
       <div class="card-tag">⚔ Scheda Personaggio</div>
       <div class="card-title">${escHtml(sheet.charName)}</div>
       <div class="card-sub">${escHtml(sheet.charClass)||'—'} · ${escHtml(sheet.charRace)||'—'}</div>
@@ -140,6 +141,26 @@ function closeAllModals() {
 //  Click Events -- fa funzionare il click del mouse 
 function bindEvents() {
 
+  // permette di eliminare schede o campagne
+  contentGrid?.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-delete')) {
+      e.stopPropagation(); //Questo comando ci evita di aprre schede se clicchiamo sulla X
+      const type = e.target.dataset.type;
+      const index = parseInt(e.target.dataset.index);
+
+      if (confirm('Vuoi davvero eliminare questo elemento?')) {
+        if (type == 'sheet') {
+          State.sheets.splice(index, 1);}
+        else {
+          State.campaigns.splice(index, 1);}
+        State.save()
+        renderGrid();
+        renderDropdowns();
+      }
+  }
+});
+
+  
   // Hamburger toggle
   hamburgerBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
