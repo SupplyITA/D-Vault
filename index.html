@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D-Vault</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+</head>
+<body class="landing-page">
+
+  <!-- Background -->
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+  <div class="bg-vignette"></div>
+
+  <!-- Particelle animate molto belle (grazie bea) -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo-emblem">⚔</div>
+  </header>
+
+  <!-- Selezione eroe-->
+  <main class="hero">
+    <div class="hero-content">
+      <p class="hero-eyebrow">Benvenuto nel</p>
+      <h1 class="hero-title">
+        <span class="title-d">D</span><span class="title-dash">—</span><span class="title-vault">Vault</span>
+      </h1>
+      <p class="hero-subtitle">Il tuo archivio segreto per campagne, schede e avventure</p>
+      <div class="hero-divider">
+        <span class="divider-gem">◆</span>
+      </div>
+    </div>
+
+    <!-- Login e registrazione -->
+    <div class="auth-container">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Accedi</button>
+        <button class="auth-tab" data-tab="register">Registrati</button>
+      </div>
+
+      <div class="auth-form-wrapper">
+        <!-- LOGIN -->
+        <form class="auth-form active" id="login-form" autocomplete="off">
+          <div class="form-group">
+            <label for="login-email">Email o Username</label>
+            <input type="text" id="login-email" name="identifier" placeholder="eroe@regno.com" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn-primary">
+            <span class="btn-icon">🗝</span> Entra nel Vault
+          </button>
+          <p class="form-note"><a href="#">Password dimenticata?</a></p>
+        </form>
+
+        <!-- REGISTER -->
+        <form class="auth-form" id="register-form" autocomplete="off">
+          <div class="form-group">
+            <label for="reg-username">Username</label>
+            <input type="text" id="reg-username" name="username" placeholder="NomeDellEroe" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" name="email" placeholder="eroe@regno.com" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" name="password" placeholder="••••••••" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-confirm">Conferma Password</label>
+            <input type="password" id="reg-confirm" name="confirm" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn-primary">
+            <span class="btn-icon">📜</span> Crea il tuo Account
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Roba temporanea per far vedere com'è il sito post login -->
+    <div class="demo-link">
+      <a href="dashboard.html" class="btn-ghost">Anteprima Dashboard →</a>
+    </div>
+  </main>
+
+  <!-- Parte sotto per evitare copyright -->
+  <footer class="site-footer">
+    <p>D-Vault &copy; 2025 &nbsp;·&nbsp; Dungeons & Dragons è un marchio registrato di Wizards of the Coast</p>
+  </footer>
+  
+  <script src="js/main.js"></script>
+
+  <!-- va aggiunta roba del login e registrazione seria -->
+  
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D-Vault — Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+</head>
+<body class="dashboard-page">
+
+  <!-- Background -->
+  <div class="dash-bg"></div>
+  <div class="dash-bg-overlay"></div>
+
+  <!-- Barra scelte sopra -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">
+      <span class="nav-logo-icon">⚔</span>
+      <span class="nav-logo-text">D-Vault</span>
+    </a>
+
+    <div class="nav-center">
+      <span class="nav-section" id="nav-section-label">— Archivio —</span>
+    </div>
+
+    <div class="nav-right">
+      <span class="nav-username" id="nav-username">Avventuriero</span>
+
+      <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+        <span></span><span></span><span></span><span></span><span></span>
+      </button>
+
+      <!-- Menù scelte del personaggio -->
+      <div class="dropdown-menu" id="dropdown-menu">
+        <div class="dropdown-section">
+          <p class="dropdown-label">Le mie Schede (Player)</p>
+          <ul id="dropdown-sheets-list">
+            <li class="dropdown-empty">Nessuna scheda</li>
+          </ul>
+          <button class="dropdown-add-btn" id="btn-add-sheet">+ Aggiungi Scheda</button>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-section">
+          <p class="dropdown-label">Le mie Campagne (Master)</p>
+          <ul id="dropdown-campaigns-list">
+            <li class="dropdown-empty">Nessuna campagna</li>
+          </ul>
+          <button class="dropdown-add-btn" id="btn-add-campaign">+ Nuova Campagna</button>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a href="index.html" class="dropdown-logout">🚪 Esci dal Vault</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN-->
+  <main class="dash-main" id="dash-main">
+
+    <!-- Questo pezzo è stato messo per quando la pagina è vuota-->
+    <section class="empty-state" id="empty-state">
+      <div class="empty-icon">📜</div>
+      <h2 class="empty-title">Il tuo Vault è vuoto</h2>
+      <p class="empty-subtitle">Aggiungi una scheda personaggio o crea la tua prima campagna per iniziare.</p>
+      <button class="btn-primary" id="btn-open-modal">
+        <span class="btn-icon">✦</span> Inizia la tua avventura
+      </button>
+    </section>
+
+     <!-- Parte scelta delle carte Mike finisci di farlo plz -->
+    <section class="content-grid" id="content-grid" style="display:none;">
+     
+    </section>
+
+  </main>
+
+  <!-- SCELTA RUOLO-->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal-box" id="modal-box">
+
+      <button class="modal-close" id="modal-close" aria-label="Chiudi">✕</button>
+      <h3 class="modal-title">Chi sei in questa avventura?</h3>
+      <p class="modal-subtitle">Scegli il tuo ruolo per continuare</p>
+
+      <div class="modal-choices">
+
+        <!-- PLAYER -->
+        <div class="modal-choice" id="choice-player" data-role="player">
+          <div class="choice-icon">🛡</div>
+          <div class="choice-label">Player</div>
+          <div class="choice-sub">Aggiungi una scheda personaggio</div>
+          <div class="choice-plus">+</div>
+        </div>
+
+        <div class="modal-divider"></div>
+
+        <!-- MASTER -->
+        <div class="modal-choice" id="choice-master" data-role="master">
+          <div class="choice-icon">📖</div>
+          <div class="choice-label">Dungeon Master</div>
+          <div class="choice-sub">Crea una nuova campagna</div>
+          <div class="choice-plus">+</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- AGGIUNTA SCHEDA PERSONAGGIO, se non vi va bene cambiatelo ma non sapevo come altro farlo -->
+  <div class="modal-backdrop" id="modal-sheet-backdrop">
+    <div class="modal-form-box" id="modal-sheet-box">
+      <button class="modal-close" id="modal-sheet-close">✕</button>
+      <h3 class="modal-title">Nuova Scheda Personaggio</h3>
+
+      <form id="form-add-sheet" class="modal-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome Personaggio</label>
+            <input type="text" name="charName" placeholder="Ettore Mangiapietre" required />
+          </div>
+          <div class="form-group">
+            <label>Classe</label>
+            <select name="charClass">
+              <option value="">— Scegli —</option>
+              <option>Barbaro</option><option>Bardo</option><option>Chierico</option>
+              <option>Druido</option><option>Guerriero</option><option>Ladro</option>
+              <option>Mago</option><option>Monaco</option><option>Paladino</option>
+              <option>Ranger</option><option>Stregone</option><option>Warlock</option>
+              <!-- in teoria qui per la 5.5 ci sarebbero altre classi ma non siamo aggiornati -->
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Razza</label>
+            <input type="text" name="charRace" placeholder="Nano, Elfo, Umano…" />
+          </div>
+          <div class="form-group">
+            <label>Livello</label>
+            <input type="number" name="charLevel" min="1" max="5" value="1" />
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Campagna / Avventura</label>
+          <input type="text" name="charCampaign" placeholder="Nome della campagna (opzionale)" />
+        </div>
+        <div class="modal-form-actions">
+          <button type="button" class="btn-ghost" id="btn-sheet-cancel">Annulla</button>
+          <button type="submit" class="btn-primary">✦ Salva Scheda</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- AGGIUNTA CAMPAGNA -->
+  <div class="modal-backdrop" id="modal-campaign-backdrop">
+    <div class="modal-form-box" id="modal-campaign-box">
+      <button class="modal-close" id="modal-campaign-close">✕</button>
+      <h3 class="modal-title">Nuova Campagna</h3>
+
+      <form id="form-add-campaign" class="modal-form">
+        <div class="form-group full">
+          <label>Nome della Campagna</label>
+          <input type="text" name="campName" placeholder="La Maledizione di Strahd…" required /> <!-- molto figa, da giocare raga -->
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ambientazione</label>
+            <input type="text" name="campSetting" placeholder="Waterdeep …" />
+          </div>
+          <div class="form-group">
+            <label>N° Giocatori</label>
+            <input type="number" name="campPlayers" min="1" max="5" value="4" /> <!-- ho messo poca gente perché tanto non si gioca in tanti -->
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Descrizione / Note</label>
+          <textarea name="campDesc" rows="3" placeholder="Descrivi brevemente la tua campagna…"></textarea>
+        </div>
+        <div class="modal-form-actions">
+          <button type="button" class="btn-ghost" id="btn-campaign-cancel">Annulla</button>
+          <button type="submit" class="btn-primary">✦ Crea Campagna</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
