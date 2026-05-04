@@ -89,6 +89,57 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── Gestione "Password Dimenticata"
+  const forgotLink = document.getElementById('forgot-link');
+  const backToLogin = document.getElementById('back-to-login');
+  const resetForm = document.getElementById('reset-form');
+
+  // Cambia schermata per mostrare il recupero
+  if (forgotLink && backToLogin && resetForm && loginForm) {
+    forgotLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginForm.classList.remove('active');
+      resetForm.classList.add('active');
+    });
+
+    // Torna indietro al login
+    backToLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetForm.classList.remove('active');
+      loginForm.classList.add('active');
+    });
+  }
+
+  // Invio dei dati al server per cambiare password
+  if (resetForm) {
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(resetForm));
+
+      try {
+        const response = await fetch('/api/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert(result.message);
+          resetForm.reset();
+          // Simula il click per tornare alla schermata di login
+          backToLogin.click();
+        } else {
+          alert(result.message);
+        }
+      } catch (error) {
+        console.error("[D-Vault] Errore reset:", error);
+        alert("Il server è spento o non raggiungibile!");
+      }
+    });
+  }
+
   // Particles (Intatto)
   const container = document.getElementById('particles');
   if (container) spawnParticles(container, 25);

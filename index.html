@@ -43,8 +43,7 @@
       </div>
 
       <div class="auth-form-wrapper">
-        
-        <!-- MESSAGGIO DEL SERVER (Errore o Successo) -->
+        <!-- MESSAGGIO DEL SERVER -->
         <div id="auth-message" style="text-align: center; font-weight: bold; margin-bottom: 15px; min-height: 20px;"></div>
 
         <!-- LOGIN -->
@@ -60,7 +59,7 @@
           <button type="submit" class="btn-primary">
             <span class="btn-icon">🗝</span> Entra nel Vault
           </button>
-          <p class="form-note"><a href="#">Password dimenticata?</a></p>
+          <p class="form-note"><a href="#" id="forgot-link">Password dimenticata?</a></p>
         </form>
 
         <!-- REGISTER -->
@@ -85,6 +84,28 @@
             <span class="btn-icon">📜</span> Crea il tuo Account
           </button>
         </form>
+
+        <!-- RECUPERO PASSWORD -->
+        <form class="auth-form" id="reset-form" autocomplete="off">
+          <h3 style="color: #e8c97e; text-align: center; margin-bottom: 15px; font-family: 'Cinzel', serif;">Recupera Password</h3>
+          <div class="form-group">
+            <label for="reset-username">Il tuo Username</label>
+            <input type="text" id="reset-username" name="username" placeholder="NomeDellEroe" required />
+          </div>
+          <div class="form-group">
+            <label for="reset-email">La tua Email</label>
+            <input type="email" id="reset-email" name="email" placeholder="eroe@regno.com" required />
+          </div>
+          <div class="form-group">
+            <label for="reset-new-password">Nuova Password</label>
+            <input type="password" id="reset-new-password" name="newPassword" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn-primary">
+            <span class="btn-icon">🔮</span> Reimposta Password
+          </button>
+          <p class="form-note"><a href="#" id="back-to-login">← Torna al Login</a></p>
+        </form>
+
       </div>
     </div>
 

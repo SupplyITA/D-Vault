@@ -10,6 +10,7 @@ Sito costruito per simulare un ambiente di gioco per il gioco di ruolo D&D per l
 d-vault/
 ├── index.html          ← Landing page (login / registrazione)
 ├── dashboard.html      ← Pagina principale post-login
+|── server.js             
 ├── css/
 │   ├── style.css       ← Stili globali + landing page
 │   └── dashboard.css   ← Stili dashboard (navbar, modali, grid)

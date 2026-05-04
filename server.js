@@ -54,6 +54,30 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+// ROTTA RESET PASSWORD
+app.post('/api/reset-password', (req, res) => {
+    // Riceviamo username, email e la nuova password dal form
+    const { username, email, newPassword } = req.body;
+    
+    // Leggiamo tutti gli utenti
+    const utenti = JSON.parse(fs.readFileSync(DB_FILE));
+    
+    // Cerchiamo la POSIZIONE (index) dell'utente che ha esattamente quel nome E quell'email
+    const indexUtente = utenti.findIndex(u => u.username === username && u.email === email);
+
+    if (indexUtente !== -1) {
+        // Se lo troviamo (l'index non è -1), gli cambiamo la password
+        utenti[indexUtente].password = newPassword;
+        
+        // Salviamo il file aggiornato
+        fs.writeFileSync(DB_FILE, JSON.stringify(utenti, null, 2));
+        
+        res.json({ message: "Password aggiornata con successo! La magia ha funzionato." });
+    } else {
+        res.status(404).json({ message: "Username o Email non corrispondenti ai nostri archivi." });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);
 });
