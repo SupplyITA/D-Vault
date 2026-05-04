@@ -51,3 +51,10 @@ d-vault/
 - **Colori dominanti**: Rosso scuro `#8b1a1a`, Rosso acceso `#c0392b`, Oro `#e8c97e`, sfondi quasi neri
 - **Background landing**: immagine del PHB 5e presa da Wikipedia
 - I dati sono attualmente salvati in `localStorage`
+
+## Note sul server 
+
+- Per il momento solo Login e Registrati - Serve node.js e scaricare express con npm install (se non funziona provate npm install express ws). (Per favore non pushate i 600 file che scarica, per non pusharli c'è il file .gitignore)
+
+- Per fare la prova fare node server.js e andare su http://localhost:3000
+
