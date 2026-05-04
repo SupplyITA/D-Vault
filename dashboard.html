@@ -48,6 +48,7 @@
             <li class="dropdown-empty">Nessuna campagna</li>
           </ul>
           <button class="dropdown-add-btn" id="btn-add-campaign">+ Nuova Campagna</button>
+          <button class="dropdown-add-btn" id="btn-join-campaign-dd" style="margin-top: 5px; color: #e8c97e; border-color: #e8c97e;">Unisciti con Codice</button>
         </div>
         <div class="dropdown-divider"></div>
         <a href="index.html" class="dropdown-logout">🚪 Esci dal Vault</a>
@@ -162,7 +163,7 @@
       <form id="form-add-campaign" class="modal-form">
         <div class="form-group full">
           <label>Nome della Campagna</label>
-          <input type="text" name="campName" placeholder="La Maledizione di Strahd…" required /> <!-- molto figa, da giocare raga -->
+          <input type="text" name="campName" placeholder="La Maledizione di Strahd…" required />
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -171,7 +172,7 @@
           </div>
           <div class="form-group">
             <label>N° Giocatori</label>
-            <input type="number" name="campPlayers" min="1" max="5" value="4" /> <!-- ho messo poca gente perché tanto non si gioca in tanti -->
+            <input type="number" name="campPlayers" min="1" max="5" value="4" />
           </div>
         </div>
         <div class="form-group full">
@@ -184,7 +185,25 @@
         </div>
       </form>
     </div>
-  </div>
+  </div> <!-- FINE DEL MODALE AGGIUNTA CAMPAGNA (Prima mancava questo tag qui!) -->
+
+  <!-- UNISCITI A CAMPAGNA CON CODICE -->
+  <div class="modal-backdrop" id="modal-join-backdrop">
+    <div class="modal-form-box" id="modal-join-box">
+      <button class="modal-close" id="modal-join-close">✕</button>
+      <h3 class="modal-title">Unisciti all'Avventura</h3>
+      <form id="form-join-campaign" class="modal-form">
+        <div class="form-group full">
+          <label>Codice Invito (Fornito dal Master)</label>
+          <input type="text" name="inviteCode" placeholder="Es. X7Y9Z1" required style="text-transform: uppercase;" />
+        </div>
+        <div class="modal-form-actions">
+          <button type="button" class="btn-ghost" id="btn-join-cancel">Annulla</button>
+          <button type="submit" class="btn-primary">✦ Entra</button>
+        </div>
+      </form>
+    </div>
+  </div> <!-- FINE DEL MODALE UNISCITI -->
 
   <script src="js/dashboard.js"></script>
 </body>
