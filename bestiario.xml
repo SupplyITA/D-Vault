@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bestiario>
+    <mostro>
+        <nome>Drago Rosso Adulto</nome>
+        <sfida>19</sfida>
+        <tipo>Drago</tipo>
+    </mostro>
+    <mostro>
+        <nome>Beholder</nome>
+        <sfida>13</sfida>
+        <tipo>Aberrazione</tipo>
+    </mostro>
+</bestiario>
