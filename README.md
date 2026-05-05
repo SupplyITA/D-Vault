@@ -56,6 +56,6 @@ d-vault/
 ## Note sul server 
 
 - Per il momento solo Login e Registrati - Serve node.js e scaricare express con npm install (se non funziona provate npm install express ws). (Per favore non pushate i 600 file che scarica, per non pusharli c'è il file .gitignore)
-
+- N.B.: è stato scelto node.js (e non PHP) per poter permettere anche la comunicazione via chat "live".
 - Per fare la prova fare node server.js e andare su http://localhost:3000
 
