@@ -33,6 +33,9 @@
                                 <xsl:if test="stats2 != ''">
                                     <img src="{stats2}" style="width: 100%; border-radius: 6px;"/>
                                 </xsl:if>
+                                <xsl:if test="stats3 != ''">
+                                    <img src="{stats3}" style="width: 100%; border-radius: 6px;"/>
+                                </xsl:if>
                             </div>
                         </div>
 
