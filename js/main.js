@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data) // Manda identifier e password al server
+          body: JSON.stringify(data)
         });
 
         const result = await response.json();
@@ -38,15 +38,41 @@ document.addEventListener('DOMContentLoaded', () => {
           // Salviamo il vero username restituito dal server per la dashboard
           localStorage.setItem('dvault_username', result.username);
           
-          // Entriamo nella taverna!
-          window.location.href = 'dashboard.html';
+          // Entriamo nella taverna con stile!
+          Swal.fire({
+            title: 'Bentornato, Eroe!',
+            text: 'I cancelli del Vault si aprono per te.',
+            icon: 'success',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            timer: 1500, // Il popup si chiude da solo dopo 1.5 secondi
+            showConfirmButton: false
+          }).then(() => {
+            window.location.href = 'dashboard.html';
+          });
+          
         } else {
-          // Se il server dice "Credenziali errate", mostriamo il popup
-          alert(result.message); 
+          // Credenziali errate
+          Swal.fire({
+            title: 'Accesso Negato',
+            text: result.message,
+            icon: 'error',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#8b1a1a',
+            confirmButtonText: 'Riprova'
+          }); 
         }
       } catch (error) {
         console.error("[D-Vault] Errore di login:", error);
-        alert("Il server è spento o non raggiungibile!");
+        Swal.fire({
+            title: 'Server Irraggiungibile',
+            text: 'La magia del server è debole in questo momento. Riprova più tardi.',
+            icon: 'warning',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#4a90e2'
+        });
       }
     });
   }
@@ -64,27 +90,61 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Controllo più elegante con SweetAlert2
+      if (data.password !== data.confirm) {
+        Swal.fire({
+            title: 'Errore Magico',
+            text: 'Le password non coincidono. Riprova l\'incantesimo.',
+            icon: 'error',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#8b1a1a'
+        });
+        return;
+      }
+
       try {
         const response = await fetch('/api/registrati', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data) // Manda username, email e password
+          body: JSON.stringify(data)
         });
 
         const result = await response.json();
 
         if (response.ok) {
-          alert('Registrazione completata! Ora puoi accedere.');
-          registerForm.reset(); // Pulisce i campi di testo
-          // La tua genialata per cambiare automaticamente tab:
-          document.querySelector('[data-tab="login"]')?.click();
+          Swal.fire({
+            title: 'Evocazione Riuscita!',
+            text: 'Il tuo account è stato creato. Ora puoi accedere.',
+            icon: 'success',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#27ae60'
+          }).then(() => {
+            registerForm.reset(); 
+            document.querySelector('[data-tab="login"]')?.click();
+          });
         } else {
-          // Se il server dice "Email o Username già in uso", lo mostriamo
-          alert(result.message);
+          // Email o Username già in uso
+          Swal.fire({
+            title: 'Nome Ghiacciato',
+            text: result.message,
+            icon: 'warning',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#e8c97e'
+          });
         }
       } catch (error) {
         console.error("[D-Vault] Errore di registrazione:", error);
-        alert("Il server è spento o non raggiungibile!");
+        Swal.fire({
+            title: 'Server Irraggiungibile',
+            text: 'La taverna è chiusa. Riprova più tardi.',
+            icon: 'warning',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#4a90e2'
+        });
       }
     });
   }
@@ -126,16 +186,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await response.json();
 
         if (response.ok) {
-          alert(result.message);
-          resetForm.reset();
-          // Simula il click per tornare alla schermata di login
-          backToLogin.click();
+          Swal.fire({
+            title: 'Memoria Ripristinata!',
+            text: result.message,
+            icon: 'success',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#4a90e2'
+          }).then(() => {
+            resetForm.reset();
+            backToLogin.click();
+          });
         } else {
-          alert(result.message);
+          Swal.fire({
+            title: 'Pergamena Vuota',
+            text: result.message,
+            icon: 'error',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#8b1a1a'
+          });
         }
       } catch (error) {
         console.error("[D-Vault] Errore reset:", error);
-        alert("Il server è spento o non raggiungibile!");
+        Swal.fire({
+            title: 'Server Irraggiungibile',
+            text: 'I corvi hanno rubato il tuo messaggio. Riprova.',
+            icon: 'warning',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#4a90e2'
+        });
       }
     });
   }

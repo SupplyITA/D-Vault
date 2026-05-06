@@ -77,42 +77,92 @@ function renderDropdowns() {
 }
 
 function renderGrid() {
-  const hasContent = State.sheets.length > 0 || State.campaigns.length > 0;
-  if (!hasContent) {
-    if ($('empty-state')) $('empty-state').style.display = '';
-    if ($('content-grid')) $('content-grid').style.display = 'none';
-    return;
+  // 1. Riempiamo la riga degli Eroi
+  if ($('grid-heroes')) {
+    if (State.sheets.length === 0) {
+      $('grid-heroes').innerHTML = '<p style="color:#aaa; font-style:italic; padding: 20px;">Nessun eroe forgiato. Clicca su "+ Forgia Eroe" per iniziare.</p>';
+    } else {
+      $('grid-heroes').innerHTML = State.sheets.map((s, i) => makeSheetCard(s, i)).join('');
+    }
   }
-  if ($('empty-state')) $('empty-state').style.display = 'none';
-  if ($('content-grid')) $('content-grid').style.display = 'grid';
 
-  const cards = [
-    ...State.sheets.map((s, i) => makeSheetCard(s, i)),
-    ...State.campaigns.map((c, i) => makeCampaignCard(c, i))
-  ];
-  $('content-grid').innerHTML = cards.join('');
+  // Dividiamo le campagne in Master e Player
+  const masterCamps = [];
+  const playerCamps = [];
+  State.campaigns.forEach((c, i) => {
+    if (c.owner === State.username) masterCamps.push({ camp: c, index: i });
+    else playerCamps.push({ camp: c, index: i });
+  });
+
+  // 2. Riempiamo la riga Master
+  if ($('grid-master')) {
+    if (masterCamps.length === 0) {
+      $('grid-master').innerHTML = '<p style="color:#aaa; font-style:italic; padding: 20px;">Nessuna campagna da Master. Crea un mondo tutto tuo!</p>';
+    } else {
+      $('grid-master').innerHTML = masterCamps.map(item => makeCampaignCard(item.camp, item.index, true)).join('');
+    }
+  }
+
+  // 3. Riempiamo la riga Giocatore
+  if ($('grid-player')) {
+    if (playerCamps.length === 0) {
+      $('grid-player').innerHTML = '<p style="color:#aaa; font-style:italic; padding: 20px;">Non partecipi a nessuna avventura. Unisciti con un codice!</p>';
+    } else {
+      $('grid-player').innerHTML = playerCamps.map(item => makeCampaignCard(item.camp, item.index, false)).join('');
+    }
+  }
 }
 
 function makeSheetCard(sheet, i) {
+  let icon = '🛡️';
+  if (['Mago', 'Stregone', 'Warlock'].includes(sheet.charClass)) icon = '🔮';
+  if (['Ladro', 'Monaco'].includes(sheet.charClass)) icon = '🗡️';
+  if (['Bardo'].includes(sheet.charClass)) icon = '🎵';
+  if (['Druido', 'Ranger'].includes(sheet.charClass)) icon = '🐺';
+
   return `
-    <div class="vault-card" data-type="sheet" data-index="${i}" style="cursor:pointer;">
-      <button class="btn-delete" data-type="sheet" data-index="${i}" title="Elimina">×</button>
-      <div class="card-tag">⚔ Scheda Personaggio</div>
-      <div class="card-title">${escHtml(sheet.charName)}</div>
-      <div class="card-sub">${escHtml(sheet.charClass) || '—'}</div>
-      <div class="card-level">Lv ${escHtml(String(sheet.charLevel || 1))}</div>
+    <div class="vault-card" data-type="sheet" data-index="${i}" style="border-left: 4px solid #4a90e2; display: flex; flex-direction: column; min-height: 220px; cursor:pointer; transition: transform 0.2s;">
+      <button class="btn-delete" data-type="sheet" data-index="${i}" title="Elimina Eroe">×</button>
+      <div style="display: flex; align-items: center; margin-bottom: 10px;">
+        <div style="font-size: 2.2rem; margin-right: 15px; background: rgba(0,0,0,0.6); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid #4a90e2;">${icon}</div>
+        <div>
+          <div class="card-tag" style="color: #4a90e2;">Eroe</div>
+          <div class="card-title">${escHtml(sheet.charName)}</div>
+        </div>
+      </div>
+      <div class="card-sub">${escHtml(sheet.charClass)||'—'} · ${escHtml(sheet.charRace)||'—'}</div>
+      <div class="card-level">Livello ${escHtml(String(sheet.charLevel||1))}</div>
+      <div style="margin-top: auto; padding-top: 15px;">
+        <button class="btn-primary" style="width: 100%; padding: 8px; font-size: 0.9rem;">✦ Apri Scheda</button>
+      </div>
     </div>`;
 }
 
-function makeCampaignCard(camp, i) {
-  const isMaster = camp.owner === State.username;
-  const btnElimina = isMaster ? `<button class="btn-delete" data-type="campaign" data-index="${i}">×</button>` : '';
+function makeCampaignCard(camp, i, isMaster) {
+  const borderColor = isMaster ? '#8b1a1a' : '#27ae60';
+  const tagText = isMaster ? 'Master' : 'Giocatore';
+  const icon = isMaster ? '🐉' : '🗺️';
+  const btnDelete = isMaster ? `<button class="btn-delete" data-type="campaign" data-index="${i}" title="Elimina">×</button>` : '';
+  const inviteInfo = isMaster 
+      ? `<div style="margin-top: 10px; font-size: 0.85rem; background: rgba(232, 201, 126, 0.1); padding: 6px; border-radius: 4px; text-align: center; border: 1px dashed #e8c97e; color: #e8c97e;">Codice: <strong style="letter-spacing: 2px;">${camp.inviteCode}</strong></div>` 
+      : `<div style="color: #aaa; margin-top: 10px; font-size: 0.85rem; text-align: center;">Master: <strong>${escHtml(camp.owner)}</strong></div>`;
+
   return `
-    <div class="vault-card" data-type="campaign" data-index="${i}" style="cursor:pointer;">
-      ${btnElimina}
-      <div class="card-tag">📖 Campagna</div>
-      <div class="card-title">${escHtml(camp.campName)}</div>
-      <div class="card-sub">${escHtml(camp.campSetting) || 'Ambientazione libera'}</div>
+    <div class="vault-card" data-type="campaign" data-index="${i}" style="border-left: 4px solid ${borderColor}; display: flex; flex-direction: column; min-height: 220px; cursor:pointer; transition: transform 0.2s;">
+      ${btnDelete}
+      <div style="display: flex; align-items: center; margin-bottom: 10px;">
+        <div style="font-size: 2.2rem; margin-right: 15px; background: rgba(0,0,0,0.6); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid ${borderColor};">${icon}</div>
+        <div>
+          <div class="card-tag" style="color: ${borderColor};">${tagText}</div>
+          <div class="card-title">${escHtml(camp.campName)}</div>
+        </div>
+      </div>
+      <div class="card-sub">${escHtml(camp.campSetting)||'Ambientazione libera'}</div>
+      <div class="card-level">${escHtml(String(camp.campPlayers||4))} giocatori massimi</div>
+      ${inviteInfo}
+      <div style="margin-top: auto; padding-top: 15px;">
+        <button class="btn-primary" style="width: 100%; padding: 8px; font-size: 0.9rem;">✦ Entra al Tavolo</button>
+      </div>
     </div>`;
 }
 
@@ -125,13 +175,31 @@ function closeDropdown() { $('dropdown-menu')?.classList.remove('open'); $('hamb
 // Event Listener Funzioni
 function bindEvents() {
   
-  // Click su griglia per segnare i punti 
-  $('content-grid')?.addEventListener('click', async (e) => {
+  // --- CLICK SULLE CARTE E SULLA X ---
+  // Invece di ascoltare una sola griglia, ascoltiamo tutto il "dash-main" che le contiene tutte e tre!
+  $('dash-main')?.addEventListener('click', async (e) => {
+    
+    // Se clicchiamo la X --- usando la libreria sweet alert2
     if (e.target.classList.contains('btn-delete')) {
       e.stopPropagation(); 
       const type = e.target.dataset.type;
       const index = parseInt(e.target.dataset.index);
-      if (confirm('Vuoi davvero eliminare questo elemento?')) {
+      
+      // IL NUOVO POPUP DI CONFERMA STILE D-VAULT
+      const result = await Swal.fire({
+        title: 'Sei sicuro?',
+        text: "Questa magia distruttiva non può essere annullata!",
+        icon: 'warning',
+        showCancelButton: true,
+        background: '#1a1a1a', // Sfondo scuro
+        color: '#e8c97e',      // Testo dorato
+        confirmButtonColor: '#8b1a1a', // Rosso sangue per distruggere
+        cancelButtonColor: '#444',
+        confirmButtonText: 'Sì, distruggi!',
+        cancelButtonText: 'Annulla'
+      });
+
+      if (result.isConfirmed) {
         if (type == 'sheet') {
           await fetch(`/api/sheets/${State.sheets[index].charName}?user=${State.username}`, { method: 'DELETE' });
           State.sheets.splice(index, 1);
@@ -139,11 +207,23 @@ function bindEvents() {
           await fetch(`/api/campaigns/${State.campaigns[index].campName}?user=${State.username}`, { method: 'DELETE' });
           State.campaigns.splice(index, 1);
         }
-        renderGrid(); renderDropdowns();
+        renderGrid(); 
+        renderDropdowns();
+
+        // Messaggio di successo post-eliminazione
+        Swal.fire({
+          title: 'Incenerito!',
+          text: 'L\'elemento è stato eliminato dal Vault.',
+          icon: 'success',
+          background: '#1a1a1a',
+          color: '#e8c97e',
+          confirmButtonColor: '#4a90e2' // Blu eroe
+        });
       }
-      return;
+      return; 
     }
 
+    // Se clicchiamo sul resto della carta (apriamo i dettagli)
     const card = e.target.closest('.vault-card');
     if (card) {
       const type = card.dataset.type;
@@ -238,10 +318,10 @@ let currentImageOverlay = null; // Memorizza la mappa attuale
     if (!$('dropdown-menu')?.contains(e.target) && e.target !== $('hamburger-btn')) closeDropdown();
   });
 
-  // Apertura e chiusura MOdali
-  $('btn-open-modal')?.addEventListener('click', () => openModal($('modal-backdrop')));
-  $('choice-player')?.addEventListener('click', () => { closeModal($('modal-backdrop')); openModal($('modal-sheet-backdrop')); });
-  $('choice-master')?.addEventListener('click', () => { closeModal($('modal-backdrop')); openModal($('modal-campaign-backdrop')); });
+  // Apertura e chiusura MOdali : nuova griglia
+  $('btn-add-sheet-main')?.addEventListener('click', () => openModal($('modal-sheet-backdrop')));
+  $('btn-add-camp-main')?.addEventListener('click', () => openModal($('modal-campaign-backdrop')));
+  $('btn-join-camp-main')?.addEventListener('click', () => openModal($('modal-join-backdrop')));
   $('btn-add-sheet')?.addEventListener('click', () => { closeDropdown(); openModal($('modal-sheet-backdrop')); });
   $('btn-add-campaign')?.addEventListener('click', () => { closeDropdown(); openModal($('modal-campaign-backdrop')); });
   $('btn-join-campaign-dd')?.addEventListener('click', () => { closeDropdown(); openModal($('modal-join-backdrop')); });
@@ -285,20 +365,44 @@ let currentImageOverlay = null; // Memorizza la mappa attuale
     renderDropdowns(); renderGrid();
   });
 
+  // --- SUBMIT: UNISCITI A CAMPAGNA ---   libreria sweet alert2
   $('form-join-campaign')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const inviteCode = $('form-join-campaign').querySelector('[name="inviteCode"]').value.trim().toUpperCase();
-    const response = await fetch('/api/campaigns/join', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteCode: inviteCode, username: State.username })
-    });
-    const result = await response.json();
-    alert(result.message);
-    if (response.ok) {
-      $('form-join-campaign').reset();
-      closeModal($('modal-join-backdrop'));
-      await State.loadFromServer();
-      renderDropdowns(); renderGrid();
+    
+    try {
+        const response = await fetch('/api/campaigns/join', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inviteCode: inviteCode, username: State.username })
+        });
+        const result = await response.json();
+        
+        // POPUP DI SUCCESSO O ERRORE
+        Swal.fire({
+            title: response.ok ? 'Benvenuto nel Party!' : 'Magia Fallita!',
+            text: result.message,
+            icon: response.ok ? 'success' : 'error',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#e8c97e'
+        });
+
+        if (response.ok) {
+          $('form-join-campaign').reset();
+          closeModal($('modal-join-backdrop'));
+          await State.loadFromServer();
+          renderDropdowns(); 
+          renderGrid();
+        }
+    } catch (error) {
+        Swal.fire({
+            title: 'Errore Server!',
+            text: 'I server sono infestati dai goblin. Riprova più tardi.',
+            icon: 'error',
+            background: '#1a1a1a',
+            color: '#e8c97e',
+            confirmButtonColor: '#8b1a1a'
+        });
     }
   });
 
@@ -401,7 +505,7 @@ function appendChatMessage(sender, text, type, containerId = 'chat-messages') {
 
 // Parte per dettagli campagna o scheda
 function openCampaignDetail(camp) {
-  if($('main-view')) $('main-view').style.display = 'none';
+  if($('dash-main')) $('dash-main').style.display = 'none'; // Sostituito main-view
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
   if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName;
 
@@ -470,7 +574,7 @@ function openCampaignDetail(camp) {
 }
 
 function openSheetDetail(sheet) {
-  if($('main-view')) $('main-view').style.display = 'none';
+  if($('dash-main')) $('dash-main').style.display = 'none'; // Sostituito main-view
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
   if($('sheet-detail-title')) $('sheet-detail-title').textContent = sheet.charName;
 
@@ -485,7 +589,7 @@ function openSheetDetail(sheet) {
 function closeDetails() {
   if($('campaign-detail')) $('campaign-detail').style.display = 'none';
   if($('sheet-detail')) $('sheet-detail').style.display = 'none';
-  if($('main-view')) $('main-view').style.display = 'block';
+  if($('dash-main')) $('dash-main').style.display = 'flex'; // IMPORTANTE: Messo flex per mantenere l'impaginazione
   renderGrid();
 }
 
