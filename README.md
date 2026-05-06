@@ -59,3 +59,63 @@ d-vault/
 - N.B.: è stato scelto node.js (e non PHP) per poter permettere anche la comunicazione via chat "live".
 - Per fare la prova fare node server.js e andare su http://localhost:3000
 
+
+Come installare tutto ciò che serve per avviare il server (e avviare il server) 
+
+1. Installa il "Motore" (Node.js e NPM)
+Se il nuovo computer non ha mai fatto girare un server Node.js, devi prima installarlo. Apri il terminale e lancia:
+
+Bash
+sudo apt update
+sudo apt install nodejs npm -y
+(Nota: ti chiederà la password del tuo utente Linux per confermare l'installazione).
+
+2. Entra nella cartella del progetto
+Devi dire al terminale di posizionarsi dentro la cartella dove hai messo i tuoi file (quella che contiene server.js).  
+
+Bash
+# Sostituisci il percorso con quello reale in cui hai copiato la cartella.
+# Ad esempio, se l'hai messa sulla Scrivania:
+cd ~/Desktop/D-Vault
+3. Inizializza il progetto (Opzionale ma consigliato)
+Se copiando la cartella non hai portato con te il file package.json, devi rigenerarlo. Questo file serve a Node.js per ricordarsi quali librerie usi.
+
+Bash
+npm init -y
+4. Installa le librerie necessarie
+Ora devi scaricare tutti i "moduli magici" che hai richiesto nel tuo file server.js (Express, SQLite, Socket.io per la chat, Multer per le immagini e Bcrypt per le password).  
+
+Bash
+npm install express bcrypt sqlite3 socket.io multer
+(Se ti ricordi, avevi menzionato di avere problemi con le nuove versioni di NPM. Se questo comando standard ti dà problemi e vuoi forzare una versione più vecchia e stabile, puoi usare npm install express bcrypt sqlite3 socket.io multer --legacy-peer-deps).
+
+5. Avvia il Server
+Una volta che ha finito di scaricare tutto (vedrai comparire una cartella node_modules nel tuo progetto), sei pronto ad accendere il server:
+
+Bash
+node server.js
+Se tutto è andato a buon fine, il terminale ti risponderà con i tuoi messaggi:
+🗄️ Database SQLite connesso con successo.
+Server avviato e in ascolto!  
+
+A questo punto, apri il browser del computer e vai su http://localhost:3000/index.html e la tua piattaforma prenderà vita! Se vuoi fermare il server in qualsiasi momento, ti basterà premere CTRL + C nel terminale.
+
+
+To DO:
+
+Aggiungere possibilità che il giocatore possa partecipare ad un party selezionando le proprie schede personaggi, da lì bisogna poter poter avere una sezione per la scheda (com'è ora la sezione personaggio insomma) e poi una sezione nella barra in alto per poter switchare alla mappa interattiva e mantenere la chat (con cronologia dell'avventura fin'ora)
+
+Aggiungere possibilità di salvare la scheda e modificarla nel file pdf virtualmente (quindi non dovendola scaricare ogni volta) e che venga personalizzata e salvata dinamicamente per ogni personaggio (e non per ogni account)
+
+Aggiungere possibilità di salvare gli appunti del master sia via testo che via pannello nella sezione campagna del master, così che non si resetti ogni volta che si esce dalla schermata.
+Mantenere un po' di cronologia della chat per ogni volta che viene "aperta la sessione"
+
+Aggiungere possibilità di tirare i dadi e mostrare i risultati sulla chat con "Nome del personaggio ha ha fatto 16 !" ad esempio, usando i dadi d4, d6, d8, d10, d12, d20, d100
+
+Aggiungere segnalini personaggi sulla mappa interattiva
+
+Togliere possibilità agli utenti di modificare le mappe nella sessione e di poter vedere il bestiario
+
+Fare un filtro per la sezione mostri, ordine cronologico e ordine di difficoltà
+
+Aggiungere possibilità di selezionare vecchie mappe e scorrere in caso siano tante con scroll, già uploadate nella barra a sinistra vicino alla mappa solo per il master nella sua campagna, caricandole dinamicamente e salvandole per l'account. 
