@@ -75,6 +75,45 @@ app.post('/api/sheets/avatar', (req, res) => {
     });
 });
 
+// Upload schede in PDF, stessa cosa di sopra ma con i PDF, così i giocatori possono caricare la scheda compilata e averla sempre a portata di mano nella dashboard, senza doverla ricompilare ogni volta.
+const pdfDir = path.join(__dirname, 'uploads', 'pdfs');
+// Crea la cartella automaticamente
+if (!fs.existsSync(pdfDir)) {
+    fs.mkdirSync(pdfDir, { recursive: true });
+}
+
+// Configurazione Multer per i file PDF
+const pdfStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, pdfDir),
+    filename: (req, file, cb) => {
+        const nomeUnico = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'scheda-' + nomeUnico + '.pdf');
+    }
+});
+const uploadPdf = multer({ storage: pdfStorage });
+
+// Rotta per ricevere e salvare il file PDF
+app.post('/api/upload-pdf', uploadPdf.single('pdfFile'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'Nessun file ricevuto' });
+    res.json({ url: `/uploads/pdfs/${req.file.filename}`, message: 'Scheda PDF caricata!' });
+});
+
+// Aggiunge la colonna "pdfUrl" al DB (se non c'è già)
+db.serialize(() => {
+    db.run(`ALTER TABLE schede ADD COLUMN pdfUrl TEXT`, (err) => {
+        // Ignoriamo l'errore se la colonna esiste già (è normale)
+    });
+});
+
+// Rotta per legare il link del PDF alla scheda nel Database
+app.post('/api/sheets/pdf', (req, res) => {
+    const { owner, charName, pdfUrl } = req.body;
+    db.run(`UPDATE schede SET pdfUrl = ? WHERE owner = ? AND charName = ?`, [pdfUrl, owner, charName], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 
 const uploadDir = path.join(__dirname, 'uploads', 'maps');
 // Crea la cartella in maniera dinamica (figata)
