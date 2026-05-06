@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 
-// Assegnazione globale delle funzioni che sono chiamate tramite eventi onclick inline nell'HTML
+// Assegnazione globale delle funzioni HTML inline
 window.openCharacterSelectorForCampaign = function(camp) {
     const listContainer = $('char-selection-list');
     if (State.sheets.length === 0) {
@@ -70,12 +70,22 @@ window.enterPlayerCampaign = function(sheetIndex, campName) {
       $('tab-pc-mappa').style.width = '100%';
   }
 
+  // --- CREAZIONE E GESTIONE MAPPA GIOCATORE ---
   if (!playerLeafletMap && $('pc-map')) {
       playerLeafletMap = L.map('pc-map', { crs: L.CRS.Simple, minZoom: -2 });
       const bounds = [[0,0], [1000,1000]]; 
       L.imageOverlay('/maps/mappa_1.jpg', bounds).addTo(playerLeafletMap);
       playerLeafletMap.fitBounds(bounds);
+
+      // Permetti al giocatore di mettere i segnalini cliccando
+      playerLeafletMap.on('click', function(e) {
+          aggiungiSegnalino(e.latlng, playerLeafletMap, true);
+      });
+      
+      // Disabilita il menu del tasto destro per permettere la rimozione
+      $('pc-map').addEventListener('contextmenu', e => e.preventDefault());
   }
+  
   document.querySelector('.player-tab-btn[data-tab="pc-scheda"]')?.click();
 };
 
@@ -87,6 +97,9 @@ function openCampaignDetail(camp) {
   const inviteContainer = $('campaign-invite-container');
   const inviteCodeEl = $('campaign-invite-code');
   const toggleBtn = $('btn-toggle-invite');
+
+  // Carica gli eroi nella tab party
+  caricaEroiParty(camp.campName);
 
   if (inviteContainer && inviteCodeEl && toggleBtn) {
       if (camp.owner === State.username) {
@@ -122,6 +135,7 @@ function openCampaignDetail(camp) {
   const primoTab = document.querySelector('.tab-btn[data-tab="storia"]');
   if(primoTab) primoTab.click();
 
+  // --- CREAZIONE E GESTIONE MAPPA MASTER ---
   if (!leafletMap && $('map')) {
       leafletMap = L.map('map', { crs: L.CRS.Simple, minZoom: -2 });
       const bounds = [[0,0], [1000,1000]]; 
@@ -129,12 +143,61 @@ function openCampaignDetail(camp) {
       currentImageOverlay = L.imageOverlay('/maps/mappa_1.jpg', bounds).addTo(leafletMap);
       leafletMap.fitBounds(bounds);
 
+      // Usa la nuova funzione per mettere i segnalini
       leafletMap.on('click', function(e) {
-          L.marker(e.latlng).addTo(leafletMap);
-          if (socket) socket.emit('invia_segnalino', e.latlng);
+          aggiungiSegnalino(e.latlng, leafletMap, true);
       });
+      
+      // Disabilita il menu del tasto destro
+      $('map').addEventListener('contextmenu', e => e.preventDefault());
   }
 }
+
+// Funzione che aggiunge e permette la rimozione dei segnalini
+function aggiungiSegnalino(latlng, mappa, isLocal = true) {
+    const marker = L.marker(latlng).addTo(mappa);
+    
+    // Al click destro (contextmenu) sul segnalino, lo rimuoviamo
+    marker.on('contextmenu', () => {
+        mappa.removeLayer(marker);
+        // Invia sempre al server la direttiva di rimozione (anche se sei stato tu a metterlo o qualcun altro)
+        if (socket) socket.emit('rimuovi_segnalino', latlng);
+    });
+
+    // Se è un segnalino messo localmente (nuovo), lo inviamo agli altri
+    if (socket && isLocal) socket.emit('invia_segnalino', latlng);
+}
+
+async function caricaEroiParty(campName) {
+    const listContainer = $('party-list-container');
+    const iframe = $('party-pdf-iframe');
+    if(iframe) iframe.src = ''; 
+    
+    try {
+        const response = await fetch(`/api/campaigns/${campName}/party`);
+        const eroi = await response.json();
+        
+        if (!eroi || eroi.length === 0) {
+            listContainer.innerHTML = '<p style="color: #aaa; font-style: italic;">Nessun eroe si è ancora unito al tavolo.</p>';
+            return;
+        }
+        
+        listContainer.innerHTML = eroi.map(eroe => `
+            <div class="party-hero-card" onclick="visualizzaSchedaParty('${eroe.pdfUrl || '/pdf/scheda_dnd_5e.pdf'}')">
+                <div class="party-hero-name">🛡️ ${escHtml(eroe.charName)}</div>
+                <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
+            </div>
+        `).join('');
+    } catch (e) {
+        listContainer.innerHTML = '<p style="color: #8b1a1a;">Errore: Impossibile caricare il party. (L\'API server esiste?)</p>';
+    }
+}
+
+// Funzione globale chiamata dal click HTML
+window.visualizzaSchedaParty = function(pdfUrl) {
+    const iframe = $('party-pdf-iframe');
+    if (iframe) iframe.src = pdfUrl;
+};
 
 function openSheetDetail(sheet) {
   if($('dash-main')) $('dash-main').style.display = 'none'; 
@@ -439,7 +502,7 @@ function bindEvents() {
       });
   });
 
-  // Ricezione Eventi Socket (Duplicazione rimossa, inserita una sola volta)
+  // Ricezione Eventi Socket
   if (socket) {
       socket.on('ricevi_messaggio', (dati) => {
           appendChatMessage(dati.mittente, dati.testo, 'other', 'chat-messages');
@@ -448,8 +511,26 @@ function bindEvents() {
       });
 
       socket.on('ricevi_segnalino', (latlng) => {
-          if (leafletMap) L.marker(latlng).addTo(leafletMap);
-          if (playerLeafletMap) L.marker(latlng).addTo(playerLeafletMap); 
+        if (leafletMap) aggiungiSegnalino(latlng, leafletMap, false);
+        if (playerLeafletMap) aggiungiSegnalino(latlng, playerLeafletMap, false);
+      });
+
+      // RIMOZIONE: Aggiunto fix con la tolleranza!
+      socket.on('segnalino_rimosso', (latlng) => {
+          const rimuoviDaMappa = (mappa) => {
+              if(!mappa) return;
+              mappa.eachLayer(layer => {
+                  if (layer instanceof L.Marker) {
+                      const pos = layer.getLatLng();
+                      // TOLLERANZA: Se la posizione differisce per millesimi (errore di rete JSON), eliminalo
+                      if (Math.abs(pos.lat - latlng.lat) < 0.001 && Math.abs(pos.lng - latlng.lng) < 0.001) {
+                          mappa.removeLayer(layer);
+                      }
+                  }
+              });
+          };
+          rimuoviDaMappa(leafletMap);
+          rimuoviDaMappa(playerLeafletMap);
       });
 
       socket.on('nuova_mappa_ricevuta', (url) => {

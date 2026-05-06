@@ -183,6 +183,14 @@ app.get('/api/sheets', (req, res) => {
     });
 });
 
+//questo è per mostrare le schede dei giocatori iscritti alla campagna
+app.get('/api/campaigns/:campName/party', (req, res) => {
+    const campName = req.params.campName;
+    // 1. Trova la campagna tramite il nome
+    // 2. Trova tutte le "sheets" i cui proprietari (owner) corrispondono ai giocatori iscritti a quella campagna
+    // 3. Invia l'array delle schede trovate: res.json(partySheets);
+});
+
 app.post('/api/sheets', (req, res) => {
     const { owner, charName, charClass, charRace, charLevel } = req.body;
     db.run(`INSERT INTO schede (owner, charName, charClass, charRace, charLevel) VALUES (?, ?, ?, ?, ?)`, 
@@ -248,10 +256,15 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('ricevi_messaggio', dati);
     });
 
-    // NUOVO: Rimbalza le coordinate dei segnalini sulla mappa
+    // Rimbalza le coordinate dei segnalini sulla mappa
     socket.on('invia_segnalino', (coordinate) => {
         socket.broadcast.emit('ricevi_segnalino', coordinate);
     });
+
+    socket.on('rimuovi_segnalino', (latlng) => {
+    // Rimbalza l'ordine di rimozione a tutti gli altri client
+    socket.broadcast.emit('segnalino_rimosso', latlng);
+});
 
     // Cambio mappa per tutti i giocatori connessi
     socket.on('cambia_sfondo_mappa', (url) => {

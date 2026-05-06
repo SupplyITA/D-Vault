@@ -591,6 +591,8 @@
   color: white; 
   display: none; 
   animation: fadeIn 0.3s ease; 
+  position: relative; 
+  z-index: 10;
 }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -657,14 +659,6 @@ spazio e far si che la scheda fosse più visibile.  */
 /* Sezione per Scheda Personaggio, Appunti e Chat */
 
 
-
-.sheet-layout {
-  display: flex;
-  gap: 20px;
-  height: 75vh; 
-  width: 100%;
-}
-
 .sheet-left {
   flex: 0 0 70%;
   height: 100%;
@@ -707,6 +701,30 @@ spazio e far si che la scheda fosse più visibile.  */
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Per lo stile del party visibile dal master*/
+.party-hero-card {
+    padding: 10px; 
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid #444; 
+    border-radius: 4px; 
+    margin-bottom: 10px; 
+    cursor: pointer; 
+    transition: 0.2s;
+}
+.party-hero-card:hover {
+    background: rgba(255,255,255,0.1);
+}
+.party-hero-name {
+    color: #e8c97e; 
+    font-weight: bold; 
+    font-family: 'Cinzel', serif;
+}
+.party-hero-sub {
+    font-size: 0.8rem; 
+    color: #aaa; 
+    margin-top: 5px;
 }
 
 .chat-msg { padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; line-height: 1.4; max-width: 85%; }
