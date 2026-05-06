@@ -1,7 +1,6 @@
-
 const socket = typeof io !== 'undefined' ? io() : null;
- // questo è per socket.io e per fare la chat, è la parte per far si che il bottone
- // capisca a cosa collegarsi. sta sopra così è più facile da debuggare
+// questo è per socket.io e per fare la chat, è la parte per far si che il bottone
+// capisca a cosa collegarsi. sta sopra così è più facile da debuggare
 
 // --- STATO DEL FRONTEND ---
 const State = {
@@ -25,6 +24,7 @@ const $ = id => document.getElementById(id);
 
 // Variabili globali per mantenere i riferimenti alle librerie
 let leafletMap = null;
+let playerLeafletMap = null; // Aggiunto per il giocatore
 let vueData = null; 
 let currentImageOverlay = null;
 
@@ -171,7 +171,6 @@ function openModal(el) { el?.classList.add('visible'); document.body.style.overf
 function closeModal(el) { el?.classList.remove('visible'); document.body.style.overflow = ''; }
 function closeDropdown() { $('dropdown-menu')?.classList.remove('open'); $('hamburger-btn')?.classList.remove('open'); }
 
-
 // Event Listener Funzioni
 function bindEvents() {
   
@@ -210,7 +209,6 @@ function bindEvents() {
         renderGrid(); 
         renderDropdowns();
 
-        // Messaggio di successo post-eliminazione
         Swal.fire({
           title: 'Incenerito!',
           text: 'L\'elemento è stato eliminato dal Vault.',
@@ -242,15 +240,30 @@ function bindEvents() {
 
   // Parte per la gestione del Master
   document.querySelectorAll('.tab-btn').forEach(btn => {
+    // Ignoriamo le tab del giocatore per non farle accavallare
+    if (btn.classList.contains('player-tab-btn')) return; 
+
     btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn:not(.player-tab-btn)').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content:not(.player-tab-content)').forEach(c => {
+          c.classList.remove('active');
+          c.style.display = 'none';
+      });
+
       e.target.classList.add('active');
       const targetTab = 'tab-' + e.target.dataset.tab;
-      $(targetTab)?.classList.add('active');
+      const targetElement = $(targetTab);
+
+      if (targetElement) {
+          targetElement.classList.add('active');
+          targetElement.style.display = 'block'; // Ripristina
+      }
 
       if (targetTab === 'tab-mappa' && leafletMap) {
-          setTimeout(() => leafletMap.invalidateSize(), 100);
+          setTimeout(() => {
+              leafletMap.invalidateSize();
+              leafletMap.fitBounds([[0,0], [1000,1000]]); // Riporta la mappa al centro!
+          }, 100);
       }
       if (targetTab === 'tab-bestiario') {
           renderizzaBestiario();
@@ -259,9 +272,6 @@ function bindEvents() {
   });
 
   // Gestione cambio mappa da parte del Master
-let currentImageOverlay = null; // Memorizza la mappa attuale
-
-  // Carica mappa tramite URL
   $('btn-change-map')?.addEventListener('click', () => {
       const url = $('map-url-input').value.trim();
       if (url && leafletMap) {
@@ -314,6 +324,7 @@ let currentImageOverlay = null; // Memorizza la mappa attuale
   //  Pulsanti "Indietro" per tornare alla home
   $('btn-back-campaign')?.addEventListener('click', () => closeDetails());
   $('btn-back-sheet')?.addEventListener('click', () => closeDetails());
+  $('btn-back-player-camp')?.addEventListener('click', () => closeDetails());
 
   // Dropdown menu
   $('hamburger-btn')?.addEventListener('click', (e) => {
@@ -333,12 +344,12 @@ let currentImageOverlay = null; // Memorizza la mappa attuale
   $('btn-add-campaign')?.addEventListener('click', () => { closeDropdown(); openModal($('modal-campaign-backdrop')); });
   $('btn-join-campaign-dd')?.addEventListener('click', () => { closeDropdown(); openModal($('modal-join-backdrop')); });
 
-
   const modals = [
     { bg: 'modal-backdrop', closeBtn: 'modal-close', cancelBtn: null },
     { bg: 'modal-sheet-backdrop', closeBtn: 'modal-sheet-close', cancelBtn: 'btn-sheet-cancel' },
     { bg: 'modal-campaign-backdrop', closeBtn: 'modal-campaign-close', cancelBtn: 'btn-campaign-cancel' },
-    { bg: 'modal-join-backdrop', closeBtn: 'modal-join-close', cancelBtn: 'btn-join-cancel' }
+    { bg: 'modal-join-backdrop', closeBtn: 'modal-join-close', cancelBtn: 'btn-join-cancel' },
+    { bg: 'modal-select-char-backdrop', closeBtn: 'modal-select-char-close', cancelBtn: null }
   ];
   modals.forEach(m => {
     $(m.closeBtn)?.addEventListener('click', () => closeModal($(m.bg)));
@@ -413,12 +424,12 @@ let currentImageOverlay = null; // Memorizza la mappa attuale
     }
   });
 
-  // Gestione chat (non ho mai usato questa libreria prima ne sta roba quindi potrebbe esplodere tutto) Invio
+  // Gestione chat Invio
   $('btn-send-chat')?.addEventListener('click', () => {
     const input = $('chat-input');
     const text = input.value.trim();
     if (text) {
-      appendChatMessage(State.username, text, 'me'); // Mostra a te stesso
+      appendChatMessage(State.username, text, 'me', 'chat-messages'); // Specifica container
       if (socket) {
           socket.emit('invia_messaggio', { mittente: State.username, testo: text }); // Invia agli altri
       }
@@ -430,16 +441,43 @@ let currentImageOverlay = null; // Memorizza la mappa attuale
       if (e.key === 'Enter') $('btn-send-chat').click();
   });
 
+  // Chat Master Invio
+  $('btn-send-dm-chat')?.addEventListener('click', () => {
+    const input = $('dm-chat-input');
+    const text = input.value.trim();
+    if (text) {
+      appendChatMessage(State.username, text, 'me', 'dm-chat-messages'); 
+      if (socket) socket.emit('invia_messaggio', { mittente: State.username, testo: text });
+      input.value = '';
+    }
+  });
+  $('dm-chat-input')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') $('btn-send-dm-chat').click();
+  });
+
+  // Chat Giocatore Invio
+  $('btn-pc-send-chat')?.addEventListener('click', () => {
+      const input = $('pc-chat-input');
+      const text = input.value.trim();
+      if (text) {
+          appendChatMessage(State.username, text, 'me', 'pc-chat-messages');
+          if (socket) socket.emit('invia_messaggio', { mittente: State.username, testo: text });
+          input.value = '';
+      }
+  });
+  $('pc-chat-input')?.addEventListener('keypress', (e) => { 
+      if (e.key === 'Enter') $('btn-pc-send-chat').click(); 
+  });
+
+
   // Gestione Mappa: Clicca per mettere un segnalino
   $('map')?.addEventListener('click', () => {
   });
 
+  // Avatar Scheda Base
   const avatarImg = $('char-avatar-img');
   const avatarInput = $('char-avatar-input');
-
   if (avatarImg && avatarInput) {
-      // Cliccando l'immagine, è come se cliccassimo l'input file nascosto
-      
       avatarImg.onclick = () => avatarInput.click();
       avatarInput.onchange = async (e) => {
           const file = e.target.files[0];
@@ -449,14 +487,12 @@ let currentImageOverlay = null; // Memorizza la mappa attuale
           formData.append('avatarImage', file);
 
           try {
-              // Carica fisicamente l'immagine sul server
               const res = await fetch('/api/upload-avatar', { method: 'POST', body: formData });
               const data = await res.json();
 
               if (data.url) {
                   avatarImg.src = data.url;
 
-                  // Salva il link nel database associandolo a questo personaggio
                   await fetch('/api/sheets/avatar', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -477,82 +513,32 @@ let currentImageOverlay = null; // Memorizza la mappa attuale
       };
   }
 
-  // Funzione per aprire il selettore di personaggio quando un giocatore clicca su una campagna a cui partecipa, così da scegliere con quale eroe entrare al tavolo
-window.openCharacterSelectorForCampaign = function(camp) {
-      const listContainer = $('char-selection-list');
-      if (State.sheets.length === 0) {
-          listContainer.innerHTML = '<p style="color:#aaa;">Non hai nessun eroe. Forgiane uno prima di unirti al tavolo!</p>';
-      } else {
-          listContainer.innerHTML = State.sheets.map((sheet, i) => `
-              <button class="btn-ghost" style="text-align: left; padding: 10px; display: flex; justify-content: space-between;" onclick="enterPlayerCampaign(${i}, '${escHtml(camp.campName)}')">
-                  <span>🛡️ ${escHtml(sheet.charName)} (Liv ${sheet.charLevel})</span>
-                  <span style="color:#e8c97e;">Scegli ➔</span>
-              </button>
-          `).join('');
-      }
-      openModal($('modal-select-char-backdrop'));
-  };
 
-  $('modal-select-char-close')?.addEventListener('click', () => closeModal($('modal-select-char-backdrop')));
-
-  // Tab Giocatore
-  document.querySelectorAll('.tab-btn-player').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-          document.querySelectorAll('.tab-btn-player').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.tab-content-player').forEach(c => {
-              c.classList.remove('active');
-              c.style.display = 'none';
-          });
-          
-          e.target.classList.add('active');
-          const targetTab = $(e.target.dataset.tab);
-          if (targetTab) {
-              targetTab.classList.add('active');
-              targetTab.style.display = 'flex'; // per tab intatto 
+  // Salvataggio Avatar in partita
+  $('pc-avatar-img')?.addEventListener('click', () => $('pc-avatar-input').click());
+  $('pc-avatar-input')?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const formData = new FormData(); formData.append('avatarImage', file);
+      try {
+          const res = await fetch('/api/upload-avatar', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data.url) {
+              $('pc-avatar-img').src = data.url;
+              const pureCharName = $('player-camp-char').dataset.charname;
+              await fetch('/api/sheets/avatar', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ owner: State.username, charName: pureCharName, avatarUrl: data.url })
+              });
+              const sheet = State.sheets.find(s => s.charName === pureCharName);
+              if (sheet) sheet.avatar = data.url;
           }
-
-          if (e.target.dataset.tab === 'player-mappa' && playerLeafletMap) {
-              setTimeout(() => playerLeafletMap.invalidateSize(), 100);
-          }
-      });
+      } catch(err) { console.error(err); }
   });
 
-  document.querySelectorAll('.player-tab-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-          // Rimuovi classe attiva a tutti i bottoni e contenuti del giocatore
-          document.querySelectorAll('.player-tab-btn').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.player-tab-content').forEach(c => c.classList.remove('active'));
-          
-          // Attiva il bottone cliccato e il suo pannello
-          e.target.classList.add('active');
-          const targetTabId = 'tab-' + e.target.dataset.tab;
-          $(targetTabId).classList.add('active');
-
-          // FIX BUG MAPPA: Quando la mappa diventa visibile, deve ridimensionarsi
-          if (e.target.dataset.tab === 'pc-mappa' && playerLeafletMap) {
-              setTimeout(() => playerLeafletMap.invalidateSize(), 100);
-          }
-      });
-  });
-
-  // Pulsante indietro tab giocatore 
-  $('btn-back-player-camp')?.addEventListener('click', () => closeDetails());
-
-  // Invio della chat giocatore
-  $('btn-pc-send-chat')?.addEventListener('click', () => {
-      const input = $('pc-chat-input');
-      const text = input.value.trim();
-      if (text) {
-          appendChatMessage(State.username, text, 'me', 'pc-chat-messages');
-          if (socket) socket.emit('invia_messaggio', { mittente: State.username, testo: text });
-          input.value = '';
-      }
-  });
-  $('pc-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-pc-send-chat').click(); });
-
-  //  Upload PDF personalizzato 
-  $('btn-upload-pdf')?.addEventListener('click', () => $('char-pdf-input').click());
-  $('char-pdf-input')?.addEventListener('change', async (e) => {
+  // Upload PDF personalizzato in partita
+  $('btn-pc-upload-pdf')?.addEventListener('click', () => $('pc-pdf-input').click());
+  $('pc-pdf-input')?.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
@@ -564,20 +550,19 @@ window.openCharacterSelectorForCampaign = function(camp) {
           const data = await res.json();
 
           if (data.url) {
-              // Salva nel DB
+              $('pc-pdf-iframe').src = data.url;
+              const pureCharName = $('player-camp-char').dataset.charname; 
               await fetch('/api/sheets/pdf', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ 
                       owner: State.username, 
-                      charName: $('sheet-detail-title').textContent.split(' - ')[1], // Estrae il nome eroe dal titolo
+                      charName: pureCharName, 
                       pdfUrl: data.url 
                   })
               });
 
-              // Aggiorna iframe e stato coso 
-              $('player-pdf-iframe').src = data.url;
-              const currentSheet = State.sheets.find(s => s.charName === $('sheet-detail-title').textContent.split(' - ')[1]);
+              const currentSheet = State.sheets.find(s => s.charName === pureCharName);
               if (currentSheet) currentSheet.pdfUrl = data.url;
 
               Swal.fire({ title: 'Scheda Salvata!', icon: 'success', background: '#1a1a1a', color: '#e8c97e', timer: 1500, showConfirmButton: false });
@@ -588,48 +573,55 @@ window.openCharacterSelectorForCampaign = function(camp) {
       }
   });
 
-// --- TABS GIOCATORE IN PARTITA ---
-  document.querySelectorAll('.player-tab-btn').forEach(btn => {
+  // --- TABS GIOCATORE IN PARTITA ---
+    document.querySelectorAll('.player-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
+          // Usiamo currentTarget per sicurezza se clicchi sull'icona dell'emoji
+          const clickedBtn = e.currentTarget;
+
           document.querySelectorAll('.player-tab-btn').forEach(b => b.classList.remove('active'));
           document.querySelectorAll('.player-tab-content').forEach(c => {
               c.classList.remove('active');
-              c.style.display = 'none'; // Nascondiamo per congelare il PDF
+              c.style.display = 'none'; 
           });
           
-          e.target.classList.add('active');
-          const targetTabId = 'tab-' + e.target.dataset.tab;
+          clickedBtn.classList.add('active');
+          const targetTabId = 'tab-' + clickedBtn.dataset.tab;
           const targetTabElement = $(targetTabId);
+          
           if (targetTabElement) {
               targetTabElement.classList.add('active');
-              targetTabElement.style.display = 'flex';
+              // FIX LARGHEZZA: la mappa deve essere 'block' per prendere tutto lo spazio
+              if (targetTabId === 'tab-pc-mappa') {
+                  targetTabElement.style.display = 'block';
+                  targetTabElement.style.height = '100%';
+                  targetTabElement.style.width = '100%';
+              } else {
+                  targetTabElement.style.display = 'flex';
+              }
           }
 
-          if (e.target.dataset.tab === 'pc-mappa' && playerLeafletMap) {
-              setTimeout(() => playerLeafletMap.invalidateSize(), 100);
+          // FIX CENTRAMENTO: Quando si apre la mappa, Leaflet ricalcola lo spazio e si centra
+          if (clickedBtn.dataset.tab === 'pc-mappa' && playerLeafletMap) {
+              setTimeout(() => {
+                  playerLeafletMap.invalidateSize();
+                  playerLeafletMap.fitBounds([[0,0], [1000,1000]]);
+              }, 100);
           }
       });
   });
 
-  // --- TASTO INDIETRO E CHAT GIOCATORE ---
   $('btn-back-player-camp')?.addEventListener('click', () => closeDetails());
 
-  $('btn-pc-send-chat')?.addEventListener('click', () => {
-      const input = $('pc-chat-input');
-      const text = input.value.trim();
-      if (text) {
-          appendChatMessage(State.username, text, 'me', 'pc-chat-messages');
-          if (socket) socket.emit('invia_messaggio', { mittente: State.username, testo: text });
-          input.value = '';
-      }
-  });
-  $('pc-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-pc-send-chat').click(); });
+  // Ricerca Bestiario
+    $('search-bestiario')?.addEventListener('keyup', filtraBestiario);
 }
 
-
+  
 // Chat recezione
 if (socket) {
     socket.on('ricevi_messaggio', (dati) => {
+        // Li manda in tutte le chat, così li vedi in qualsiasi schermata ti trovi
         appendChatMessage(dati.mittente, dati.testo, 'other', 'chat-messages');
         appendChatMessage(dati.mittente, dati.testo, 'other', 'dm-chat-messages');
         appendChatMessage(dati.mittente, dati.testo, 'other', 'pc-chat-messages'); 
@@ -647,26 +639,13 @@ if (socket) {
             currentImageOverlay = L.imageOverlay(url, bounds).addTo(leafletMap);
             leafletMap.fitBounds(bounds);
         }
-        if (playerLeafletMap) { // NUOVA
+        if (playerLeafletMap) { 
             playerLeafletMap.eachLayer(layer => playerLeafletMap.removeLayer(layer));
             L.imageOverlay(url, bounds).addTo(playerLeafletMap);
             playerLeafletMap.fitBounds(bounds);
         }
     });
 }
-// Chat per la parte del Master
-$('btn-send-dm-chat')?.addEventListener('click', () => {
-    const input = $('dm-chat-input');
-    const text = input.value.trim();
-    if (text) {
-      appendChatMessage(State.username, text, 'me', 'dm-chat-messages'); 
-      if (socket) socket.emit('invia_messaggio', { mittente: State.username, testo: text });
-      input.value = '';
-    }
-  });
-  $('dm-chat-input')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') $('btn-send-dm-chat').click();
-  });
 
 function appendChatMessage(sender, text, type, containerId = 'chat-messages') {
   const container = $(containerId);
@@ -678,10 +657,9 @@ function appendChatMessage(sender, text, type, containerId = 'chat-messages') {
   container.scrollTop = container.scrollHeight;
 }
 
-
 // Parte per dettagli campagna o scheda
 function openCampaignDetail(camp) {
-  if($('dash-main')) $('dash-main').style.display = 'none'; // Sostituito main-view
+  if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
   if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName;
 
@@ -697,41 +675,32 @@ function openCampaignDetail(camp) {
           inviteCodeEl.textContent = camp.inviteCode;
           inviteCodeEl.style.filter = 'blur(5px)'; 
           toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash" style="color: #aaa;"></i>'; 
-          toggleBtn.dataset.visible = 'false'; // QUESTO SPERO FUNZIONI 
+          toggleBtn.dataset.visible = 'false'; 
       } else {
           inviteContainer.style.display = 'none'; 
       }
   }
 
-  // Questo si assicura che il pulsante mostri/nasconda il codice invito, sfocandolo o no e cambiando l'icona di conseguenza
-  // bug fix n.231435346534 continua a non funzionare non capisco perché. Provo con questo singolo 
-
-  // FUNZIONAAAAAAAAAAAAAAAAAAAAAAAAAaa
   const btnToggleInvite = $('btn-toggle-invite');
     if (btnToggleInvite) {
-        // Usiamo .onclick invece di addEventListener per evitare cloni del comando!
         btnToggleInvite.onclick = function() {
             const codeEl = $('campaign-invite-code');
             const iconEl = this.querySelector('i');
             
-            // Controlliamo la nostra variabile sicura "data-visible"
             if (this.dataset.visible === 'false') {
-                // Riveliamo
                 codeEl.style.filter = 'none';
                 iconEl.className = 'fa-solid fa-eye';
                 iconEl.style.color = '#e8c97e';
-                this.dataset.visible = 'true'; // Aggiorniamo lo stato
+                this.dataset.visible = 'true'; 
             } else {
-                // Nascondiamo
                 codeEl.style.filter = 'blur(5px)';
                 iconEl.className = 'fa-solid fa-eye-slash';
                 iconEl.style.color = '#aaa';
-                this.dataset.visible = 'false'; // Aggiorniamo lo stato
+                this.dataset.visible = 'false'; 
             }
         };
     }
 
-  // Se è il Master, apre direttamente la tab della mappa, altrimenti quella della storia (o quella che vuoi)
   const primoTab = document.querySelector('.tab-btn[data-tab="storia"]');
   if(primoTab) primoTab.click();
 
@@ -750,7 +719,7 @@ function openCampaignDetail(camp) {
 }
 
 function openSheetDetail(sheet) {
-  if($('dash-main')) $('dash-main').style.display = 'none'; // Sostituito main-view
+  if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
   if($('sheet-detail-title')) $('sheet-detail-title').textContent = sheet.charName;
 
@@ -758,29 +727,25 @@ function openSheetDetail(sheet) {
       $('char-avatar-img').src = sheet.avatar || 'https://via.placeholder.com/150/111111/e8c97e?text=Click';
   }
   
-  // Aggiorna il livello in Vue, così da aggiornare anche il bonus competenza
   if (vueData) vueData.livello.value = parseInt(sheet.charLevel) || 1;
 }
 
-let playerLeafletMap = null;
 
-// Apre il modale per scegliere l'eroe
+// Funzione per aprire il selettore di personaggio quando un giocatore clicca su una campagna a cui partecipa
 window.openCharacterSelectorForCampaign = function(camp) {
-    const listContainer = $('char-selection-list');
-    if (State.sheets.length === 0) {
-        listContainer.innerHTML = '<p style="color:#aaa;">Non hai nessun eroe. Forgiane uno prima di unirti al tavolo!</p>';
-    } else {
-        listContainer.innerHTML = State.sheets.map((sheet, i) => `
-            <button class="btn-ghost" style="text-align: left; padding: 10px; display: flex; justify-content: space-between;" onclick="enterPlayerCampaign(${i}, '${escHtml(camp.campName)}')">
-                <span>🛡️ ${escHtml(sheet.charName)} (Liv ${sheet.charLevel})</span>
-                <span style="color:#e8c97e;">Scegli ➔</span>
-            </button>
-        `).join('');
-    }
-    openModal($('modal-select-char-backdrop'));
+      const listContainer = $('char-selection-list');
+      if (State.sheets.length === 0) {
+          listContainer.innerHTML = '<p style="color:#aaa;">Non hai nessun eroe. Forgiane uno prima di unirti al tavolo!</p>';
+      } else {
+          listContainer.innerHTML = State.sheets.map((sheet, i) => `
+              <button class="btn-ghost" style="text-align: left; padding: 10px; display: flex; justify-content: space-between;" onclick="enterPlayerCampaign(${i}, '${escHtml(camp.campName)}')">
+                  <span>🛡️ ${escHtml(sheet.charName)} (Liv ${sheet.charLevel})</span>
+                  <span style="color:#e8c97e;">Scegli ➔</span>
+              </button>
+          `).join('');
+      }
+      openModal($('modal-select-char-backdrop'));
 };
-
-$('modal-select-char-close')?.addEventListener('click', () => closeModal($('modal-select-char-backdrop')));
 
 // Fa entrare l'eroe in partita
 window.enterPlayerCampaign = function(sheetIndex, campName) {
@@ -793,76 +758,35 @@ window.enterPlayerCampaign = function(sheetIndex, campName) {
     if($('player-camp-title')) $('player-camp-title').textContent = campName;
     if($('player-camp-char')) {
         $('player-camp-char').textContent = "Eroe: " + sheet.charName;
-        $('player-camp-char').dataset.charname = sheet.charName; // NOME SICURO PER IL DATABASE
+        $('player-camp-char').dataset.charname = sheet.charName; 
     }
 
     if($('pc-avatar-img')) $('pc-avatar-img').src = sheet.avatar || 'https://via.placeholder.com/150/111111/e8c97e?text=Click';
     if($('pc-pdf-iframe')) $('pc-pdf-iframe').src = sheet.pdfUrl || '/pdf/scheda_dnd_5e.pdf';
 
-    // Fix mappa: la mappa ora è visibile per 1 millisecondo per farla calcolare a Leaflet
-    $('tab-pc-mappa').style.display = 'flex'; 
+  // Fix mappa: la mappa ora è visibile per 1 millisecondo per farla calcolare a Leaflet
+  if ($('tab-pc-mappa')) {
+        $('tab-pc-mappa').style.display = 'block';
+        $('tab-pc-mappa').style.height = '100%';
+        $('tab-pc-mappa').style.width = '100%';
+    }
 
     if (!playerLeafletMap && $('pc-map')) {
         playerLeafletMap = L.map('pc-map', { crs: L.CRS.Simple, minZoom: -2 });
         const bounds = [[0,0], [1000,1000]]; 
-        L.imageOverlay('https://via.placeholder.com/1000x1000/111111/444444?text=In+attesa+del+Master...', bounds).addTo(playerLeafletMap);
+        // FIX IMMAGINE: Usiamo la mappa base locale per evitare il blocco di via.placeholder.com
+        L.imageOverlay('/maps/mappa_1.jpg', bounds).addTo(playerLeafletMap);
         playerLeafletMap.fitBounds(bounds);
     }
 
-    // Ora clicchiamo sulla tab della scheda per rimettere la mappa al suo posto (in background)
+    // Ora clicchiamo sulla tab della scheda per nascondere di nuovo la mappa in background
     document.querySelector('.player-tab-btn[data-tab="pc-scheda"]')?.click();
 };
-
-// Salvataggio Avatar in partita
-$('pc-avatar-img')?.addEventListener('click', () => $('pc-avatar-input').click());
-$('pc-avatar-input')?.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData(); formData.append('avatarImage', file);
-    try {
-        const res = await fetch('/api/upload-avatar', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.url) {
-            $('pc-avatar-img').src = data.url;
-            const pureCharName = $('player-camp-char').dataset.charname;
-            await fetch('/api/sheets/avatar', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ owner: State.username, charName: pureCharName, avatarUrl: data.url })
-            });
-            const sheet = State.sheets.find(s => s.charName === pureCharName);
-            if (sheet) sheet.avatar = data.url;
-        }
-    } catch(err) { console.error(err); }
-});
-
-// Salvataggio PDF in partita
-$('btn-pc-upload-pdf')?.addEventListener('click', () => $('pc-pdf-input').click());
-$('pc-pdf-input')?.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData(); formData.append('pdfFile', file);
-    try {
-        const res = await fetch('/api/upload-pdf', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.url) {
-            $('pc-pdf-iframe').src = data.url;
-            const pureCharName = $('player-camp-char').dataset.charname;
-            await fetch('/api/sheets/pdf', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ owner: State.username, charName: pureCharName, pdfUrl: data.url })
-            });
-            const sheet = State.sheets.find(s => s.charName === pureCharName);
-            if (sheet) sheet.pdfUrl = data.url;
-            Swal.fire({ title: 'Scheda Salvata!', icon: 'success', background: '#1a1a1a', color: '#e8c97e', timer: 1500, showConfirmButton: false });
-        }
-    } catch(err) { console.error(err); }
-});
-
 
 function closeDetails() {
   if($('campaign-detail')) $('campaign-detail').style.display = 'none';
   if($('sheet-detail')) $('sheet-detail').style.display = 'none';
-  if($('player-campaign-detail')) $('player-campaign-detail').style.display = 'none'; // <-- AGGIUNGI QUESTA
+  if($('player-campaign-detail')) $('player-campaign-detail').style.display = 'none'; 
   if($('dash-main')) $('dash-main').style.display = 'flex';
   renderGrid();
 }
@@ -890,46 +814,9 @@ async function renderizzaBestiario() {
   }
 }
 
-
-// questo è per ricevere i messaggi dagli altri utenti e mostrarli nella chat (se aperta, altrimenti li vedi quando la apri)
-
-if (socket) {
-    socket.on('ricevi_messaggio', (dati) => {
-        // Li manda in tutte le chat, così li vedi in qualsiasi schermata ti trovi
-        appendChatMessage(dati.mittente, dati.testo, 'other', 'chat-messages');
-        appendChatMessage(dati.mittente, dati.testo, 'other', 'dm-chat-messages');
-        appendChatMessage(dati.mittente, dati.testo, 'other', 'pc-chat-messages'); // Chat Giocatore
-    });
-
-    socket.on('ricevi_segnalino', (latlng) => {
-        if (leafletMap) L.marker(latlng).addTo(leafletMap);
-        if (playerLeafletMap) L.marker(latlng).addTo(playerLeafletMap); // Segnalino Giocatore
-    });
-
-    socket.on('nuova_mappa_ricevuta', (url) => {
-        const bounds = [[0,0], [1000,1000]];
-        if (leafletMap) {
-            // Aggiorna mappa Master
-            if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
-            currentImageOverlay = L.imageOverlay(url, bounds).addTo(leafletMap);
-            leafletMap.fitBounds(bounds);
-        }
-        if (playerLeafletMap) {
-            // Aggiorna mappa Giocatore in tempo reale!
-            playerLeafletMap.eachLayer(layer => playerLeafletMap.removeLayer(layer));
-            L.imageOverlay(url, bounds).addTo(playerLeafletMap);
-            playerLeafletMap.fitBounds(bounds);
-        }
-    });
-}
-
-
-
 //questa funzione invece è per espandere i mostri, ovvero quando clicchiamo sul nome, si espande e fa vedere l'immagine del mostro 
 //con la scheda tecnica etc.
-
 function espandiMostro(riga) {
-    // Trova la riga successiva (che contiene l'immagine nascosta) e la mostra/nasconde
     const rigaDettagli = riga.nextElementSibling;
     if (rigaDettagli.style.display === 'none') {
         rigaDettagli.style.display = 'table-row';
@@ -938,10 +825,6 @@ function espandiMostro(riga) {
     }
 }
 
-
-
-
-//  Utility, pare sia estremamente necessario visto che è la 213123 volta che me lo consiglia e alla fine lo metto
 // Funzione per ripulire l'input e prevenire attacchi XSS
 function escHtml(str) {
   return String(str ?? '')
@@ -951,4 +834,51 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+//funziona per la barra di ricerca nella sezione "bestiario" 
+window.filtraBestiario = function() {
+    const input = $('search-bestiario').value.toLowerCase();
+    const table = document.querySelector('.bestiario-table');
+    if (!table) return;
 
+    const righe = table.querySelectorAll('tr[onclick]');
+    
+    righe.forEach(riga => {
+        const nomeMostro = riga.cells[0].textContent.toLowerCase();
+        const rigaDettagli = riga.nextElementSibling; 
+        
+        if (nomeMostro.includes(input)) {
+            riga.style.display = 'table-row';
+        } else {
+            riga.style.display = 'none';
+            if (rigaDettagli) rigaDettagli.style.display = 'none';
+        }
+    });
+};
+
+if (socket) {
+    socket.on('ricevi_messaggio', (dati) => {
+        // Li manda in tutte le chat
+        appendChatMessage(dati.mittente, dati.testo, 'other', 'chat-messages');
+        appendChatMessage(dati.mittente, dati.testo, 'other', 'dm-chat-messages');
+        appendChatMessage(dati.mittente, dati.testo, 'other', 'pc-chat-messages'); 
+    });
+
+    socket.on('ricevi_segnalino', (latlng) => {
+        if (leafletMap) L.marker(latlng).addTo(leafletMap);
+        if (playerLeafletMap) L.marker(latlng).addTo(playerLeafletMap); 
+    });
+
+    socket.on('nuova_mappa_ricevuta', (url) => {
+        const bounds = [[0,0], [1000,1000]];
+        if (leafletMap) {
+            if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
+            currentImageOverlay = L.imageOverlay(url, bounds).addTo(leafletMap);
+            leafletMap.fitBounds(bounds);
+        }
+        if (playerLeafletMap) { 
+            playerLeafletMap.eachLayer(layer => playerLeafletMap.removeLayer(layer));
+            L.imageOverlay(url, bounds).addTo(playerLeafletMap);
+            playerLeafletMap.fitBounds(bounds);
+        }
+    });
+}

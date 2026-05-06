@@ -3,7 +3,7 @@
     <mostro>
         <nome>Beholder</nome>
         <sfida>13</sfida>
-        <tipo>Aberrazione</tipo>
+        <tipo>Abberation</tipo>
         <avatar>img/bestiario/beholder_avatar.jpg</avatar>
         <stats1>img/bestiario/beholder_stats1.jpg</stats1>
         <stats2>img/bestiario/beholder_stats2.jpg</stats2>
@@ -12,7 +12,7 @@
     <mostro>
         <nome>Goblin</nome>
         <sfida>1/4</sfida>
-        <tipo>Umanoide</tipo>
+        <tipo>Humanoid</tipo>
         <avatar>img/bestiario/goblin_avatar.jpg</avatar>
         <stats1>img/bestiario/goblin_stats.jpg</stats1>
         <stats2></stats2> <!-- Se non serve la seconda immagine, lasciala vuota -->
@@ -21,7 +21,7 @@
     <mostro>
         <nome>Aboleth</nome>
         <sfida>10</sfida>
-        <tipo>Aberrazione</tipo>
+        <tipo>Abberation</tipo>
         <avatar>img/bestiario/aboleth_avatar.jpg</avatar>
         <stats1>img/bestiario/aboleth_stats1.jpg</stats1>
         <stats2>img/bestiario/aboleth_stats2.jpg</stats2>
@@ -30,7 +30,7 @@
     <mostro>
         <nome>Acolyte</nome>
         <sfida>1/4</sfida>
-        <tipo>Aberrazione</tipo>
+        <tipo>Humanoid</tipo>
         <avatar>img/bestiario/acolyte_avatar.jpg</avatar>
         <stats1>img/bestiario/acolyte_stats.jpg</stats1>
         <stats2></stats2>

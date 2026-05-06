@@ -8,6 +8,8 @@
                 <th style="padding: 10px; background: #8b1a1a; color: white; border: 1px solid #444; width: 150px;">Tipo</th>
             </tr>
             <xsl:for-each select="bestiario/mostro">
+                <!-- Permette di mantenere i mostri in ordine alfabetico -->
+                <xsl:sort select="nome" order="ascending" data-type="text"/>
                 <!-- Riga cliccabile -->
                 <tr style="cursor: pointer; background: rgba(139,26,26,0.1); transition: 0.2s;" onclick="espandiMostro(this)">
                     <td style="padding: 15px; border: 1px solid #444; font-weight: bold; color: #e8c97e; font-size: 1.1rem;"><xsl:value-of select="nome"/></td>
