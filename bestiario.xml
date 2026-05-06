@@ -7,6 +7,7 @@
         <avatar>img/bestiario/beholder_avatar.jpg</avatar>
         <stats1>img/bestiario/beholder_stats1.jpg</stats1>
         <stats2>img/bestiario/beholder_stats2.jpg</stats2>
+        <stats3></stats3>
     </mostro>
     <mostro>
         <nome>Goblin</nome>
@@ -15,5 +16,159 @@
         <avatar>img/bestiario/goblin_avatar.jpg</avatar>
         <stats1>img/bestiario/goblin_stats.jpg</stats1>
         <stats2></stats2> <!-- Se non serve la seconda immagine, lasciala vuota -->
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Aboleth</nome>
+        <sfida>10</sfida>
+        <tipo>Aberrazione</tipo>
+        <avatar>img/bestiario/aboleth_avatar.jpg</avatar>
+        <stats1>img/bestiario/aboleth_stats1.jpg</stats1>
+        <stats2>img/bestiario/aboleth_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Acolyte</nome>
+        <sfida>1/4</sfida>
+        <tipo>Aberrazione</tipo>
+        <avatar>img/bestiario/acolyte_avatar.jpg</avatar>
+        <stats1>img/bestiario/acolyte_stats.jpg</stats1>
+        <stats2></stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Adult Black Dragon</nome>
+        <sfida>14</sfida>
+        <tipo>Drago</tipo>
+        <avatar>img/bestiario/adult_black_dragon_avatar.jpg</avatar>
+        <stats1>img/bestiario/adult_black_dragon_stats1.jpg</stats1>
+        <stats2>img/bestiario/adult_black_dragon_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Adult Bronze Dragon</nome>
+        <sfida>14</sfida>
+        <tipo>Dragon</tipo>
+        <avatar>img/bestiario/adult_bronze_dragon_avatar.jpg</avatar>
+        <stats1>img/bestiario/adult_bronze_dragon_stats1.jpg</stats1>
+        <stats2>img/bestiario/adult_bronze_dragon_stats2.jpg</stats2>
+        <stats3>img/bestiario/adult_bronze_dragon_stats3.jpg</stats3>
+    </mostro>
+    <mostro>
+        <nome>Adult Gold Dragon</nome>
+        <sfida>17</sfida>
+        <tipo>Dragon</tipo>
+        <avatar>img/bestiario/adult_gold_dragon_avatar.jpg</avatar>
+        <stats1>img/bestiario/adult_gold_dragon_stats1.jpg</stats1>
+        <stats2>img/bestiario/adult_gold_dragon_stats2.jpg</stats2>
+        <stats3>img/bestiario/adult_gold_dragon_stats3.jpg</stats3>
+    </mostro>
+    <mostro>
+        <nome>Air Elemental</nome>
+        <sfida>5</sfida>
+        <tipo>Elemental</tipo>
+        <avatar>img/bestiario/air_elemental_avatar.jpg</avatar>
+        <stats1>img/bestiario/air_elemental_stats1.jpg</stats1>
+        <stats2>img/bestiario/air_elemental_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Allosaurus</nome>
+        <sfida>2</sfida>
+        <tipo>Beast</tipo>
+        <avatar>img/bestiario/allosaurus_avatar.jpg</avatar>
+        <stats1>img/bestiario/allosaurus_stats1.jpg</stats1>
+        <stats2>img/bestiario/allosaurus_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Animated Armor</nome>
+        <sfida>1</sfida>
+        <tipo>Construct</tipo>
+        <avatar>img/bestiario/animated_armor_avatar.jpg</avatar>
+        <stats1>img/bestiario/animated_armor_stats1.jpg</stats1>
+        <stats2>img/bestiario/animated_armor_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Awakened Tree</nome>
+        <sfida>2</sfida>
+        <tipo>Plant</tipo>
+        <avatar>img/bestiario/awakened_tree_avatar.jpg</avatar>
+        <stats1>img/bestiario/awakened_tree_stats.jpg</stats1>
+        <stats2></stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Black Pudding</nome>
+        <sfida>4</sfida>
+        <tipo>Ooze</tipo>
+        <avatar>img/bestiario/black_pudding_avatar.jpg</avatar>
+        <stats1>img/bestiario/black_puddingg_stats1.jpg</stats1>
+        <stats2>img/bestiario/black_pudding_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Blink Dog</nome>
+        <sfida>1/4</sfida>
+        <tipo>Fey</tipo>
+        <avatar>img/bestiario/blink_dog_avatar.jpg</avatar>
+        <stats1>img/bestiario/blink_dog_stats.jpg</stats1>
+        <stats2></stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Chimera</nome>
+        <sfida>6</sfida>
+        <tipo>Monstrosity</tipo>
+        <avatar>img/bestiario/chimera_avatar.jpg</avatar>
+        <stats1>img/bestiario/chimera_stats1.jpg</stats1>
+        <stats2>img/bestiario/chimera_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Cloud Giant</nome>
+        <sfida>9</sfida>
+        <tipo>Giant</tipo>
+        <avatar>img/bestiario/cloud_giant_avatar.jpg</avatar>
+        <stats1>img/bestiario/cloud_giant_stats1.jpg</stats1>
+        <stats2>img/bestiario/cloud_giant_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Crocodile</nome>
+        <sfida>1/2</sfida>
+        <tipo>Beast</tipo>
+        <avatar>img/bestiario/crocodile_avatar.jpg</avatar>
+        <stats1>img/bestiario/crocodile_stats.jpg</stats1>
+        <stats2></stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Deva</nome>
+        <sfida>10</sfida>
+        <tipo>Celestial</tipo>
+        <avatar>img/bestiario/deva_avatar.jpg</avatar>
+        <stats1>img/bestiario/deva_stats1.jpg</stats1>
+        <stats2>img/bestiario/deva_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Erinyes</nome>
+        <sfida>12</sfida>
+        <tipo>Fiend</tipo>
+        <avatar>img/bestiario/erinyes_avatar.jpg</avatar>
+        <stats1>img/bestiario/erinyes_stats1.jpg</stats1>
+        <stats2>img/bestiario/erinyes_stats2.jpg</stats2>
+        <stats3></stats3>
+    </mostro>
+    <mostro>
+        <nome>Wraith</nome>
+        <sfida>5</sfida>
+        <tipo>Undead</tipo>
+        <avatar>img/bestiario/wraith_avatar.jpg</avatar>
+        <stats1>img/bestiario/wraith_stats1.jpg</stats1>
+        <stats2>img/bestiario/wraith_stats2.jpg</stats2>
+        <stats3></stats3>
     </mostro>
 </bestiario>
