@@ -40,7 +40,7 @@ window.openCharacterSelectorForCampaign = function(camp) {
     } else {
         listContainer.innerHTML = State.sheets.map((sheet, i) => `
             <button class="btn-ghost" style="text-align: left; padding: 10px; display: flex; justify-content: space-between;" onclick="enterPlayerCampaign(${i}, '${escHtml(camp.campName)}')">
-                <span>🛡️ ${escHtml(sheet.charName)} (Liv ${sheet.charLevel})</span>
+                <span> ${escHtml(sheet.charName)} (Liv ${sheet.charLevel})</span>
                 <span style="color:#e8c97e;">Scegli ➔</span>
             </button>
         `).join('');

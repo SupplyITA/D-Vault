@@ -23,6 +23,120 @@
   <div class="dash-bg"></div>
   <div class="dash-bg-overlay"></div>
 
+  <!-- Particelle dorate — solo estetica, zero logica -->
+  <canvas id="gold-particles-canvas" style="position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0.55;"></canvas>
+  <script>
+    (function(){
+      const canvas = document.getElementById('gold-particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let W, H, particles = [];
+
+      function resize(){
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function rand(a,b){ return a + Math.random()*(b-a); }
+
+      function createParticle(){
+        return {
+          x: rand(0, W),
+          y: H + rand(0, 20),
+          r: rand(0.6, 2.2),
+          speed: rand(0.3, 0.9),
+          opacity: 0,
+          maxOp: rand(0.3, 0.65),
+          fadeIn: true,
+          life: 0,
+          maxLife: rand(180, 400),
+          dx: rand(-0.18, 0.18)
+        };
+      }
+
+      for(let i=0; i<55; i++){
+        const p = createParticle();
+        p.y = rand(0, H); // spread on load
+        p.life = rand(0, p.maxLife);
+        particles.push(p);
+      }
+
+      function draw(){
+        ctx.clearRect(0,0,W,H);
+        for(let i=0; i<particles.length; i++){
+          const p = particles[i];
+          p.life++;
+          p.y -= p.speed;
+          p.x += p.dx;
+
+          const halfLife = p.maxLife * 0.15;
+          if(p.life < halfLife){
+            p.opacity = (p.life / halfLife) * p.maxOp;
+          } else if(p.life > p.maxLife * 0.8){
+            p.opacity = ((p.maxLife - p.life) / (p.maxLife * 0.2)) * p.maxOp;
+          } else {
+            p.opacity = p.maxOp;
+          }
+
+          if(p.life >= p.maxLife || p.y < -10){
+            particles[i] = createParticle();
+            continue;
+          }
+
+          // Glow dorato
+          const grd = ctx.createRadialGradient(p.x,p.y,0, p.x,p.y, p.r*3);
+          grd.addColorStop(0, `rgba(245,215,130,${p.opacity})`);
+          grd.addColorStop(0.5, `rgba(212,168,67,${p.opacity*0.5})`);
+          grd.addColorStop(1, `rgba(212,168,67,0)`);
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r*3, 0, Math.PI*2);
+          ctx.fillStyle = grd;
+          ctx.fill();
+
+          // Punto centrale più luminoso
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(255,240,180,${p.opacity})`;
+          ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+  </script>
+
+  <!-- Tilt 3D + glow al cursore sulle vault-card (solo estetica) -->
+  <script>
+    (function(){
+      function bind(card){
+        if(card.__luxBound) return;
+        card.__luxBound = true;
+        const MAX = 6; // gradi max
+        card.addEventListener('mousemove', (e) => {
+          const r = card.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width;
+          const y = (e.clientY - r.top)  / r.height;
+          const rx = (0.5 - y) * MAX;
+          const ry = (x - 0.5) * MAX;
+          card.style.transform =
+            `translateY(-6px) perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = '';
+        });
+      }
+      const obs = new MutationObserver(() => {
+        document.querySelectorAll('.vault-card.luxury').forEach(bind);
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.vault-card.luxury').forEach(bind);
+      });
+    })();
+  </script>
+
   <!-- Navbar -->
   <nav class="navbar">
     <a href="dashboard.html" class="nav-logo"> 
@@ -47,7 +161,7 @@
           <button class="dropdown-add-btn" id="btn-join-campaign-dd" style="margin-top: 5px; color: #e8c97e; border-color: #e8c97e;">Unisciti con Codice</button>
         </div>
         <div class="dropdown-divider"></div>
-        <a href="index.html" class="dropdown-logout">🚪 Esci dal Vault</a>
+        <a href="index.html" class="dropdown-logout"> Esci dal Vault</a>
       </div>
     </div>
   </nav>
@@ -55,30 +169,30 @@
   <!-- MAIN -->
   <main class="dash-main" id="dash-main" style="display: flex; flex-direction: column; gap: 40px;">
     <!-- SEZIONE 1: EROI -->
-    <section class="dashboard-section">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #4a90e2; padding-bottom: 10px; margin-bottom: 20px;">
-        <h2 style="color: #4a90e2; font-family: 'Cinzel', serif; font-size: 1.5rem; margin: 0;">🛡️ I Miei Eroi</h2>
-        <button class="btn-primary" id="btn-add-sheet-main" style="padding: 5px 15px; font-size: 0.9rem;">+ Forgia Eroe</button>
+    <section class="dashboard-section section-heroes">
+      <div class="section-header">
+        <h2>I Miei Eroi</h2>
+        <button class="btn-primary section-cta" id="btn-add-sheet-main">+ Forgia Eroe</button>
       </div>
-      <div class="content-grid" id="grid-heroes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: stretch;"></div>
+      <div class="content-grid" id="grid-heroes"></div>
     </section>
 
     <!-- SEZIONE 2: CAMPAGNE MASTER -->
-    <section class="dashboard-section">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #8b1a1a; padding-bottom: 10px; margin-bottom: 20px;">
-        <h2 style="color: #e8c97e; font-family: 'Cinzel', serif; font-size: 1.5rem; margin: 0;">👑 Le Mie Campagne (Master)</h2>
-        <button class="btn-primary" id="btn-add-camp-main" style="padding: 5px 15px; font-size: 0.9rem;">+ Nuova Campagna</button>
+    <section class="dashboard-section section-master">
+      <div class="section-header">
+        <h2>Le Mie Campagne · Master</h2>
+        <button class="btn-primary section-cta" id="btn-add-camp-main">+ Nuova Campagna</button>
       </div>
-      <div class="content-grid" id="grid-master" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: stretch;"></div>
+      <div class="content-grid" id="grid-master"></div>
     </section>
 
     <!-- SEZIONE 3: CAMPAGNE GIOCATORE -->
-    <section class="dashboard-section">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #27ae60; padding-bottom: 10px; margin-bottom: 20px;">
-        <h2 style="color: #27ae60; font-family: 'Cinzel', serif; font-size: 1.5rem; margin: 0;">🎲 Avventure in Corso (Giocatore)</h2>
-        <button class="btn-primary" id="btn-join-camp-main" style="padding: 5px 15px; font-size: 0.9rem;">🔗 Unisciti con Codice</button>
+    <section class="dashboard-section section-player">
+      <div class="section-header">
+        <h2>Avventure in Corso · Giocatore</h2>
+        <button class="btn-primary section-cta" id="btn-join-camp-main">Unisciti con Codice</button>
       </div>
-      <div class="content-grid" id="grid-player" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: stretch;"></div>
+      <div class="content-grid" id="grid-player"></div>
     </section>
   </main>
 
@@ -100,10 +214,10 @@
     <div class="sheet-layout">
       <div class="sheet-left" style="display: flex; flex-direction: column;">
         <nav class="campaign-tabs">
-          <button class="tab-btn active" data-tab="storia">📖 Storia e Appunti</button>
-          <button class="tab-btn" data-tab="mappa">🗺️ Mappa Interattiva</button>
-          <button class="tab-btn" data-tab="bestiario">🐉 Bestiario</button>
-          <button class="tab-btn" data-tab="party">👥 Eroi del Party</button>
+          <button class="tab-btn active" data-tab="storia"> Storia e Appunti</button>
+          <button class="tab-btn" data-tab="mappa"> Mappa Interattiva</button>
+          <button class="tab-btn" data-tab="bestiario"> Bestiario</button>
+          <button class="tab-btn" data-tab="party"> Eroi del Party</button>
         </nav>
 
         <div id="tab-storia" class="tab-content active" style="flex: 1;">
@@ -148,7 +262,7 @@
 
       <div class="sheet-right">
         <div class="right-panel-box" style="height: 100%;">
-          <h3 class="panel-box-title">💬 Chat Campagna</h3>
+          <h3 class="panel-box-title"> Chat Campagna</h3>
           <div id="dm-chat-messages" class="chat-messages" style="flex: 1; overflow-y: auto;">
             <div class="chat-msg system">Tavolo virtuale aperto. Pronti all'avventura!</div>
           </div>
@@ -194,12 +308,12 @@
         </div>
 
         <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px;">
-          <h3 class="panel-box-title">📝 Appunti</h3>
+          <h3 class="panel-box-title"> Appunti</h3>
           <textarea id="player-notes" style="display: block; width: 100%; min-height: 120px; resize: vertical; background: rgba(0,0,0,0.3); color: #ccc; border: 1px solid #444; border-radius: 4px; padding: 10px; font-family: sans-serif; margin-top: 15px;" placeholder="Scrivi i tuoi appunti personali qui..."></textarea>
         </div>
 
         <div class="right-panel-box" style="padding: 15px;">
-          <h3 class="panel-box-title">💬 Chat Base</h3>
+          <h3 class="panel-box-title"> Chat Base</h3>
           <div id="chat-messages" class="chat-messages" style="display: block; min-height: 150px; height: 200px; resize: vertical; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; margin-top: 15px; margin-bottom: 15px; border: 1px solid #333;"></div>
           
           <div class="chat-input-area" style="display: flex; gap: 10px;">
@@ -216,23 +330,23 @@
     <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
       <button id="btn-back-player-camp" class="btn-ghost" style="margin: 0;">← Esci dal Tavolo</button>
       <div>
-        <h1 id="player-camp-title" style="font-family: 'Cinzel', serif; font-size: 2.2rem; color: #27ae60; margin: 0;">Nome Campagna</h1>
-        <p id="player-camp-char" data-charname="" style="color: #4a90e2; font-family: 'Cinzel', serif; margin: 5px 0 0 0; font-size: 1.2rem;">Eroe: Nome</p>
+        <h1 id="player-camp-title" style="color: #e8c97e;font-family: 'Cinzel', serif; font-size: 2.2rem; margin: 0;">Nome Campagna</h1>
+        <p id="player-camp-char" data-charname="" style="color: #e8c97e; font-family: 'Cinzel', serif; margin: 5px 0 0 0; font-size: 1.2rem;">Eroe: Nome</p>
       </div>
     </div>
 
     <div class="sheet-layout">
       <div class="sheet-left" style="display: flex; flex-direction: column;">
         <nav class="campaign-tabs">
-          <button class="tab-btn player-tab-btn active" data-tab="pc-scheda">📜 La mia Scheda</button>
-          <button class="tab-btn player-tab-btn" data-tab="pc-mappa">🗺️ Mappa Interattiva</button>
+          <button class="tab-btn player-tab-btn active" data-tab="pc-scheda">La mia Scheda</button>
+          <button class="tab-btn player-tab-btn" data-tab="pc-mappa">Mappa Interattiva</button>
         </nav>
 
         <div id="tab-pc-scheda" class="tab-content player-tab-content active" style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
           <div style="background: rgba(0,0,0,0.5); padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444;">
             <span style="color: #ccc; font-size: 0.9rem; font-style: italic;">Salva la scheda compilata sul tuo PC e caricala qui:</span>
             <input type="file" id="pc-pdf-input" accept="application/pdf" style="display: none;">
-            <button id="btn-pc-upload-pdf" class="btn-primary" style="padding: 5px 15px; margin: 0; min-width: 150px; font-size: 0.85rem;">☁️ Aggiorna PDF</button>
+            <button id="btn-pc-upload-pdf" class="btn-primary" style="padding: 5px 15px; margin: 0; min-width: 150px; font-size: 0.85rem;">Aggiorna PDF</button>
           </div>
           <div class="pdf-container" style="flex: 1; border: 2px solid #444; border-radius: 8px; overflow: hidden;">
             <iframe id="pc-pdf-iframe" src="/pdf/scheda_dnd_5e.pdf" width="100%" height="100%" style="border: none;"></iframe>
@@ -255,7 +369,7 @@
         </div>
 
         <div class="right-panel-box" style="padding: 15px;">
-          <h3 class="panel-box-title">💬 Chat Party</h3>
+          <h3 class="panel-box-title">Chat Party</h3>
           <div id="pc-chat-messages" class="chat-messages" style="display: block; min-height: 150px; height: 250px; resize: vertical; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; margin-top: 15px; margin-bottom: 15px; border: 1px solid #333;"></div>
           <div class="chat-input-area" style="display: flex; gap: 10px;">
             <input type="text" id="pc-chat-input" placeholder="Scrivi al gruppo..." style="flex: 1; padding: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 4px;">

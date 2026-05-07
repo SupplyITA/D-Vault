@@ -38,15 +38,15 @@ document.addEventListener('DOMContentLoaded', () => {
           // Salviamo il vero username restituito dal server per la dashboard
           localStorage.setItem('dvault_username', result.username);
           
-          // Entriamo nella taverna con stile!
           Swal.fire({
             title: 'Bentornato, Eroe!',
             text: 'I cancelli del Vault si aprono per te.',
             icon: 'success',
-            background: '#1a1a1a',
-            color: '#e8c97e',
             timer: 1500, // Il popup si chiude da solo dopo 1.5 secondi
-            showConfirmButton: false
+            showConfirmButton: false,
+            customClass: {
+                popup: 'vault-popup'
+            }
           }).then(() => {
             window.location.href = 'dashboard.html';
           });
@@ -57,8 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Accesso Negato',
             text: result.message,
             icon: 'error',
-            background: '#1a1a1a',
-            color: '#e8c97e',
+            customClass: {
+                popup: 'vault-popup'
+            },
             confirmButtonColor: '#8b1a1a',
             confirmButtonText: 'Riprova'
           }); 
@@ -69,9 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Server Irraggiungibile',
             text: 'La magia del server è debole in questo momento. Riprova più tardi.',
             icon: 'warning',
-            background: '#1a1a1a',
-            color: '#e8c97e',
-            confirmButtonColor: '#4a90e2'
+            customClass: {
+                popup: 'vault-popup'
+            }
         });
       }
     });
@@ -96,8 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Errore Magico',
             text: 'Le password non coincidono. Riprova l\'incantesimo.',
             icon: 'error',
-            background: '#1a1a1a',
-            color: '#e8c97e',
+            customClass: {
+                popup: 'vault-popup'
+            },
             confirmButtonColor: '#8b1a1a'
         });
         return;
@@ -117,9 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Evocazione Riuscita!',
             text: 'Il tuo account è stato creato. Ora puoi accedere.',
             icon: 'success',
-            background: '#1a1a1a',
-            color: '#e8c97e',
-            confirmButtonColor: '#27ae60'
+            customClass: {
+                popup: 'vault-popup'
+            }
           }).then(() => {
             registerForm.reset(); 
             document.querySelector('[data-tab="login"]')?.click();
@@ -130,8 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Nome Ghiacciato',
             text: result.message,
             icon: 'warning',
-            background: '#1a1a1a',
-            color: '#e8c97e',
+            customClass: {
+                popup: 'vault-popup'
+            },
             confirmButtonColor: '#e8c97e'
           });
         }
@@ -141,8 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Server Irraggiungibile',
             text: 'La taverna è chiusa. Riprova più tardi.',
             icon: 'warning',
-            background: '#1a1a1a',
-            color: '#e8c97e',
+            customClass: {
+                popup: 'vault-popup'
+            },
             confirmButtonColor: '#4a90e2'
         });
       }
@@ -190,8 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Memoria Ripristinata!',
             text: result.message,
             icon: 'success',
-            background: '#1a1a1a',
-            color: '#e8c97e',
+            customClass: {
+                popup: 'vault-popup'
+            },
             confirmButtonColor: '#4a90e2'
           }).then(() => {
             resetForm.reset();
@@ -202,8 +207,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Pergamena Vuota',
             text: result.message,
             icon: 'error',
-            background: '#1a1a1a',
-            color: '#e8c97e',
+            customClass: {
+                popup: 'vault-popup'
+            },
             confirmButtonColor: '#8b1a1a'
           });
         }
@@ -213,8 +219,9 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Server Irraggiungibile',
             text: 'I corvi hanno rubato il tuo messaggio. Riprova.',
             icon: 'warning',
-            background: '#1a1a1a',
-            color: '#e8c97e',
+            customClass: {
+                popup: 'vault-popup'
+            },
             confirmButtonColor: '#4a90e2'
         });
       }

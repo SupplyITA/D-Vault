@@ -10,7 +10,7 @@ export function renderDropdowns() {
       dropdownSheetsList.innerHTML = '<li class="dropdown-empty">Nessuna scheda</li>';
     } else {
       dropdownSheetsList.innerHTML = State.sheets.map((s, i) =>
-        `<li class="dropdown-item" data-type="sheet" data-index="${i}">🛡 ${escHtml(s.charName)}</li>`
+        `<li class="dropdown-item" data-type="sheet" data-index="${i}"> ${escHtml(s.charName)}</li>`
       ).join('');
     }
   }
@@ -20,7 +20,7 @@ export function renderDropdowns() {
       dropdownCampaignsList.innerHTML = '<li class="dropdown-empty">Nessuna campagna</li>';
     } else {
       dropdownCampaignsList.innerHTML = State.campaigns.map((c, i) =>
-        `<li class="dropdown-item" data-type="campaign" data-index="${i}">📖 ${escHtml(c.campName)}</li>`
+        `<li class="dropdown-item" data-type="campaign" data-index="${i}"> ${escHtml(c.campName)}</li>`
       ).join('');
     }
   }
@@ -59,56 +59,101 @@ export function renderGrid() {
   }
 }
 
-export function makeSheetCard(sheet, i) {
-  let icon = '🛡️';
-  if (['Mago', 'Stregone', 'Warlock'].includes(sheet.charClass)) icon = '🔮';
-  if (['Ladro', 'Monaco'].includes(sheet.charClass)) icon = '🗡️';
-  if (['Bardo'].includes(sheet.charClass)) icon = '🎵';
-  if (['Druido', 'Ranger'].includes(sheet.charClass)) icon = '🐺';
+// Monogramma tipografico (prima lettera del nome) usato come "sigillo" nobile.
+function monogram(name) {
+  const ch = (name || '?').trim().charAt(0).toUpperCase();
+  return escHtml(ch || '?');
+}
 
-  // Nota: Le classi CSS inline qui andrebbero spostate nel file .css per maggiore pulizia
+// Slug per nome file specie (es. "Mezzorco" → "mezzorco")
+function speciesSlug(name) {
+  return (name || 'umano').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'umano';
+}
+
+export function makeSheetCard(sheet, i) {
+  const slug = speciesSlug(sheet.charRace);
+  const portraitSrc = sheet.charPortrait || `uploads/avatars/${slug}.jpg`;
+  const fallback = `this.onerror=null;this.src='img/species/_default.jpg';this.classList.add('is-fallback');`;
   return `
-    <div class="vault-card" data-type="sheet" data-index="${i}" style="border-left: 4px solid #4a90e2; display: flex; flex-direction: column; min-height: 220px; cursor:pointer; transition: transform 0.2s;">
+    <div class="vault-card luxury luxury-hero" data-type="sheet" data-index="${i}">
+      <span class="lux-paper"></span>
+      <span class="lux-shine"></span>
+      <span class="lux-corner lux-corner-tl"></span>
+      <span class="lux-corner lux-corner-tr"></span>
+      <span class="lux-corner lux-corner-bl"></span>
+      <span class="lux-corner lux-corner-br"></span>
       <button class="btn-delete" data-type="sheet" data-index="${i}" title="Elimina Eroe">×</button>
-      <div style="display: flex; align-items: center; margin-bottom: 10px;">
-        <div style="font-size: 2.2rem; margin-right: 15px; background: rgba(0,0,0,0.6); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid #4a90e2;">${icon}</div>
-        <div>
-          <div class="card-tag" style="color: #4a90e2;">Eroe</div>
+      <div class="lux-portrait-wrap">
+        <div class="lux-portrait-frame">
+          <img class="lux-portrait-img" src="${escHtml(portraitSrc)}" alt="${escHtml(sheet.charName)}" onerror="${fallback}" loading="lazy" />
+          <span class="lux-portrait-shine"></span>
+        </div>
+        <div class="lux-species-tag">${escHtml(sheet.charRace)||'—'}</div>
+      </div>
+      <div class="lux-head">
+        <div class="lux-sigil"><span>${monogram(sheet.charName)}</span></div>
+        <div class="lux-head-text">
+          <div class="card-tag">Eroe</div>
           <div class="card-title">${escHtml(sheet.charName)}</div>
         </div>
       </div>
-      <div class="card-sub">${escHtml(sheet.charClass)||'—'} · ${escHtml(sheet.charRace)||'—'}</div>
-      <div class="card-level">Livello ${escHtml(String(sheet.charLevel||1))}</div>
-      <div style="margin-top: auto; padding-top: 15px;">
-        <button class="btn-primary" style="width: 100%; padding: 8px; font-size: 0.9rem;">✦ Apri Scheda</button>
+      <div class="lux-divider"></div>
+      <div class="card-sub">${escHtml(sheet.charClass)||'—'}</div>
+      <div class="card-level">Liv. ${escHtml(String(sheet.charLevel||1))}</div>
+      <div class="lux-actions">
+        <button class="btn-primary lux-btn">Apri Scheda</button>
       </div>
     </div>`;
 }
 
 export function makeCampaignCard(camp, i, isMaster) {
-  const borderColor = isMaster ? '#8b1a1a' : '#27ae60';
+  const variant = isMaster ? 'luxury-master' : 'luxury-player';
   const tagText = isMaster ? 'Master' : 'Giocatore';
-  const icon = isMaster ? '🐉' : '🗺️';
   const btnDelete = isMaster ? `<button class="btn-delete" data-type="campaign" data-index="${i}" title="Elimina">×</button>` : '';
-  const inviteInfo = isMaster 
-      ? `<div style="margin-top: 10px; font-size: 0.85rem; background: rgba(232, 201, 126, 0.1); padding: 6px; border-radius: 4px; text-align: center; border: 1px dashed #e8c97e; color: #e8c97e;">Codice: <strong style="letter-spacing: 2px;">${camp.inviteCode}</strong></div>` 
-      : `<div style="color: #aaa; margin-top: 10px; font-size: 0.85rem; text-align: center;">Master: <strong>${escHtml(camp.owner)}</strong></div>`;
+  const inviteInfo = isMaster
+      ? `<div class="lux-invite">Codice <strong>${escHtml(String(camp.inviteCode||''))}</strong></div>`
+      : `<div class="lux-meta">Master · <strong>${escHtml(camp.owner)}</strong></div>`;
+
+  const mapSrc = camp.mapUrl || camp.campMap || '';
+  const mapBlock = mapSrc
+    ? `<div class="lux-map-thumb" style="background-image:url('${escHtml(mapSrc)}')"></div>`
+    : `<div class="lux-map-thumb lux-map-empty" aria-label="Nessuna mappa">
+         <svg viewBox="0 0 64 64" aria-hidden="true">
+           <defs><linearGradient id="g${i}" x1="0" x2="1" y1="0" y2="1">
+             <stop offset="0" stop-color="#f5d98e"/><stop offset="1" stop-color="#7a5c20"/>
+           </linearGradient></defs>
+           <circle cx="32" cy="32" r="22" fill="none" stroke="url(#g${i})" stroke-width="1.5"/>
+           <path d="M32 8 L36 32 L32 56 L28 32 Z" fill="url(#g${i})" opacity=".9"/>
+           <path d="M8 32 L32 28 L56 32 L32 36 Z" fill="url(#g${i})" opacity=".55"/>
+           <circle cx="32" cy="32" r="2" fill="#0a0604"/>
+         </svg>
+       </div>`;
 
   return `
-    <div class="vault-card" data-type="campaign" data-index="${i}" style="border-left: 4px solid ${borderColor}; display: flex; flex-direction: column; min-height: 220px; cursor:pointer; transition: transform 0.2s;">
+    <div class="vault-card luxury ${variant}" data-type="campaign" data-index="${i}">
+      <span class="lux-paper"></span>
+      <span class="lux-shine"></span>
+      <span class="lux-corner lux-corner-tl"></span>
+      <span class="lux-corner lux-corner-tr"></span>
+      <span class="lux-corner lux-corner-bl"></span>
+      <span class="lux-corner lux-corner-br"></span>
       ${btnDelete}
-      <div style="display: flex; align-items: center; margin-bottom: 10px;">
-        <div style="font-size: 2.2rem; margin-right: 15px; background: rgba(0,0,0,0.6); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid ${borderColor};">${icon}</div>
-        <div>
-          <div class="card-tag" style="color: ${borderColor};">${tagText}</div>
+      <div class="lux-head lux-head-camp">
+        <div class="lux-sigil"><span>${monogram(camp.campName)}</span></div>
+        ${mapBlock}
+        <div class="lux-head-text">
+          <div class="card-tag">${tagText}</div>
           <div class="card-title">${escHtml(camp.campName)}</div>
         </div>
       </div>
+      <div class="lux-divider"></div>
       <div class="card-sub">${escHtml(camp.campSetting)||'Ambientazione libera'}</div>
-      <div class="card-level">${escHtml(String(camp.campPlayers||4))} giocatori massimi</div>
+      <div class="card-level">${escHtml(String(camp.campPlayers||4))} posti</div>
       ${inviteInfo}
-      <div style="margin-top: auto; padding-top: 15px;">
-        <button class="btn-primary" style="width: 100%; padding: 8px; font-size: 0.9rem;">✦ Entra al Tavolo</button>
+      <div class="lux-actions">
+        <button class="btn-primary lux-btn">Entra al Tavolo</button>
       </div>
     </div>`;
 }
