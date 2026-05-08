@@ -144,11 +144,9 @@ form.readonly-sheet input, form.readonly-sheet textarea {
 .dnd-skill-row input[type="checkbox"]:checked { background: var(--gold-mid); }
 
 
-/* ════════════════════════════════════════════════
-   NUOVE AGGIUNTE FUNZIONALI
-   ════════════════════════════════════════════════ */
 
-/* 1. Stile del Pulsante di Salvataggio Manuale */
+
+/* Stile del Pulsante di Salvataggio Manuale */
 .dnd-save-btn {
   padding: 12px 25px;
   background: #27ae60;
@@ -172,14 +170,7 @@ form.readonly-sheet .dnd-save-btn {
   display: none;
 }
 
-/* 2. Griglia per gli Incantesimi (Livelli 0 - 9) */
-.dnd-spells-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-/* 3. FIX LAYOUT: Costringe l'avatar a stare a destra */
+/*  Costringe l'avatar a stare a destra */
 .sheet-layout {
   display: flex !important;
   flex-direction: row !important;
@@ -189,10 +180,108 @@ form.readonly-sheet .dnd-save-btn {
 }
 .sheet-left {
   flex: 1 1 auto;
-  min-width: 0; /* CRUCIALE: blocca l'allargamento infinito della scheda */
+  min-width: 0; 
   overflow-x: hidden;
 }
 .sheet-right {
-  flex: 0 0 320px; /* Larghezza fissa per la colonna di Avatar e Chat */
+  flex: 0 0 320px; 
   min-width: 320px;
 }
+
+
+/* ════════════════════════════════════════════════
+   GRIGLIA INCANTESIMI (STILE SCHEDA UFFICIALE)
+   ════════════════════════════════════════════════ */
+.dnd-spells-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 colonne perfette come nel manuale */
+  gap: 20px;
+}
+
+.spell-level-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(180,130,40,0.3);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.spell-header {
+  display: flex;
+  align-items: center;
+  background: rgba(180,130,40,0.1);
+  border-bottom: 2px solid var(--gold-mid);
+  padding: 5px 10px;
+  gap: 15px;
+}
+
+.spell-level-num {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--gold-bright);
+  background: #111;
+  padding: 5px 15px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 4px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+
+.spell-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--gold-mid);
+  letter-spacing: 0.1em;
+}
+
+.spell-slots {
+  display: flex;
+  gap: 15px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.spell-slots label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.65rem;
+  color: #aaa;
+  align-items: center;
+  font-family: sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.spell-slots input {
+  width: 45px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid var(--gold-dim);
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  padding: 2px;
+  margin-top: 3px;
+}
+
+.spell-list { display: flex; flex-direction: column; padding: 10px; }
+.spell-row {
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(180,130,40,0.2); padding: 4px 0;
+}
+.spell-row:last-child { border-bottom: none; }
+
+.spell-prep-check {
+  appearance: none; width: 14px; height: 14px;
+  border: 2px solid var(--gold-dim); border-radius: 50%;
+  cursor: pointer; flex-shrink: 0; background: #111; transition: 0.2s;
+}
+.spell-prep-check:checked { background: var(--gold-mid); box-shadow: 0 0 8px rgba(212,168,67,0.8); }
+
+.spell-name-input {
+  flex: 1; background: transparent; border: none;
+  color: #eee; outline: none; font-family: 'Crimson Text', serif; font-size: 1.05rem;
+}
+
+@media (max-width: 1100px) { .dnd-spells-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) { .dnd-spells-grid { grid-template-columns: 1fr; } }

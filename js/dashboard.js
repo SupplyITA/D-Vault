@@ -3,6 +3,7 @@ import { State } from './state.js';
 import { socket, appendChatMessage, gestisciInvioChat } from './chat.js';
 import { renderDropdowns, renderGrid, renderizzaBestiario } from './ui.js';
 import { costruisciSchedaInterattiva } from './interactive-sheet.js';
+import { dndData } from './dnd-data.js';
 
 // Variabili globali per Map e Vue
 let leafletMap = null;
@@ -29,14 +30,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                   const charName = $('sheet-detail-title')?.textContent;
                   if (!charName) return;
 
-                  // 1. Cerca la scheda tra quelle caricate per aggiornarla istantaneamente
+                  // Cerca la scheda tra quelle caricate per aggiornarla istantaneamente
                   const sheet = State.sheets.find(s => s.charName === charName);
                   const livelloParsato = parseInt(nuovoLivello) || 1;
+                  const container = document.getElementById('base-sheet-container') || document.getElementById('pc-sheet-container');
 
                   if (sheet && sheet.charLevel !== livelloParsato) {
-                      sheet.charLevel = livelloParsato; // Aggiorna per il front-end (modale selezione)
+                      sheet.charLevel = livelloParsato;
                       
-                      // 2. Salva il dato in background sul Database
+                      // Salva il dato in background sul Database
                       try {
                           await fetch('/api/sheets/update-level', {
                               method: 'POST',
@@ -51,6 +53,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                           console.error("Errore durante il salvataggio del livello:", e); 
                       }
                   }
+                  
+                 if (container) {
+                    //Avvia la funzione aggiornaTuttiICalcoli per ricalcolare tutto in base al nuovo bonus competenza
+                    const form = container.querySelector('form');
+                    if (form) form.dispatchEvent(new Event('input'));
+                 }
               });
 
               return { livello, bonusCompetenza };
@@ -498,31 +506,66 @@ function bindEvents() {
     }
 
   // Invio del form
-  $('form-add-sheet')?.addEventListener('submit', async (e) => {
+$('form-add-sheet')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData($('form-add-sheet')));
     data.owner = State.username;
     
-    // Componiamo il percorso dell'avatar basato su razza e sesso
     const slug = data.charRace.toLowerCase().replace(/\s+/g, '-');
-    const gender = data.charGender; // 'm' o 'f'
+    const gender = data.charGender; 
     data.avatar = `img/species/${slug}-${gender}.jpg`;
 
+    // Crea la scheda base nel Database
     await fetch('/api/sheets', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify(data) 
     });
+
+    // Calcola le statistiche iniziali basate su dnd-data.js
+    const razzaDati = dndData.razze[data.charRace] || {};
+    const classeDati = dndData.classi[data.charClass] || {};
     
+    const baseCon = 10 + (razzaDati.con || 0);
+    const conMod = Math.floor((baseCon - 10) / 2);
+
+    const initialDetails = {
+
+        headerClassLevel: `${data.charClass} ${data.charLevel}`,
+        headerBackground: "Avventuriero",
+        
+        str: 10 + (razzaDati.str || 0),
+        dex: 10 + (razzaDati.dex || 0),
+        con: baseCon,
+        int: 10 + (razzaDati.int || 0),
+        wis: 10 + (razzaDati.wis || 0),
+        cha: 10 + (razzaDati.cha || 0),
+        hitDice: `${data.charLevel}${classeDati.hitDice || 'd8'}`,
+        hpMax: (classeDati.hpBase || 10) + conMod, 
+        hpCurrent: (classeDati.hpBase || 10) + conMod,
+        features: razzaDati.traits || ''
+    };
+
+    // Spunta automaticamente i Tiri Salvezza della classe
+    if (classeDati.saves) {
+        classeDati.saves.forEach(save => initialDetails[save] = 'on');
+    }
+
+    // Salva i dettagli iniziali 
+    await fetch('/api/sheets/update-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner: State.username, charName: data.charName, details: initialDetails })
+    });
+
     await State.loadFromServer(); 
     $('form-add-sheet').reset();
     
-    // Reset della preview all'immagine di default
     const previewImg = document.getElementById('new-hero-preview');
     if(previewImg) previewImg.src = `img/species/umano-m.jpg`;
     
     closeModal($('modal-sheet-backdrop'));
-    renderGrid(); // Ridisegna la griglia
+    renderGrid(); 
 });
 
   $('form-add-campaign')?.addEventListener('submit', async (e) => {

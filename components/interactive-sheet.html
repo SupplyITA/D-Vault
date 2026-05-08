@@ -17,12 +17,12 @@
 
       <div class="dnd-main-grid">
         <div class="dnd-col-stats">
-          <div class="dnd-stat-box main-stat"><label>FOR</label><input type="number" name="str"><input type="number" class="stat-mod" name="strMod" placeholder="Mod"></div>
-          <div class="dnd-stat-box main-stat"><label>DES</label><input type="number" name="dex"><input type="number" class="stat-mod" name="dexMod" placeholder="Mod"></div>
-          <div class="dnd-stat-box main-stat"><label>COS</label><input type="number" name="con"><input type="number" class="stat-mod" name="conMod" placeholder="Mod"></div>
-          <div class="dnd-stat-box main-stat"><label>INT</label><input type="number" name="int"><input type="number" class="stat-mod" name="intMod" placeholder="Mod"></div>
-          <div class="dnd-stat-box main-stat"><label>SAG</label><input type="number" name="wis"><input type="number" class="stat-mod" name="wisMod" placeholder="Mod"></div>
-          <div class="dnd-stat-box main-stat"><label>CAR</label><input type="number" name="cha"><input type="number" class="stat-mod" name="chaMod" placeholder="Mod"></div>
+          <div class="dnd-stat-box main-stat"><label>FOR</label><input type="number" name="str"><input type="text" class="stat-mod" name="strMod" placeholder="Mod" readonly></div>
+          <div class="dnd-stat-box main-stat"><label>DES</label><input type="number" name="dex"><input type="text" class="stat-mod" name="dexMod" placeholder="Mod" readonly></div>
+          <div class="dnd-stat-box main-stat"><label>COS</label><input type="number" name="con"><input type="text" class="stat-mod" name="conMod" placeholder="Mod" readonly></div>
+          <div class="dnd-stat-box main-stat"><label>INT</label><input type="number" name="int"><input type="text" class="stat-mod" name="intMod" placeholder="Mod" readonly></div>
+          <div class="dnd-stat-box main-stat"><label>SAG</label><input type="number" name="wis"><input type="text" class="stat-mod" name="wisMod" placeholder="Mod" readonly></div>
+          <div class="dnd-stat-box main-stat"><label>CAR</label><input type="number" name="cha"><input type="text" class="stat-mod" name="chaMod" placeholder="Mod" readonly></div>
         </div>
 
         <div class="dnd-col-skills">
@@ -104,25 +104,20 @@
       </div>
     </div>
 
-    <div class="dnd-subtab-content" id="subtab-spells">
+<div class="dnd-subtab-content" id="subtab-spells">
       <div class="dnd-header-row">
-        <div class="dnd-combat-box"><label>Caratteristica Incantatore</label><input type="text" name="spellAbility" placeholder="es. INT"></div>
-        <div class="dnd-combat-box"><label>CD Tiro Salvezza</label><input type="number" name="spellDC"></div>
-        <div class="dnd-combat-box"><label>Bonus Attacco Magico</label><input type="text" name="spellBonus" placeholder="+5"></div>
+        <div class="dnd-combat-box"><label>Caratteristica Incantatore</label><input type="text" name="spellAbility" readonly></div>
+        <div class="dnd-combat-box"><label>CD Tiro Salvezza</label><input type="number" name="spellDC" readonly></div>
+        <div class="dnd-combat-box"><label>Bonus Attacco Magico</label><input type="text" name="spellBonus" readonly></div>
+        
+        <div class="dnd-combat-box" id="prepared-counter-box" style="border: 1px solid var(--gold-mid); background: rgba(139, 26, 26, 0.15);">
+            <label style="color: var(--gold-bright);">Incantesimi Preparati</label>
+            <div style="font-size: 1.5rem; font-weight: bold; color: white;">
+                <span id="current-prepared">0</span> / <span id="max-prepared">0</span>
+            </div>
+        </div>
       </div>
-      
-      <div class="dnd-spells-grid">
-        <div class="dnd-textarea-box"><label>Trucchetti (Livello 0)</label><textarea name="spells0"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 1</label><textarea name="spells1"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 2</label><textarea name="spells2"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 3</label><textarea name="spells3"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 4</label><textarea name="spells4"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 5</label><textarea name="spells5"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 6</label><textarea name="spells6"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 7</label><textarea name="spells7"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 8</label><textarea name="spells8"></textarea></div>
-        <div class="dnd-textarea-box"><label>Livello 9</label><textarea name="spells9"></textarea></div>
-      </div>
+      <div class="dnd-spells-grid"></div>
     </div>
   </form>
 </div>
