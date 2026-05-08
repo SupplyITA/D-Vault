@@ -14,14 +14,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   if ($('nav-username')) $('nav-username').textContent = State.username;
   await State.loadFromServer();
   
-  // Inizializzazione Vue.js
+// Inizializzazione Vue.js
   if (typeof Vue !== 'undefined') {
-      const { createApp, ref, computed } = Vue;
+      // Importa anche 'watch' da Vue
+      const { createApp, ref, computed, watch } = Vue;
       createApp({
           setup() {
               const livello = ref(1);
               const bonusCompetenza = computed(() => Math.ceil(livello.value / 4) + 1);
               vueData = { livello }; 
+              
+              // Ascolta i cambiamenti della variabile 'livello'
+              watch(livello, async (nuovoLivello) => {
+                  const charName = $('sheet-detail-title')?.textContent;
+                  if (!charName) return;
+
+                  // 1. Cerca la scheda tra quelle caricate per aggiornarla istantaneamente
+                  const sheet = State.sheets.find(s => s.charName === charName);
+                  const livelloParsato = parseInt(nuovoLivello) || 1;
+
+                  if (sheet && sheet.charLevel !== livelloParsato) {
+                      sheet.charLevel = livelloParsato; // Aggiorna per il front-end (modale selezione)
+                      
+                      // 2. Salva il dato in background sul Database
+                      try {
+                          await fetch('/api/sheets/update-level', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ 
+                                  owner: State.username, 
+                                  charName: charName, 
+                                  charLevel: livelloParsato 
+                              })
+                          });
+                      } catch(e) { 
+                          console.error("Errore durante il salvataggio del livello:", e); 
+                      }
+                  }
+              });
+
               return { livello, bonusCompetenza };
           }
       }).mount('#vue-scheda-personaggio');
@@ -75,17 +106,38 @@ window.enterPlayerCampaign = function(sheetIndex, campName) {
 
   costruisciSchedaInterattiva('pc-sheet-container', sheet, false);
 
+  // --- GESTIONE MAPPA GIOCATORE AGGIORNATA ---
+  
+  // Troviamo la campagna per sapere che mappa ha salvato
+  const camp = State.campaigns.find(c => c.campName === campName);
+  const mapUrl = (camp && camp.mapUrl) ? camp.mapUrl : '/maps/mappa_1.jpg';
+
+  // 1. Inizializza la mappa Leaflet solo la prima volta
   if (!playerLeafletMap && $('pc-map')) {
       playerLeafletMap = L.map('pc-map', { crs: L.CRS.Simple, minZoom: -2 });
-      const bounds = [[0,0], [1000,1000]]; 
-      L.imageOverlay('/maps/mappa_1.jpg', bounds).addTo(playerLeafletMap);
-      playerLeafletMap.fitBounds(bounds);
 
       playerLeafletMap.on('click', function(e) {
           aggiungiSegnalino(e.latlng, playerLeafletMap, true);
       });
       
       $('pc-map').addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  // 2. Aggiorna SEMPRE l'immagine (anche se la mappa Leaflet esisteva già)
+  if (playerLeafletMap) {
+      // Puliamo il tavolo togliendo la mappa precedente
+      playerLeafletMap.eachLayer(layer => {
+          if (layer instanceof L.ImageOverlay) {
+              playerLeafletMap.removeLayer(layer);
+          }
+      });
+      
+      // Mettiamo la mappa della campagna attuale
+      const bounds = [[0,0], [1000,1000]]; 
+      L.imageOverlay(mapUrl, bounds).addTo(playerLeafletMap);
+      playerLeafletMap.fitBounds(bounds);
+      
+      setTimeout(() => playerLeafletMap.invalidateSize(), 100);
   }
   
   document.querySelector('.player-tab-btn[data-tab="pc-scheda"]')?.click();
@@ -137,14 +189,13 @@ function openCampaignDetail(camp) {
   const primoTab = document.querySelector('.tab-btn[data-tab="storia"]');
   if(primoTab) primoTab.click();
 
-  // --- CREAZIONE E GESTIONE MAPPA MASTER ---
+  // --- CREAZIONE E GESTIONE MAPPA MASTER (AGGIORNATA) ---
+  const mapUrl = camp.mapUrl || '/maps/mappa_1.jpg'; // Prende la mappa della campagna o quella base
+
+  // 1. Inizializza la mappa Leaflet solo la prima volta
   if (!leafletMap && $('map')) {
       leafletMap = L.map('map', { crs: L.CRS.Simple, minZoom: -2 });
-      const bounds = [[0,0], [1000,1000]]; 
       
-      currentImageOverlay = L.imageOverlay('/maps/mappa_1.jpg', bounds).addTo(leafletMap);
-      leafletMap.fitBounds(bounds);
-
       // Usa la nuova funzione per mettere i segnalini
       leafletMap.on('click', function(e) {
           aggiungiSegnalino(e.latlng, leafletMap, true);
@@ -152,6 +203,20 @@ function openCampaignDetail(camp) {
       
       // Disabilita il menu del tasto destro
       $('map').addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  // 2. Aggiorna SEMPRE l'immagine (anche se la mappa Leaflet esisteva già)
+  if (leafletMap) {
+      // Togliamo l'immagine vecchia
+      if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
+      
+      // Mettiamo l'immagine della campagna in cui siamo appena entrati
+      const bounds = [[0,0], [1000,1000]]; 
+      currentImageOverlay = L.imageOverlay(mapUrl, bounds).addTo(leafletMap);
+      leafletMap.fitBounds(bounds);
+      
+      // Assicura che le dimensioni si calcolino correttamente senza ricaricare la pagina
+      setTimeout(() => leafletMap.invalidateSize(), 100);
   }
 }
 
@@ -306,8 +371,10 @@ function bindEvents() {
   });
 
   // Mappa Master: Cambio URL
-  $('btn-change-map')?.addEventListener('click', () => {
+  $('btn-change-map')?.addEventListener('click', async () => {
       const url = $('map-url-input').value.trim();
+      const campName = $('campaign-detail-title').textContent.trim();
+
       if (url && leafletMap) {
           if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
           const bounds = [[0,0], [1000,1000]];
@@ -315,6 +382,21 @@ function bindEvents() {
           leafletMap.fitBounds(bounds);
           if (socket) socket.emit('cambia_sfondo_mappa', url);
           $('map-url-input').value = '';
+
+          // SALVATAGGIO BLINDATO NEL DATABASE
+          try {
+              await fetch('/api/campaigns/map', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ campName: campName, owner: State.username, mapUrl: url })
+              });
+              
+              // 🪄 LA MAGIA: Forza il ricaricamento dal server per essere sicuri al 100%
+              await State.loadFromServer();
+              renderGrid(); 
+          } catch (err) {
+              console.error("Errore salvataggio mappa:", err);
+          }
       }
   });
 
@@ -322,6 +404,8 @@ function bindEvents() {
   $('btn-upload-map')?.addEventListener('click', async () => {
       const fileInput = $('map-file-input');
       const file = fileInput.files[0];
+      const campName = $('campaign-detail-title').textContent.trim();
+      
       if (!file) return alert("Seleziona prima un'immagine dal tuo PC!");
 
       const formData = new FormData();
@@ -338,8 +422,22 @@ function bindEvents() {
               leafletMap.fitBounds(bounds);
               if (socket) socket.emit('cambia_sfondo_mappa', data.url);
               fileInput.value = '';
+
+              // SALVATAGGIO BLINDATO NEL DATABASE
+              await fetch('/api/campaigns/map', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ campName: campName, owner: State.username, mapUrl: data.url })
+              });
+              
+              // 🪄 LA MAGIA: Forza il ricaricamento dal server
+              await State.loadFromServer();
+              renderGrid();
           }
-      } catch (err) { console.error("Errore upload mappa:", err); alert("Errore durante il caricamento."); }
+      } catch (err) { 
+          console.error("Errore upload mappa:", err); 
+          alert("Errore durante il caricamento."); 
+      }
   });
 
   // Pulsanti indietro
@@ -379,18 +477,53 @@ function bindEvents() {
     $(m.bg)?.addEventListener('click', (e) => { if (e.target === $(m.bg)) closeModal($(m.bg)); });
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modals.forEach(m => closeModal($(m.bg))); });
+  // Trova il menu a tendina delle razze e l'immagine di anteprima
+    const raceSelect = document.querySelector('#form-add-sheet select[name="charRace"]');
+    const genderSelect = document.querySelector('#form-add-sheet select[name="charGender"]');
+    const previewImg = document.getElementById('new-hero-preview');
 
-  // Forms
+    // Funzione che aggiorna l'immagine combinando razza e sesso
+    const updatePreview = () => {
+        if (!raceSelect || !genderSelect || !previewImg) return;
+        const raceSlug = raceSelect.value.toLowerCase().replace(/\s+/g, '-');
+        const genderSlug = genderSelect.value; // sarà "m" o "f"
+        previewImg.src = `img/species/${raceSlug}-${genderSlug}.jpg`; 
+    };
+
+    if (raceSelect && genderSelect && previewImg) {
+        raceSelect.addEventListener('change', updatePreview);
+        genderSelect.addEventListener('change', updatePreview);
+        // Imposta l'immagine base all'apertura
+        previewImg.src = `img/species/umano-m.jpg`; 
+    }
+
+  // Invio del form
   $('form-add-sheet')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData($('form-add-sheet')));
     data.owner = State.username;
-    await fetch('/api/sheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    
+    // Componiamo il percorso dell'avatar basato su razza e sesso
+    const slug = data.charRace.toLowerCase().replace(/\s+/g, '-');
+    const gender = data.charGender; // 'm' o 'f'
+    data.avatar = `img/species/${slug}-${gender}.jpg`;
+
+    await fetch('/api/sheets', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(data) 
+    });
+    
     await State.loadFromServer(); 
     $('form-add-sheet').reset();
+    
+    // Reset della preview all'immagine di default
+    const previewImg = document.getElementById('new-hero-preview');
+    if(previewImg) previewImg.src = `img/species/umano-m.jpg`;
+    
     closeModal($('modal-sheet-backdrop'));
-    renderDropdowns(); renderGrid();
-  });
+    renderGrid(); // Ridisegna la griglia
+});
 
   $('form-add-campaign')?.addEventListener('submit', async (e) => {
     e.preventDefault();

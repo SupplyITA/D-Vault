@@ -96,8 +96,21 @@ export async function costruisciSchedaInterattiva(containerId, sheetData, isRead
                 salvaDati(true);
             };
         }
+        // Autosave automatico quando si compila la scheda
+        let debounceTimer;
 
-        // Autosave quando si esce da un campo di testo
-        form.addEventListener('change', () => salvaDati(false));
+        form.addEventListener('input', (e) => {
+            // Ignora le checkbox per evitare conflitti con il change event sotto
+            if (e.target.type === 'checkbox') return;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => salvaDati(false), 800); // Salva in automatico dopo 800 millisecondi di inattività
+        });
+
+        // Salva immediatamente quando si spunta una checkbox o si preme invio
+        form.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') salvaDati(false);
+        });
+
     }
 }

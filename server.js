@@ -33,7 +33,10 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS campagne (
         id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT, campName TEXT, campSetting TEXT, campPlayers INTEGER, campDesc TEXT, inviteCode TEXT UNIQUE, joinedPlayers TEXT
     )`);
-    db.run(`ALTER TABLE schede ADD COLUMN avatar TEXT`, (err) => {}); // ignora errore se esiste già
+    db.run(`ALTER TABLE schede ADD COLUMN avatar TEXT`, (err) => {});
+    db.run(`ALTER TABLE schede ADD COLUMN charGender TEXT`, (err) => {}); 
+
+    db.run(`ALTER TABLE campagne ADD COLUMN mapUrl TEXT`, (err) => {}); 
 });
 
 // QUesto è per uploadare l'avatar del personaggio.
@@ -93,22 +96,23 @@ const pdfStorage = multer.diskStorage({
 const uploadPdf = multer({ storage: pdfStorage });
 
 // Rotta per ricevere e salvare il file PDF
+/*
 app.post('/api/upload-pdf', uploadPdf.single('pdfFile'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Nessun file ricevuto' });
     res.json({ url: `/uploads/pdfs/${req.file.filename}`, message: 'Scheda PDF caricata!' });
 });
-
+*/
 
 
 
 // Rotta per legare il link del PDF alla scheda nel Database
-app.post('/api/sheets/pdf', (req, res) => {
+/*app.post('/api/sheets/pdf', (req, res) => {
     const { owner, charName, pdfUrl } = req.body;
     db.run(`UPDATE schede SET pdfUrl = ? WHERE owner = ? AND charName = ?`, [pdfUrl, owner, charName], (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
-});
+});*/
 
 
 const uploadDir = path.join(__dirname, 'uploads', 'maps');
@@ -172,25 +176,12 @@ app.post('/api/reset-password', async (req, res) => {
     });
 });
 
-// --- ROTTE SCHEDE ---
-app.get('/api/sheets', (req, res) => {
-    db.all(`SELECT * FROM schede WHERE owner = ?`, [req.query.user], (err, rows) => {
-        res.json(rows || []);
-    });
-});
-
-//questo è per mostrare le schede dei giocatori iscritti alla campagna
-app.get('/api/campaigns/:campName/party', (req, res) => {
-    const campName = req.params.campName;
-    // 1. Trova la campagna tramite il nome
-    // 2. Trova tutte le "sheets" i cui proprietari (owner) corrispondono ai giocatori iscritti a quella campagna
-    // 3. Invia l'array delle schede trovate: res.json(partySheets);
-});
 
 app.post('/api/sheets', (req, res) => {
-    const { owner, charName, charClass, charRace, charLevel } = req.body;
-    db.run(`INSERT INTO schede (owner, charName, charClass, charRace, charLevel) VALUES (?, ?, ?, ?, ?)`, 
-    [owner, charName, charClass, charRace, charLevel], (err) => {
+    const { owner, charName, charClass, charRace, charGender, charLevel, avatar } = req.body;
+    db.run(`INSERT INTO schede (owner, charName, charClass, charRace, charGender, charLevel, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)`, 
+    [owner, charName, charClass, charRace, charGender, charLevel, avatar], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, message: "Scheda forgiata con successo!" });
     });
 });
@@ -212,12 +203,26 @@ app.get('/api/campaigns', (req, res) => {
     });
 });
 
+// 1. Rotta per CREARE una nuova campagna
 app.post('/api/campaigns', (req, res) => {
-    const { owner, campName, campSetting, campPlayers, campDesc } = req.body;
+    const { campName, campSetting, owner } = req.body;
     const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    db.run(`INSERT INTO campagne (owner, campName, campSetting, campPlayers, campDesc, inviteCode, joinedPlayers) VALUES (?, ?, ?, ?, ?, ?, ?)`, 
-    [owner, campName, campSetting, campPlayers, campDesc, inviteCode, "[]"], (err) => {
+    const defaultMap = '/maps/mappa_1.jpg'; // La tua mappa di default
+
+    db.run(`INSERT INTO campagne (owner, campName, campSetting, campPlayers, inviteCode, joinedPlayers, mapUrl) VALUES (?, ?, ?, 4, ?, '[]', ?)`, 
+    [owner, campName, campSetting, inviteCode, defaultMap], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, message: "Campagna creata con successo!" });
+    });
+});
+
+// 2. Rotta per AGGIORNARE la mappa esistente
+app.post('/api/campaigns/map', (req, res) => {
+    const { campName, owner, mapUrl } = req.body;
+    db.run(`UPDATE campagne SET mapUrl = ? WHERE campName = ? AND owner = ?`, 
+    [mapUrl, campName, owner], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, message: "Mappa salvata nel DB!" });
     });
 });
 
@@ -294,6 +299,16 @@ app.post('/api/sheets/update-details', (req, res) => {
         } else {
             res.status(404).json({ error: "Scheda non trovata" });
         }
+    });
+});
+
+// per salvare il livello del personaggio
+app.post('/api/sheets/update-level', (req, res) => {
+    const { owner, charName, charLevel } = req.body;
+    
+    db.run(`UPDATE schede SET charLevel = ? WHERE owner = ? AND charName = ?`, [charLevel, owner, charName], function(err) {
+        if (err) return res.status(500).json({ error: "Errore interno" });
+        res.json({ success: true });
     });
 });
 

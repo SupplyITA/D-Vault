@@ -35,6 +35,57 @@
   <link rel="stylesheet" href="css/interactive-sheet.css">
   
 </head>
+<script>
+(function() {
+  var QUOTES = [
+    { text: "Non tutti coloro che vagano sono perduti.", attr: "— J.R.R. Tolkien" },
+    { text: "Non è la forza del corpo che conta, ma la forza dello spirito.", attr: "— J.R.R. Tolkien" },
+    { text: "Il coraggio non è l'assenza di paura, ma decidere che qualcosa vale più di essa.", attr: "— Ambrose Redmoon" },
+    { text: "I dadi non mentono mai. A volte sono solo crudeli.", attr: "— Ogni Dungeon Master" },
+    { text: "La fortuna arride agli audaci.", attr: "— Virgilio" },
+    { text: "Un drago non è mai soltanto un drago.", attr: "— Detto degli Stregoni" },
+    { text: "Ogni grande storia comincia con qualcuno che dice: sì, lo farò.", attr: "— Proverbio da taverna" },
+    { text: "Non chiedere chi sei — chiediti cosa potresti diventare.", attr: "— Archivio del Vault" }
+  ];
+
+  function setUsername() {
+    var navUser = document.getElementById('nav-username');
+    var bannerUser = document.getElementById('hero-banner-username');
+    if (!bannerUser) return;
+    var name = navUser && navUser.textContent.trim() && navUser.textContent.trim() !== 'Avventuriero'
+      ? navUser.textContent.trim() : null;
+    if (!name) name = localStorage.getItem('username') || sessionStorage.getItem('username');
+    if (name) bannerUser.textContent = name;
+    else setTimeout(setUsername, 800);
+  }
+
+  var cur = Math.floor(Math.random() * QUOTES.length);
+
+  function rotateQuote() {
+    var qEl = document.getElementById('vault-rotating-quote');
+    var aEl = document.getElementById('vault-rotating-attr');
+    if (!qEl || !aEl) return;
+    qEl.style.opacity = '0'; aEl.style.opacity = '0';
+    setTimeout(function() {
+      cur = (cur + 1) % QUOTES.length;
+      qEl.textContent = QUOTES[cur].text;
+      aEl.textContent = QUOTES[cur].attr;
+      qEl.style.opacity = '1'; aEl.style.opacity = '1';
+    }, 500);
+  }
+
+  setInterval(rotateQuote, 9000);
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setUsername);
+  } else {
+    setUsername();
+  }
+  setTimeout(setUsername, 600);
+  setTimeout(setUsername, 1800);
+})();
+</script>
+
 <body class="dashboard-page">
 
   <div class="dash-bg"></div>
@@ -151,6 +202,24 @@
 
   <!-- MAIN -->
   <main class="dash-main" id="dash-main" style="display: flex; flex-direction: column; gap: 40px;">
+
+    <!-- HERO BANNER -->
+    <div class="vault-hero-banner">
+      <div class="vault-hero-inner">
+        <div class="vault-hero-left">
+          <p class="vault-hero-greeting">Bentornato nell'Archivio,</p>
+          <h1 class="vault-hero-name" id="hero-banner-username">Avventuriero</h1>
+          <p class="vault-hero-sub">Cosa forgiamo oggi?</p>
+        </div>
+        <div class="vault-hero-divider"></div>
+        <div class="vault-hero-right">
+          <span class="vault-quote-mark">"</span>
+          <p class="vault-quote-text" id="vault-rotating-quote">Non tutti coloro che vagano sono perduti.</p>
+          <p class="vault-quote-attr" id="vault-rotating-attr">— J.R.R. Tolkien</p>
+        </div>
+      </div>
+    </div>
+
     <!-- SEZIONE 1: EROI -->
     <section class="dashboard-section section-heroes">
       <div class="section-header">
@@ -368,6 +437,14 @@
       <button class="modal-close" id="modal-sheet-close">✕</button>
       <h3 class="modal-title">Nuova Scheda Personaggio</h3>
       <form id="form-add-sheet" class="modal-form">
+        <div class="form-row" style="align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border: 1px solid rgba(212,168,67,0.2);">
+          <div style="flex: 0 0 70px; text-align: center;">
+            <img id="new-hero-preview" src="img/species/umano.jpg" alt="Preview" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; border: 2px solid var(--gold-dim);">
+          </div>
+          <div style="flex: 1; padding-left: 15px;">
+            <p style="color: #aaa; font-size: 0.85rem; margin: 0; font-family: 'Crimson Text', serif; font-style: italic;">L'aspetto cambierà con la razza. Potrai caricarne uno tuo dopo la creazione.</p>
+          </div>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label>Nome Personaggio</label>
@@ -404,6 +481,13 @@
               <option>Mezzelfo</option>
               <option>Mezzorco</option>
               <option>Tiefling</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sesso</label>
+            <select name="charGender">
+              <option value="m">Maschio</option>
+              <option value="f">Femmina</option>
             </select>
           </div>
           <div class="form-group">

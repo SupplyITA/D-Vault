@@ -74,7 +74,8 @@ function speciesSlug(name) {
 
 export function makeSheetCard(sheet, i) {
   const slug = speciesSlug(sheet.charRace);
-  const portraitSrc = sheet.charPortrait || `uploads/avatars/${slug}.jpg`;
+  const gender = sheet.charGender || 'm'; // Di default mette maschio se l'eroe è vecchio e non ha il sesso
+  const portraitSrc = sheet.avatar || `img/species/${slug}-${gender}.jpg`;
   const fallback = `this.onerror=null;this.src='img/species/_default.jpg';this.classList.add('is-fallback');`;
   return `
     <div class="vault-card luxury luxury-hero" data-type="sheet" data-index="${i}">
@@ -116,7 +117,7 @@ export function makeCampaignCard(camp, i, isMaster) {
       ? `<div class="lux-invite">Codice <strong>${escHtml(String(camp.inviteCode||''))}</strong></div>`
       : `<div class="lux-meta">Master · <strong>${escHtml(camp.owner)}</strong></div>`;
 
-  const mapSrc = camp.mapUrl || camp.campMap || '';
+  const mapSrc = camp.mapUrl || camp.campMap || '/maps/mappa_1.jpg';
   const mapBlock = mapSrc
     ? `<div class="lux-map-thumb" style="background-image:url('${escHtml(mapSrc)}')"></div>`
     : `<div class="lux-map-thumb lux-map-empty" aria-label="Nessuna mappa">
