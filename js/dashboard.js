@@ -2,6 +2,7 @@ import { $, escHtml, openModal, closeModal, closeDropdown, closeDetails } from '
 import { State } from './state.js';
 import { socket, appendChatMessage, gestisciInvioChat } from './chat.js';
 import { renderDropdowns, renderGrid, renderizzaBestiario } from './ui.js';
+import { costruisciSchedaInterattiva } from './interactive-sheet.js';
 
 // Variabili globali per Map e Vue
 let leafletMap = null;
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderDropdowns();
   renderGrid();
+  applicaTilt3D();
   bindEvents();
 });
 
@@ -50,6 +52,8 @@ window.openCharacterSelectorForCampaign = function(camp) {
 
 window.enterPlayerCampaign = function(sheetIndex, campName) {
   closeModal($('modal-select-char-backdrop'));
+  
+  // Assegnato una sola volta!
   const sheet = State.sheets[sheetIndex];
   
   if($('dash-main')) $('dash-main').style.display = 'none';
@@ -62,7 +66,6 @@ window.enterPlayerCampaign = function(sheetIndex, campName) {
   }
 
   if($('pc-avatar-img')) $('pc-avatar-img').src = sheet.avatar || 'https://via.placeholder.com/150/111111/e8c97e?text=Click';
-  if($('pc-pdf-iframe')) $('pc-pdf-iframe').src = sheet.pdfUrl || '/pdf/scheda_dnd_5e.pdf';
 
   if ($('tab-pc-mappa')) {
       $('tab-pc-mappa').style.display = 'block';
@@ -70,19 +73,18 @@ window.enterPlayerCampaign = function(sheetIndex, campName) {
       $('tab-pc-mappa').style.width = '100%';
   }
 
-  // --- CREAZIONE E GESTIONE MAPPA GIOCATORE ---
+  costruisciSchedaInterattiva('pc-sheet-container', sheet, false);
+
   if (!playerLeafletMap && $('pc-map')) {
       playerLeafletMap = L.map('pc-map', { crs: L.CRS.Simple, minZoom: -2 });
       const bounds = [[0,0], [1000,1000]]; 
       L.imageOverlay('/maps/mappa_1.jpg', bounds).addTo(playerLeafletMap);
       playerLeafletMap.fitBounds(bounds);
 
-      // Permetti al giocatore di mettere i segnalini cliccando
       playerLeafletMap.on('click', function(e) {
           aggiungiSegnalino(e.latlng, playerLeafletMap, true);
       });
       
-      // Disabilita il menu del tasto destro per permettere la rimozione
       $('pc-map').addEventListener('contextmenu', e => e.preventDefault());
   }
   
@@ -183,7 +185,7 @@ async function caricaEroiParty(campName) {
         }
         
         listContainer.innerHTML = eroi.map(eroe => `
-            <div class="party-hero-card" onclick="visualizzaSchedaParty('${eroe.pdfUrl || '/pdf/scheda_dnd_5e.pdf'}')">
+            <div class="party-hero-card" onclick="visualizzaSchedaParty('${eroe.charName}')">
                 <div class="party-hero-name">🛡️ ${escHtml(eroe.charName)}</div>
                 <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
             </div>
@@ -194,9 +196,18 @@ async function caricaEroiParty(campName) {
 }
 
 // Funzione globale chiamata dal click HTML
-window.visualizzaSchedaParty = function(pdfUrl) {
-    const iframe = $('party-pdf-iframe');
-    if (iframe) iframe.src = pdfUrl;
+window.visualizzaSchedaParty = function(charName) {
+    fetch(`/api/sheets/by-name?charName=${encodeURIComponent(charName)}`)
+      .then(res => res.json())
+      .then(sheetData => {
+          if (!sheetData || sheetData.error) return alert("Errore nel caricamento eroe.");
+          
+          $('master-sheet-title').textContent = `Scheda di ${sheetData.charName} (Liv. ${sheetData.charLevel})`;
+          
+          // Costruisce la scheda IN SOLA LETTURA (true)
+          costruisciSchedaInterattiva('master-sheet-container', sheetData, true);
+          openModal($('modal-master-sheet-backdrop'));
+      });
 };
 
 function openSheetDetail(sheet) {
@@ -207,6 +218,9 @@ function openSheetDetail(sheet) {
   if($('char-avatar-img')) {
       $('char-avatar-img').src = sheet.avatar || 'https://via.placeholder.com/150/111111/e8c97e?text=Click';
   }
+  // Costruisce la scheda interattiva con i dati del personaggio
+  costruisciSchedaInterattiva('base-sheet-container', sheet, false);
+
   if (vueData) vueData.livello.value = parseInt(sheet.charLevel) || 1;
 }
 
@@ -240,6 +254,7 @@ function bindEvents() {
           State.campaigns.splice(index, 1);
         }
         renderGrid(); 
+        applicaTilt3D();
         renderDropdowns();
 
         Swal.fire({ title: 'Incenerito!', text: 'L\'elemento è stato eliminato dal Vault.', icon: 'success', background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#4a90e2' });
@@ -328,10 +343,10 @@ function bindEvents() {
   });
 
   // Pulsanti indietro
-  $('btn-back-campaign')?.addEventListener('click', () => { renderGrid(); closeDetails(); });
-  $('btn-back-sheet')?.addEventListener('click', () => { renderGrid(); closeDetails(); });
-  $('btn-back-player-camp')?.addEventListener('click', () => { renderGrid(); closeDetails(); });
-
+  $('btn-back-campaign')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
+  $('btn-back-sheet')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
+  $('btn-back-player-camp')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
+  
   // Menu
   $('hamburger-btn')?.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -349,7 +364,8 @@ function bindEvents() {
   $('btn-add-sheet')?.addEventListener('click', () => { closeDropdown(); openModal($('modal-sheet-backdrop')); });
   $('btn-add-campaign')?.addEventListener('click', () => { closeDropdown(); openModal($('modal-campaign-backdrop')); });
   $('btn-join-campaign-dd')?.addEventListener('click', () => { closeDropdown(); openModal($('modal-join-backdrop')); });
-
+  $('modal-master-sheet-close')?.addEventListener('click', () => closeModal($('modal-master-sheet-backdrop')));
+  
   const modals = [
     { bg: 'modal-backdrop', closeBtn: 'modal-close', cancelBtn: null },
     { bg: 'modal-sheet-backdrop', closeBtn: 'modal-sheet-close', cancelBtn: 'btn-sheet-cancel' },
@@ -384,7 +400,9 @@ function bindEvents() {
     await State.loadFromServer();
     $('form-add-campaign').reset();
     closeModal($('modal-campaign-backdrop'));
-    renderDropdowns(); renderGrid();
+    renderDropdowns(); 
+    renderGrid();
+    applicaTilt3D();
   });
 
   $('form-join-campaign')?.addEventListener('submit', async (e) => {
@@ -402,6 +420,7 @@ function bindEvents() {
           closeModal($('modal-join-backdrop'));
           await State.loadFromServer();
           renderDropdowns(); renderGrid();
+          applicaTilt3D();
         }
     } catch (error) { Swal.fire({ title: 'Errore Server!', text: 'I server sono infestati dai goblin.', icon: 'error', background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#8b1a1a' }); }
   });
@@ -417,45 +436,133 @@ function bindEvents() {
   $('pc-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-pc-send-chat').click(); });
 
   // Avatar Base
-  const avatarImg = $('char-avatar-img');
-  const avatarInput = $('char-avatar-input');
-  if (avatarImg && avatarInput) {
-      avatarImg.onclick = () => avatarInput.click();
-      avatarInput.onchange = async (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          const formData = new FormData(); formData.append('avatarImage', file);
-          try {
-              const res = await fetch('/api/upload-avatar', { method: 'POST', body: formData });
-              const data = await res.json();
-              if (data.url) {
-                  avatarImg.src = data.url;
-                  await fetch('/api/sheets/avatar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ owner: State.username, charName: $('sheet-detail-title').textContent, avatarUrl: data.url }) });
-                  const currentSheet = State.sheets.find(s => s.charName === $('sheet-detail-title').textContent);
-                  if (currentSheet) currentSheet.avatar = data.url;
-              }
-          } catch (err) { alert("Errore caricamento avatar."); }
+function initAvatarMenu(imgId, inputId) {
+      const imgEl = $(imgId);
+      const menu = $('avatar-context-menu');
+      const zoomOverlay = $('avatar-zoom-overlay');
+
+      if (!imgEl) return;
+
+      imgEl.onclick = (e) => {
+          e.stopPropagation();
+          menu.style.top = `${e.clientY}px`;
+          menu.style.left = `${e.clientX}px`;
+          menu.style.display = 'block';
+
+          $('menu-view-avatar').onclick = (e) => {
+              e.stopPropagation(); 
+              $('zoomed-avatar-img').src = imgEl.src;
+              zoomOverlay.style.display = 'flex';
+              menu.style.display = 'none';
+          };
+
+          $('menu-upload-avatar').onclick = (e) => {
+              e.stopPropagation(); 
+              $(inputId).click();
+              menu.style.display = 'none';
+          };
       };
   }
 
-  // Avatar Partita
-  $('pc-avatar-img')?.addEventListener('click', () => $('pc-avatar-input').click());
-  $('pc-avatar-input')?.addEventListener('change', async (e) => {
+  initAvatarMenu('char-avatar-img', 'char-avatar-input');
+  initAvatarMenu('pc-avatar-img', 'pc-avatar-input');
+
+  document.addEventListener('click', () => {
+      if($('avatar-context-menu')) $('avatar-context-menu').style.display = 'none';
+      if($('avatar-zoom-overlay')) $('avatar-zoom-overlay').style.display = 'none';
+  });
+
+  // Ritaglio e Upload Avatar
+  let cropper; 
+  let pendingAvatarData = { charName: null, isPlayerCamp: false, imgEl: null };
+
+  const handleAvatarFileSelection = (e, charNameSource, isPlayerCamp, imgElementId) => {
       const file = e.target.files[0];
       if (!file) return;
-      const formData = new FormData(); formData.append('avatarImage', file);
-      try {
-          const res = await fetch('/api/upload-avatar', { method: 'POST', body: formData });
-          const data = await res.json();
-          if (data.url) {
-              $('pc-avatar-img').src = data.url;
-              const pureCharName = $('player-camp-char').dataset.charname;
-              await fetch('/api/sheets/avatar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ owner: State.username, charName: pureCharName, avatarUrl: data.url }) });
-              const sheet = State.sheets.find(s => s.charName === pureCharName);
-              if (sheet) sheet.avatar = data.url;
+
+      const charName = charNameSource(); 
+      if (!charName) return;
+
+      pendingAvatarData = { charName, isPlayerCamp, imgEl: $(imgElementId) };
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          const cropperImg = $('cropper-image');
+          if (!cropperImg) {
+              alert("Errore: Manca la modale del cropper nell'HTML!");
+              return;
           }
-      } catch(err) { console.error(err); }
+          cropperImg.src = event.target.result;
+          openModal($('modal-cropper-backdrop'));
+
+          if (cropper) cropper.destroy(); 
+          
+          cropper = new Cropper(cropperImg, {
+              aspectRatio: 1, 
+              viewMode: 1,
+              autoCropArea: 1,
+              background: false,
+          });
+      };
+      reader.readAsDataURL(file);
+      e.target.value = ''; 
+  };
+
+  $('char-avatar-input')?.addEventListener('change', (e) => {
+      handleAvatarFileSelection(e, () => $('sheet-detail-title').textContent, false, 'char-avatar-img');
   });
+
+  $('pc-avatar-input')?.addEventListener('change', (e) => {
+      handleAvatarFileSelection(e, () => $('player-camp-char').dataset.charname, true, 'pc-avatar-img');
+  });
+
+  const chiudiCropper = () => {
+      closeModal($('modal-cropper-backdrop'));
+      if (cropper) {
+          cropper.destroy();
+          cropper = null;
+      }
+  };
+  $('modal-cropper-close')?.addEventListener('click', chiudiCropper);
+  $('btn-cropper-cancel')?.addEventListener('click', chiudiCropper);
+
+  $('btn-cropper-save')?.addEventListener('click', async () => {
+      if (!cropper) return;
+      
+      cropper.getCroppedCanvas({ width: 300, height: 300 }).toBlob(async (blob) => {
+          const formData = new FormData();
+          formData.append('avatarImage', blob, 'avatar-ritagliato.png');
+
+          try {
+              const res = await fetch('/api/upload-avatar', { method: 'POST', body: formData });
+              const data = await res.json();
+              
+              if (data.url) {
+                  if (pendingAvatarData.imgEl) pendingAvatarData.imgEl.src = data.url;
+                  
+                  await fetch('/api/sheets/avatar', { 
+                      method: 'POST', 
+                      headers: { 'Content-Type': 'application/json' }, 
+                      body: JSON.stringify({ 
+                          owner: State.username, 
+                          charName: pendingAvatarData.charName, 
+                          avatarUrl: data.url 
+                      }) 
+                  });
+
+                  const sheet = State.sheets.find(s => s.charName === pendingAvatarData.charName);
+                  if (sheet) sheet.avatar = data.url;
+
+                  Swal.fire({ title: 'Ritratto aggiornato!', icon: 'success', customClass: { popup: 'vault-popup' }, timer: 1500, showConfirmButton: false });
+              }
+          } catch (err) { 
+              Swal.fire({ title: 'Errore', text: "Impossibile salvare l'avatar.", icon: 'error', customClass: { popup: 'vault-popup' } });
+          } finally {
+              chiudiCropper();
+          }
+      }, 'image/png');
+  });
+
 
   // Upload PDF Partita
   $('btn-pc-upload-pdf')?.addEventListener('click', () => $('pc-pdf-input').click());
@@ -547,4 +654,27 @@ function bindEvents() {
           }
       });
   }
+}
+
+// Effetto Tilt 3D per le carte di lusso per evitare che lagghi troppo
+function applicaTilt3D() {
+  document.querySelectorAll('.vault-card.luxury').forEach(card => {
+    if(card.__luxBound) return;
+    card.__luxBound = true;
+    const MAX = 6; 
+    card.addEventListener('mousemove', (e) => {
+      // Usiamo requestAnimationFrame per non sovraccaricare il rendering
+      requestAnimationFrame(() => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width;
+        const y = (e.clientY - r.top)  / r.height;
+        const rx = (0.5 - y) * MAX;
+        const ry = (x - 0.5) * MAX;
+        card.style.transform = `translateY(-6px) perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+    });
+    card.addEventListener('mouseleave', () => {
+      requestAnimationFrame(() => card.style.transform = '');
+    });
+  });
 }

@@ -59,11 +59,11 @@ app.post('/api/upload-avatar', uploadAvatar.single('avatarImage'), (req, res) =>
     res.json({ url: `/uploads/avatars/${req.file.filename}`, message: 'Ritratto caricato!' });
 });
 
-// Aggiunge la colonna "avatar" al DB (se non c'è già)
+// Aggiunge la colonna "avatar", "pdfUrl" e "details al DB (se non c'è già)
 db.serialize(() => {
-    db.run(`ALTER TABLE schede ADD COLUMN avatar TEXT`, (err) => {
-        // Ignoriamo l'errore se la colonna esiste già (è normale)
-    });
+    db.run(`ALTER TABLE schede ADD COLUMN avatar TEXT`, (err) => {});
+    db.run(`ALTER TABLE schede ADD COLUMN pdfUrl TEXT`, (err) => {});
+    db.run(`ALTER TABLE schede ADD COLUMN details TEXT`, (err) => {});
 });
 
 // Rotta per legare la foto alla scheda dell'utente nel Database
@@ -98,12 +98,8 @@ app.post('/api/upload-pdf', uploadPdf.single('pdfFile'), (req, res) => {
     res.json({ url: `/uploads/pdfs/${req.file.filename}`, message: 'Scheda PDF caricata!' });
 });
 
-// Aggiunge la colonna "pdfUrl" al DB (se non c'è già)
-db.serialize(() => {
-    db.run(`ALTER TABLE schede ADD COLUMN pdfUrl TEXT`, (err) => {
-        // Ignoriamo l'errore se la colonna esiste già (è normale)
-    });
-});
+
+
 
 // Rotta per legare il link del PDF alla scheda nel Database
 app.post('/api/sheets/pdf', (req, res) => {
@@ -244,6 +240,74 @@ app.post('/api/campaigns/join', (req, res) => {
         db.run(`UPDATE campagne SET joinedPlayers = ? WHERE id = ?`, [JSON.stringify(players), row.id], (err) => {
             res.json({ message: "Ti sei unito alla campagna con successo!" });
         });
+    });
+});
+
+// Salva i campi interattivi della scheda
+app.get('/api/sheets', (req, res) => {
+    db.all(`SELECT * FROM schede WHERE owner = ?`, [req.query.user], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        // Traduce il testo salvato nel DB in un vero oggetto per la scheda interattiva
+        const parsedRows = (rows || []).map(r => ({
+            ...r,
+            sheetDataDetails: r.details ? JSON.parse(r.details) : {}
+        }));
+        res.json(parsedRows);
+    });
+});
+
+// Mostra le schede dei giocatori iscritti alla campagna al Master
+app.get('/api/campaigns/:campName/party', (req, res) => {
+    const campName = req.params.campName;
+    db.get(`SELECT joinedPlayers FROM campagne WHERE campName = ?`, [campName], (err, row) => {
+        if (err || !row) return res.status(404).json({error: "Campagna non trovata"});
+        
+        let players = [];
+        try { players = JSON.parse(row.joinedPlayers || "[]"); } catch(e){}
+        if (players.length === 0) return res.json([]);
+
+        // Cerca le schede dei giocatori iscritti
+        const placeholders = players.map(() => '?').join(',');
+        db.all(`SELECT * FROM schede WHERE owner IN (${placeholders})`, players, (err, sheets) => {
+            if (err) return res.status(500).json({error: err.message});
+            const parsedSheets = (sheets || []).map(s => ({
+                ...s,
+                sheetDataDetails: s.details ? JSON.parse(s.details) : {}
+            }));
+            res.json(parsedSheets);
+        });
+    });
+});
+
+// Salva i campi interattivi della scheda su SQLITE
+app.post('/api/sheets/update-details', (req, res) => {
+    const { owner, charName, details } = req.body;
+    const detailsJson = JSON.stringify(details); // Trasforma i dati in stringa per il DB
+    
+    db.run(`UPDATE schede SET details = ? WHERE owner = ? AND charName = ?`, [detailsJson, owner, charName], function(err) {
+        if (err) {
+            console.error("Errore Database:", err);
+            return res.status(500).json({ error: "Errore interno" });
+        }
+        if (this.changes > 0) {
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ error: "Scheda non trovata" });
+        }
+    });
+});
+
+// Recupera una scheda singola (per il Master)
+app.get('/api/sheets/by-name', (req, res) => {
+    const charName = req.query.charName;
+    db.get(`SELECT * FROM schede WHERE charName = ?`, [charName], (err, row) => {
+        if (err) return res.status(500).json({ error: "Errore server" });
+        if (row) {
+            row.sheetDataDetails = row.details ? JSON.parse(row.details) : {};
+            res.json(row);
+        } else {
+            res.status(404).json({ error: "Non trovato" });
+        }
     });
 });
 

@@ -17,6 +17,23 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+  <!-- CSS Per ogni sezione, così semplifichiamo e rendiamo tutto più immediato -->
+  <link rel="stylesheet" href="css/style.css" />
+  
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/navbar.css" />
+  
+  <link rel="stylesheet" href="css/cards.css" />
+  <link rel="stylesheet" href="css/modals.css" />
+  <link rel="stylesheet" href="css/chat.css" />
+  <link rel="stylesheet" href="css/tabs-layout.css" />
+  <link rel="stylesheet" href="css/tables.css" />
+  
+  <link rel="stylesheet" href="css/sweetalert-theme.css" />
+
+  <link rel="stylesheet" href="css/interactive-sheet.css">
+  
 </head>
 <body class="dashboard-page">
 
@@ -84,20 +101,15 @@
             continue;
           }
 
-          // Glow dorato
-          const grd = ctx.createRadialGradient(p.x,p.y,0, p.x,p.y, p.r*3);
-          grd.addColorStop(0, `rgba(245,215,130,${p.opacity})`);
-          grd.addColorStop(0.5, `rgba(212,168,67,${p.opacity*0.5})`);
-          grd.addColorStop(1, `rgba(212,168,67,0)`);
-
+          // NUOVO GLOW OTTIMIZZATO (Niente Gradienti)
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r*3, 0, Math.PI*2);
-          ctx.fillStyle = grd;
+          ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(212,168,67,${p.opacity * 0.4})`;
           ctx.fill();
 
-          // Punto centrale più luminoso
+          // Punto centrale
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(255,240,180,${p.opacity})`;
           ctx.fill();
         }
@@ -107,35 +119,6 @@
     })();
   </script>
 
-  <!-- Tilt 3D + glow al cursore sulle vault-card (solo estetica) -->
-  <script>
-    (function(){
-      function bind(card){
-        if(card.__luxBound) return;
-        card.__luxBound = true;
-        const MAX = 6; // gradi max
-        card.addEventListener('mousemove', (e) => {
-          const r = card.getBoundingClientRect();
-          const x = (e.clientX - r.left) / r.width;
-          const y = (e.clientY - r.top)  / r.height;
-          const rx = (0.5 - y) * MAX;
-          const ry = (x - 0.5) * MAX;
-          card.style.transform =
-            `translateY(-6px) perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-        });
-        card.addEventListener('mouseleave', () => {
-          card.style.transform = '';
-        });
-      }
-      const obs = new MutationObserver(() => {
-        document.querySelectorAll('.vault-card.luxury').forEach(bind);
-      });
-      obs.observe(document.body, { childList: true, subtree: true });
-      document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.vault-card.luxury').forEach(bind);
-      });
-    })();
-  </script>
 
   <!-- Navbar -->
   <nav class="navbar">
@@ -289,19 +272,17 @@
       </div>
     </div>
 
-    <div class="sheet-layout">
-      <div class="sheet-left">
-        <div class="pdf-container" style="height: 100%; border: 2px solid #444; border-radius: 8px; overflow: hidden;">
-          <iframe id="base-pdf-iframe" src="/pdf/scheda_dnd_5e.pdf" width="100%" height="100%" style="border: none;"></iframe>
-        </div>
+    <div class="sheet-layout" style="display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; align-items: stretch; width: 100%;">
+      <div class="sheet-left" style="flex: 1 1 auto; min-width: 0;">
+        <div id="base-sheet-container" style="height: 100%; border: 2px solid rgba(180,130,40,0.3); border-radius: 8px; overflow-y: auto; overflow-x: hidden; background: #111; min-height: 650px;"></div>
       </div>
 
-      <div class="sheet-right" style="overflow-y: auto; height: 100%; padding-right: 10px;">
+      <div class="sheet-right" style="flex: 0 0 320px; width: 320px; overflow-y: auto; height: 100%; padding-right: 10px;">
         <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px; text-align: center;">
           <p style="margin-top: 0; margin-bottom: 10px; color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.9rem; text-transform: uppercase;">Ritratto Eroe</p>
           <img id="char-avatar-img" src="https://via.placeholder.com/150/111111/e8c97e?text=+" 
                alt="Avatar"
-               style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; cursor: pointer; transition: opacity 0.2s; margin: 0 auto;" 
+               style="width: 130px; height: 130px; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; cursor: pointer; transition: opacity 0.2s; margin: 0 auto;" 
                title="Clicca per caricare il ritratto" 
                onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">
           <input type="file" id="char-avatar-input" accept="image/*" style="display: none;">
@@ -309,13 +290,12 @@
 
         <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px;">
           <h3 class="panel-box-title"> Appunti</h3>
-          <textarea id="player-notes" style="display: block; width: 100%; min-height: 120px; resize: vertical; background: rgba(0,0,0,0.3); color: #ccc; border: 1px solid #444; border-radius: 4px; padding: 10px; font-family: sans-serif; margin-top: 15px;" placeholder="Scrivi i tuoi appunti personali qui..."></textarea>
+          <textarea id="player-notes" style="display: block; width: 100%; min-height: 120px; resize: vertical; background: rgba(0,0,0,0.3); color: #ccc; border: 1px solid #444; border-radius: 4px; padding: 10px; font-family: sans-serif; margin-top: 15px;" placeholder="Scrivi i tuoi appunti..."></textarea>
         </div>
 
         <div class="right-panel-box" style="padding: 15px;">
           <h3 class="panel-box-title"> Chat Base</h3>
           <div id="chat-messages" class="chat-messages" style="display: block; min-height: 150px; height: 200px; resize: vertical; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; margin-top: 15px; margin-bottom: 15px; border: 1px solid #333;"></div>
-          
           <div class="chat-input-area" style="display: flex; gap: 10px;">
             <input type="text" id="chat-input" placeholder="Scrivi al gruppo..." style="flex: 1; padding: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 4px;">
             <button id="btn-send-chat" class="btn-primary" style="padding: 0 20px; margin: 0;">Invia</button>
@@ -335,36 +315,29 @@
       </div>
     </div>
 
-    <div class="sheet-layout">
-      <div class="sheet-left" style="display: flex; flex-direction: column;">
+    <div class="sheet-layout" style="display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; align-items: stretch; width: 100%;">
+      <div class="sheet-left" style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;">
         <nav class="campaign-tabs">
           <button class="tab-btn player-tab-btn active" data-tab="pc-scheda">La mia Scheda</button>
           <button class="tab-btn player-tab-btn" data-tab="pc-mappa">Mappa Interattiva</button>
         </nav>
 
-        <div id="tab-pc-scheda" class="tab-content player-tab-content active" style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
-          <div style="background: rgba(0,0,0,0.5); padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444;">
-            <span style="color: #ccc; font-size: 0.9rem; font-style: italic;">Salva la scheda compilata sul tuo PC e caricala qui:</span>
-            <input type="file" id="pc-pdf-input" accept="application/pdf" style="display: none;">
-            <button id="btn-pc-upload-pdf" class="btn-primary" style="padding: 5px 15px; margin: 0; min-width: 150px; font-size: 0.85rem;">Aggiorna PDF</button>
-          </div>
-          <div class="pdf-container" style="flex: 1; border: 2px solid #444; border-radius: 8px; overflow: hidden;">
-            <iframe id="pc-pdf-iframe" src="/pdf/scheda_dnd_5e.pdf" width="100%" height="100%" style="border: none;"></iframe>
-          </div>
+        <div id="tab-pc-scheda" class="tab-content player-tab-content active" style="flex: 1; display: flex; flex-direction: column;">
+          <div id="pc-sheet-container" style="height: 100%; border: 2px solid rgba(180,130,40,0.3); border-radius: 8px; overflow-y: auto; overflow-x: hidden; background: #111; min-height: 650px;"></div>
         </div>
 
         <div id="tab-pc-mappa" class="tab-content player-tab-content" style="flex: 1;">
-          <div class="map-hover-effect" style="height: 100%;">
+          <div class="map-hover-effect" style="height: 100%; min-height: 600px;">
             <div id="pc-map" style="height: 100%; width: 100%; background: #111;"></div>
           </div>
         </div>
       </div>
 
-      <div class="sheet-right" style="overflow-y: auto; height: 100%; padding-right: 10px;">
+      <div class="sheet-right" style="flex: 0 0 320px; width: 320px; overflow-y: auto; height: 100%; padding-right: 10px;">
         <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px; text-align: center;">
           <p style="margin-top: 0; margin-bottom: 10px; color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.9rem; text-transform: uppercase;">Ritratto Eroe</p>
           <img id="pc-avatar-img" src="https://via.placeholder.com/150/111111/e8c97e?text=+" 
-               style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; cursor: pointer; transition: opacity 0.2s; margin: 0 auto;">
+               style="width: 130px; height: 130px; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; cursor: pointer; transition: opacity 0.2s; margin: 0 auto;">
           <input type="file" id="pc-avatar-input" accept="image/*" style="display: none;">
         </div>
 
@@ -396,12 +369,47 @@
       <h3 class="modal-title">Nuova Scheda Personaggio</h3>
       <form id="form-add-sheet" class="modal-form">
         <div class="form-row">
-          <div class="form-group"><label>Nome Personaggio</label><input type="text" name="charName" required /></div>
-          <div class="form-group"><label>Classe</label><select name="charClass"><option>Guerriero</option><option>Mago</option><option>Ladro</option><option>Chierico</option></select></div>
+          <div class="form-group">
+            <label>Nome Personaggio</label>
+            <input type="text" name="charName" required />
+          </div>
+          <div class="form-group">
+            <label>Classe</label>
+            <select name="charClass">
+              <option>Barbaro</option>
+              <option>Bardo</option>
+              <option>Chierico</option>
+              <option>Druido</option>
+              <option>Guerriero</option>
+              <option>Ladro</option>
+              <option>Mago</option>
+              <option>Monaco</option>
+              <option>Paladino</option>
+              <option>Ranger</option>
+              <option>Stregone</option>
+              <option>Warlock</option>
+            </select>
+          </div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Razza</label><input type="text" name="charRace" /></div>
-          <div class="form-group"><label>Livello</label><input type="number" name="charLevel" min="1" max="20" value="1" /></div>
+          <div class="form-group">
+            <label>Razza</label>
+            <select name="charRace">
+              <option>Umano</option>
+              <option>Elfo</option>
+              <option>Nano</option>
+              <option>Halfling</option>
+              <option>Dragonide</option>
+              <option>Gnomo</option>
+              <option>Mezzelfo</option>
+              <option>Mezzorco</option>
+              <option>Tiefling</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Livello</label>
+            <input type="number" name="charLevel" min="1" max="20" value="1" />
+          </div>
         </div>
         <div class="modal-form-actions">
           <button type="button" class="btn-ghost" id="btn-sheet-cancel">Annulla</button>
@@ -440,8 +448,48 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="modal-cropper-backdrop">
+    <div class="modal-form-box" style="max-width: 600px;">
+      <button class="modal-close" id="modal-cropper-close">✕</button>
+      <h3 class="modal-title">Ritaglia l'Avatar</h3>
+      <div style="width: 100%; max-height: 400px; overflow: hidden; background: #111; border: 1px solid var(--gold-mid); border-radius: 4px;">
+        <img id="cropper-image" src="" style="display: block; max-width: 100%;">
+      </div>
+      <div class="modal-form-actions" style="margin-top: 20px;">
+        <button type="button" class="btn-ghost" id="btn-cropper-cancel">Annulla</button>
+        <button type="button" class="btn-primary" id="btn-cropper-save">✦ Ritaglia e Salva</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-backdrop" id="modal-master-sheet-backdrop">
+    <div class="modal-form-box" style="max-width: 800px; width: 95%; height: 90vh; display: flex; flex-direction: column; padding: 1.5rem;">
+      <button class="modal-close" id="modal-master-sheet-close" style="z-index: 20;">✕</button>
+      <h3 class="modal-title" id="master-sheet-title" style="margin-bottom: 10px;">Scheda Giocatore</h3>
+      <div id="master-sheet-container" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid var(--gold-dim);">
+      </div>
+    </div>
+  </div>
+
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module" src="js/dashboard.js"></script>
+
+    <div id="avatar-context-menu" class="lux-avatar-menu">
+    <button id="menu-view-avatar">👁️ Visualizza avatar</button>
+    <button id="menu-upload-avatar">📤 Carica avatar</button>
+  </div>
+
+  <div id="avatar-zoom-overlay" class="zoom-overlay">
+    <div class="zoom-container">
+      <img id="zoomed-avatar-img" src="" alt="Avatar Zoom">
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 </body>
 </html>

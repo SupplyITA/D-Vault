@@ -1,0 +1,128 @@
+<div class="dnd-interactive-sheet">
+  <nav class="dnd-sheet-nav">
+    <button type="button" class="dnd-subtab-btn active" data-subtab="main">⚔️ Statistiche Base</button>
+    <button type="button" class="dnd-subtab-btn" data-subtab="bio">📜 Biografia & Tratti</button>
+    <button type="button" class="dnd-subtab-btn" data-subtab="spells">✨ Incantesimi</button>
+    <button type="button" class="dnd-save-btn" id="btn-manual-save">💾 SALVA</button>
+  </nav>
+
+  <form class="dnd-sheet-form">
+    <div class="dnd-subtab-content active" id="subtab-main">
+      <div class="dnd-header-row">
+         <div class="dnd-stat-box"><label>Classe e Livello</label><input type="text" name="headerClassLevel"></div>
+         <div class="dnd-stat-box"><label>Background</label><input type="text" name="headerBackground"></div>
+         <div class="dnd-stat-box"><label>Allineamento</label><input type="text" name="headerAlignment"></div>
+         <div class="dnd-stat-box"><label>Punti Esperienza</label><input type="text" name="headerXP"></div>
+      </div>
+
+      <div class="dnd-main-grid">
+        <div class="dnd-col-stats">
+          <div class="dnd-stat-box main-stat"><label>FOR</label><input type="number" name="str"><input type="number" class="stat-mod" name="strMod" placeholder="Mod"></div>
+          <div class="dnd-stat-box main-stat"><label>DES</label><input type="number" name="dex"><input type="number" class="stat-mod" name="dexMod" placeholder="Mod"></div>
+          <div class="dnd-stat-box main-stat"><label>COS</label><input type="number" name="con"><input type="number" class="stat-mod" name="conMod" placeholder="Mod"></div>
+          <div class="dnd-stat-box main-stat"><label>INT</label><input type="number" name="int"><input type="number" class="stat-mod" name="intMod" placeholder="Mod"></div>
+          <div class="dnd-stat-box main-stat"><label>SAG</label><input type="number" name="wis"><input type="number" class="stat-mod" name="wisMod" placeholder="Mod"></div>
+          <div class="dnd-stat-box main-stat"><label>CAR</label><input type="number" name="cha"><input type="number" class="stat-mod" name="chaMod" placeholder="Mod"></div>
+        </div>
+
+        <div class="dnd-col-skills">
+          <div class="dnd-skill-group">
+            <div class="dnd-skill-row"><input type="number" name="profBonus" class="short-input"> <strong>Bonus Competenza</strong></div>
+            <div class="dnd-skill-row"><input type="number" name="inspiration" class="short-input"> <strong>Ispirazione</strong></div>
+          </div>
+
+          <div class="dnd-skill-group">
+            <label class="group-title">Tiri Salvezza</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="saveStr"> <input type="number" name="valSaveStr" class="short-input"> Forza</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="saveDex"> <input type="number" name="valSaveDex" class="short-input"> Destrezza</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="saveCon"> <input type="number" name="valSaveCon" class="short-input"> Costituzione</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="saveInt"> <input type="number" name="valSaveInt" class="short-input"> Intelligenza</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="saveWis"> <input type="number" name="valSaveWis" class="short-input"> Saggezza</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="saveCha"> <input type="number" name="valSaveCha" class="short-input"> Carisma</label>
+          </div>
+
+          <div class="dnd-skill-group">
+            <label class="group-title">Abilità</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillAcrobatics"> <input type="number" name="valAcrobatics" class="short-input"> Acrobazia (Des)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillAnimal"> <input type="number" name="valAnimal" class="short-input"> Addestrare Animali (Sag)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillArcana"> <input type="number" name="valArcana" class="short-input"> Arcano (Int)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillAthletics"> <input type="number" name="valAthletics" class="short-input"> Atletica (For)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillStealth"> <input type="number" name="valStealth" class="short-input"> Furtività (Des)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillInvestigation"> <input type="number" name="valInvestigation" class="short-input"> Indagare (Int)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillDeception"> <input type="number" name="valDeception" class="short-input"> Inganno (Car)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillIntimidation"> <input type="number" name="valIntimidation" class="short-input"> Intimidire (Car)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillPerformance"> <input type="number" name="valPerformance" class="short-input"> Intrattenere (Car)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillSleight"> <input type="number" name="valSleight" class="short-input"> Mano Lesta (Des)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillMedicine"> <input type="number" name="valMedicine" class="short-input"> Medicina (Sag)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillNature"> <input type="number" name="valNature" class="short-input"> Natura (Int)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillPerception"> <input type="number" name="valPerception" class="short-input"> Percezione (Sag)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillPersuasion"> <input type="number" name="valPersuasion" class="short-input"> Persuasione (Car)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillReligion"> <input type="number" name="valReligion" class="short-input"> Religione (Int)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillInsight"> <input type="number" name="valInsight" class="short-input"> Intuizione (Sag)</label>
+            <label class="dnd-skill-row"><input type="checkbox" name="skillSurvival"> <input type="number" name="valSurvival" class="short-input"> Sopravvivenza (Sag)</label>
+          </div>
+        </div>
+
+        <div class="dnd-col-combat">
+          <div class="dnd-combat-row">
+            <div class="dnd-combat-box"><label>Classe Armatura</label><input type="number" name="ac"></div>
+            <div class="dnd-combat-box"><label>Iniziativa</label><input type="number" name="initiative"></div>
+            <div class="dnd-combat-box"><label>Velocità</label><input type="text" name="speed"></div>
+          </div>
+          <div class="dnd-stat-box"><label>Punti Ferita Massimi</label><input type="number" name="hpMax"></div>
+          <div class="dnd-stat-box" style="padding: 20px;"><label>Punti Ferita Attuali</label><input type="number" name="hpCurrent" style="font-size: 2.5rem;"></div>
+          <div class="dnd-combat-row">
+            <div class="dnd-combat-box"><label>Dadi Vita</label><input type="text" name="hitDice"></div>
+            <div class="dnd-combat-box"><label>TS Morte</label><input type="text" name="deathSaves" placeholder="S: OOO | F: OOO"></div>
+          </div>
+          <div class="dnd-textarea-box" style="flex: 1;">
+            <label>Attacchi e Incantesimi</label>
+            <textarea name="attacksList" placeholder="Spada Lunga | +5 | 1d8+3 Tagl."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dnd-subtab-content" id="subtab-bio">
+      <div class="dnd-header-row">
+        <div class="dnd-stat-box"><label>Età</label><input type="text" name="age"></div>
+        <div class="dnd-stat-box"><label>Altezza</label><input type="text" name="height"></div>
+        <div class="dnd-stat-box"><label>Peso</label><input type="text" name="weight"></div>
+        <div class="dnd-stat-box"><label>Occhi</label><input type="text" name="eyes"></div>
+      </div>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 250px;">
+            <div class="dnd-textarea-box"><label>Tratti Caratteriali</label><textarea name="traits"></textarea></div>
+            <div class="dnd-textarea-box"><label>Ideali</label><textarea name="ideals"></textarea></div>
+            <div class="dnd-textarea-box"><label>Legami</label><textarea name="bonds"></textarea></div>
+            <div class="dnd-textarea-box"><label>Difetti</label><textarea name="flaws"></textarea></div>
+        </div>
+        <div class="dnd-textarea-box" style="flex: 1.5; min-width: 250px;">
+            <label>Privilegi e Tratti (Classi/Razza)</label>
+            <textarea name="features" style="height: 100%;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="dnd-subtab-content" id="subtab-spells">
+      <div class="dnd-header-row">
+        <div class="dnd-combat-box"><label>Caratteristica Incantatore</label><input type="text" name="spellAbility" placeholder="es. INT"></div>
+        <div class="dnd-combat-box"><label>CD Tiro Salvezza</label><input type="number" name="spellDC"></div>
+        <div class="dnd-combat-box"><label>Bonus Attacco Magico</label><input type="text" name="spellBonus" placeholder="+5"></div>
+      </div>
+      
+      <div class="dnd-spells-grid">
+        <div class="dnd-textarea-box"><label>Trucchetti (Livello 0)</label><textarea name="spells0"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 1</label><textarea name="spells1"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 2</label><textarea name="spells2"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 3</label><textarea name="spells3"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 4</label><textarea name="spells4"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 5</label><textarea name="spells5"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 6</label><textarea name="spells6"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 7</label><textarea name="spells7"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 8</label><textarea name="spells8"></textarea></div>
+        <div class="dnd-textarea-box"><label>Livello 9</label><textarea name="spells9"></textarea></div>
+      </div>
+    </div>
+  </form>
+</div>

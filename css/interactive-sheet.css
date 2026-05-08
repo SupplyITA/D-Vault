@@ -1,0 +1,198 @@
+.dnd-interactive-sheet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: radial-gradient(ellipse at center, #1f140d 0%, #0d0805 100%);
+  color: #e8c97e;
+  font-family: 'Crimson Text', serif;
+  overflow-x: auto; /* Aggiunto per schermi piccoli */
+}
+
+.dnd-sheet-nav {
+  display: flex;
+  background: rgba(0,0,0,0.6);
+  border-bottom: 2px solid var(--gold-mid);
+}
+
+.dnd-subtab-btn {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: 0.2s;
+  border-right: 1px solid rgba(180,130,40,0.2);
+}
+
+.dnd-subtab-btn:hover { color: var(--gold-bright); background: rgba(212,168,67,0.1); }
+.dnd-subtab-btn.active { color: #111; background: var(--gold-mid); font-weight: bold; }
+
+.dnd-subtab-content { display: none; flex: 1; padding: 20px; flex-direction: column; gap: 20px; overflow-y: auto; }
+.dnd-subtab-content.active { display: flex; animation: fadeIn 0.3s ease; }
+
+.dnd-stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; }
+.dnd-combat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
+.dnd-bio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+
+.dnd-stat-box, .dnd-combat-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(180,130,40,0.3);
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+}
+
+.dnd-stat-box label, .dnd-combat-box label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--gold-dim);
+  margin-bottom: 5px;
+}
+
+.dnd-stat-box input, .dnd-combat-box input {
+  width: 100%;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  outline: none;
+}
+
+.dnd-textarea-box {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(180,130,40,0.3);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.dnd-textarea-box textarea {
+  min-height: 100px;
+  background: transparent;
+  border: none;
+  color: #eee;
+  font-size: 1.05rem;
+  resize: vertical;
+  outline: none;
+}
+
+/* Sola lettura per il Master */
+form.readonly-sheet input, form.readonly-sheet textarea {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.dnd-header-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.dnd-main-grid {
+  display: grid;
+  grid-template-columns: 100px 1fr 1.5fr;
+  gap: 20px;
+}
+.dnd-col-stats { display: flex; flex-direction: column; gap: 10px; }
+.dnd-col-skills, .dnd-col-combat { display: flex; flex-direction: column; gap: 15px; }
+
+.main-stat { position: relative; padding-bottom: 25px; }
+.main-stat .stat-mod {
+  position: absolute;
+  bottom: -10px; left: 50%;
+  transform: translateX(-50%);
+  width: 50px; height: 25px;
+  background: #111;
+  border: 1px solid var(--gold-mid);
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.dnd-skill-group {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(180,130,40,0.3);
+  border-radius: 6px;
+  padding: 15px;
+}
+.group-title {
+  display: block; font-family: var(--font-display);
+  color: var(--gold-mid); margin-bottom: 10px;
+  border-bottom: 1px solid rgba(180,130,40,0.3); padding-bottom: 5px;
+}
+.dnd-skill-row {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Crimson Text', serif; color: #eee;
+  margin-bottom: 6px; cursor: pointer;
+}
+.short-input {
+  width: 35px; background: transparent; border: none;
+  border-bottom: 1px solid var(--gold-dim);
+  color: #fff; text-align: center; outline: none;
+}
+.dnd-skill-row input[type="checkbox"] {
+  appearance: none; width: 14px; height: 14px;
+  border: 1px solid var(--gold-dim); border-radius: 50%;
+  cursor: pointer; position: relative;
+}
+.dnd-skill-row input[type="checkbox"]:checked { background: var(--gold-mid); }
+
+
+/* ════════════════════════════════════════════════
+   NUOVE AGGIUNTE FUNZIONALI
+   ════════════════════════════════════════════════ */
+
+/* 1. Stile del Pulsante di Salvataggio Manuale */
+.dnd-save-btn {
+  padding: 12px 25px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: bold;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+.dnd-save-btn:hover {
+  background: #2ecc71;
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+}
+
+/* Nasconde il pulsante salva se la scheda è in sola lettura (Master) */
+form.readonly-sheet .dnd-save-btn {
+  display: none;
+}
+
+/* 2. Griglia per gli Incantesimi (Livelli 0 - 9) */
+.dnd-spells-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* 3. FIX LAYOUT: Costringe l'avatar a stare a destra */
+.sheet-layout {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch;
+  width: 100%;
+}
+.sheet-left {
+  flex: 1 1 auto;
+  min-width: 0; /* CRUCIALE: blocca l'allargamento infinito della scheda */
+  overflow-x: hidden;
+}
+.sheet-right {
+  flex: 0 0 320px; /* Larghezza fissa per la colonna di Avatar e Chat */
+  min-width: 320px;
+}
