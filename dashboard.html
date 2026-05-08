@@ -436,6 +436,12 @@
     <div class="modal-form-box">
       <button class="modal-close" id="modal-sheet-close">✕</button>
       <h3 class="modal-title">Nuova Scheda Personaggio</h3>
+      <div style="margin-bottom: 20px; padding: 15px; background: rgba(41, 128, 185, 0.1); border: 1px dashed #2980b9; border-radius: 8px; text-align: center;">
+          <p style="color: #eee; font-size: 0.9rem; margin-top: 0;">Hai già una scheda in PDF ufficiale?</p>
+          <button type="button" class="btn-ghost" id="btn-trigger-import" style="color: #3498db; border-color: #3498db;">📥 Importa da PDF</button>
+          <input type="file" id="pdf-import-input" accept="application/pdf" style="display: none;">
+      </div>
+      <div style="text-align: center; margin-bottom: 20px; color: #555;">— OPPURE FORGIALO DA ZERO —</div>
       <form id="form-add-sheet" class="modal-form">
         <div class="form-row" style="align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border: 1px solid rgba(212,168,67,0.2);">
           <div style="flex: 0 0 70px; text-align: center;">

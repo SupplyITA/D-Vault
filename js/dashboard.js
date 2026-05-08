@@ -4,6 +4,7 @@ import { socket, appendChatMessage, gestisciInvioChat } from './chat.js';
 import { renderDropdowns, renderGrid, renderizzaBestiario } from './ui.js';
 import { costruisciSchedaInterattiva } from './interactive-sheet.js';
 import { dndData } from './dnd-data.js';
+import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm';
 
 // Variabili globali per Map e Vue
 let leafletMap = null;
@@ -298,7 +299,6 @@ function openSheetDetail(sheet) {
 }
 
 function bindEvents() {
-  
   $('dash-main')?.addEventListener('click', async (e) => {
     if (e.target.classList.contains('btn-delete')) {
       e.stopPropagation(); 
@@ -399,7 +399,7 @@ function bindEvents() {
                   body: JSON.stringify({ campName: campName, owner: State.username, mapUrl: url })
               });
               
-              // 🪄 LA MAGIA: Forza il ricaricamento dal server per essere sicuri al 100%
+              //  Forza il ricaricamento dal server per essere sicuri al 100%
               await State.loadFromServer();
               renderGrid(); 
           } catch (err) {
@@ -438,7 +438,7 @@ function bindEvents() {
                   body: JSON.stringify({ campName: campName, owner: State.username, mapUrl: data.url })
               });
               
-              // 🪄 LA MAGIA: Forza il ricaricamento dal server
+              // Forza il ricaricamento dal server
               await State.loadFromServer();
               renderGrid();
           }
@@ -504,7 +504,83 @@ function bindEvents() {
         // Imposta l'immagine base all'apertura
         previewImg.src = `img/species/umano-m.jpg`; 
     }
+    const btnTriggerImport = $('btn-trigger-import');
+    const fileInputImport = $('pdf-import-input');
 
+    btnTriggerImport?.addEventListener('click', () => fileInputImport.click());
+
+    fileInputImport?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        Swal.fire({ title: 'Lettura PDF...', text: 'Estraendo i dati dell\'eroe...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const formPdf = pdfDoc.getForm();
+
+            // Helper per leggere i campi in modo sicuro
+            const getT = (name) => {
+                try { return formPdf.getTextField(name).getText() || ''; } catch(e) { return ''; }
+            };
+
+            // 1. Estrazione dati base
+            const fullClassLevel = getT('ClassLevel'); // Es: "Guerriero 5"
+            const classParts = fullClassLevel.split(' ');
+            const charLevel = parseInt(classParts.pop()) || 1;
+            const charClass = classParts.join(' ') || 'Guerriero';
+
+            const rawData = {
+                owner: State.username,
+                charName: getT('CharacterName') || 'Eroe Senza Nome',
+                charClass: charClass,
+                charRace: getT('Race ').trim() || 'Umano',
+                charGender: 'm', // Default
+                charLevel: charLevel,
+                avatar: `img/species/umano-m.jpg`
+            };
+
+            // 2. Estrazione Dettagli (mappatura nomi scanner -> database)
+            const details = {
+                str: getT('STR'), dex: getT('DEX'), con: getT('CON'),
+                int: getT('INT'), wis: getT('WIS'), cha: getT('CHA'),
+                hpMax: getT('HPMax'), hpCurrent: getT('HPCurrent'),
+                speed: getT('Speed'), initiative: getT('Initiative'),
+                traits: getT('PersonalityTraits '), ideals: getT('Ideals'),
+                bonds: getT('Bonds'), flaws: getT('Flaws'),
+                features: getT('Features and Traits'),
+                headerBackground: getT('Background'),
+                headerAlignment: getT('Alignment'),
+                headerXP: getT('XP')
+            };
+
+            // 3. Salvataggio nel Database (Processo in due step come la creazione manuale)
+            const res1 = await fetch('/api/sheets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rawData)
+            });
+
+            if (res1.ok) {
+                await fetch('/api/sheets/update-details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ owner: State.username, charName: rawData.charName, details: details })
+                });
+
+                await State.loadFromServer();
+                renderGrid();
+                closeModal($('modal-sheet-backdrop'));
+                Swal.fire('Eroe Importato!', `${rawData.charName} è ora nel tuo Vault.`, 'success');
+            }
+
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Errore', 'Impossibile leggere questo file PDF.', 'error');
+        }
+        e.target.value = ''; // Reset input
+    });
   // Invio del form
 $('form-add-sheet')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -533,7 +609,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
 
         headerClassLevel: `${data.charClass} ${data.charLevel}`,
         headerBackground: "Avventuriero",
-        
+
         str: 10 + (razzaDati.str || 0),
         dex: 10 + (razzaDati.dex || 0),
         con: baseCon,
@@ -853,4 +929,37 @@ function applicaTilt3D() {
       requestAnimationFrame(() => card.style.transform = '');
     });
   });
+
+
+    import('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm').then(async ({ PDFDocument }) => {
+        async function scopriNomiCampiPDF() {
+            console.log("⏳ Avvio scansione del PDF...");
+            try {
+                // Assicurati che il percorso sia corretto! 
+                // Se lo hai messo nella cartella uploads, cambia in '/uploads/pdf/5E_...'
+                const url = '/pdf/scheda_dnd_5e.pdf'; 
+                
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Non riesco a trovare il PDF all'indirizzo: " + url);
+                
+                const arrayBuffer = await res.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(arrayBuffer);
+                const form = pdfDoc.getForm();
+                
+                const campi = form.getFields();
+                console.log("🔥 INIZIO LISTA CAMPI PDF 🔥");
+                campi.forEach(campo => {
+                    console.log(`Nome Interno: "${campo.getName()}" | Tipo: ${campo.constructor.name}`);
+                });
+                console.log("✅ FINE LISTA CAMPI PDF ✅");
+                console.log("Ci sono in totale " + campi.length + " campi compilabili.");
+                
+            } catch (e) {
+                console.error("❌ Errore lettura PDF:", e);
+            }
+        }
+        
+        // Questa riga fa partire fisicamente la funzione!
+        scopriNomiCampiPDF();
+    });
 }

@@ -1,6 +1,7 @@
 import { $, escHtml } from './utils.js';
 import { State } from './state.js';
 import { dndData } from './dnd-data.js'; 
+import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm'; 
 
 let sheetHTML = '';
 
@@ -220,17 +221,22 @@ const aggiornaTuttiICalcoli = () => {
     }
 
     // Esegue i calcoli ogni volta sui dati trovati nel database, così se ad esempio si aggiorna il livello o la classe si aggiornano da soli tutti i valori senza dover fare refresh o altro
-    aggiornaTuttiICalcoli(); 
+aggiornaTuttiICalcoli(); 
 
     const saveBtn = container.querySelector('#btn-manual-save');
+    const btnExportPdf = container.querySelector('#btn-export-pdf');
+
+    // Definisce funzione per poter salvare
+    let salvaDati = async () => {}; 
 
     if (isReadOnly) {
         form.classList.add('readonly-sheet');
         Array.from(form.elements).forEach(el => el.disabled = true);
         if (saveBtn) saveBtn.style.display = 'none';
+        if (btnExportPdf) btnExportPdf.style.display = 'none'; 
     } else {
-        // Funzione di salvataggio
-        const salvaDati = async (mostraPopup = false) => {
+        // Assegniamo la funzione per salvare in pdf
+        salvaDati = async (mostraPopup = false) => {
             const updatedData = {};
             Array.from(form.elements).forEach(el => {
                 if (el.name) {
@@ -288,5 +294,104 @@ const aggiornaTuttiICalcoli = () => {
         form.addEventListener('change', (e) => {
             if (e.target.type === 'checkbox') salvaDati(false);
         });
+    }
+
+    // ---------------------------------------------------------
+    // Esportazione scheda PDF
+    // ---------------------------------------------------------
+    if (btnExportPdf) {
+        btnExportPdf.onclick = async (e) => {
+            e.preventDefault();
+            
+            // Adesso salvaDati esiste e non fa crashare la scheda!
+            await salvaDati(false); 
+            
+            Swal.fire({
+                title: 'Forgiatura del PDF in corso...',
+                text: 'Gli gnomi archivisti stanno preparando il documento.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+
+                const urlTemplate = '/pdf/scheda_dnd_5e.pdf'; 
+                const arrayBuffer = await fetch(urlTemplate).then(res => {
+                    if(!res.ok) throw new Error("Template PDF non trovato!");
+                    return res.arrayBuffer();
+                });
+                
+                // Apri il documento PDF
+                const pdfDoc = await PDFDocument.load(arrayBuffer);
+                const formPdf = pdfDoc.getForm();
+
+                const details = sheetData.sheetDataDetails || {};
+                const livello = parseInt(sheetData.charLevel) || 1;
+                const profBonus = "+" + (Math.ceil(livello / 4) + 1);
+
+                // Compila i campi leggendo il JSON salvato nel database
+                try {
+                    // Info Base
+                    formPdf.getTextField('CharacterName').setText(sheetData.charName || '');
+                    formPdf.getTextField('ClassLevel').setText(`${sheetData.charClass} ${livello}`);
+                    formPdf.getTextField('Race ').setText(sheetData.charRace || ''); 
+                    formPdf.getTextField('PlayerName').setText(sheetData.owner || '');
+                    formPdf.getTextField('Background').setText(details.headerBackground || '');
+                    formPdf.getTextField('Alignment').setText(details.headerAlignment || '');
+                    formPdf.getTextField('XP').setText(details.headerXP || '');
+
+                    // Statistiche
+                    formPdf.getTextField('STR').setText(String(details.str || 10));
+                    formPdf.getTextField('STRmod').setText(details.strMod || '+0');
+                    formPdf.getTextField('DEX').setText(String(details.dex || 10));
+                    formPdf.getTextField('DEXmod ').setText(details.dexMod || '+0'); 
+                    formPdf.getTextField('CON').setText(String(details.con || 10));
+                    formPdf.getTextField('CONmod').setText(details.conMod || '+0');
+                    formPdf.getTextField('INT').setText(String(details.int || 10));
+                    formPdf.getTextField('INTmod').setText(details.intMod || '+0');
+                    formPdf.getTextField('WIS').setText(String(details.wis || 10));
+                    formPdf.getTextField('WISmod').setText(details.wisMod || '+0');
+                    formPdf.getTextField('CHA').setText(String(details.cha || 10));
+                    formPdf.getTextField('CHamod').setText(details.chaMod || '+0'); 
+
+                    // Combattimento e HP
+                    formPdf.getTextField('ProfBonus').setText(profBonus);
+                    formPdf.getTextField('AC').setText(String(details.ac || 10));
+                    formPdf.getTextField('Initiative').setText(String(details.initiative || 0));
+                    formPdf.getTextField('Speed').setText(String(details.speed || 30));
+                    formPdf.getTextField('HPMax').setText(String(details.hpMax || 10));
+                    formPdf.getTextField('HPCurrent').setText(String(details.hpCurrent || details.hpMax || 10));
+                    formPdf.getTextField('HDTotal').setText(String(livello));
+                    formPdf.getTextField('HD').setText(details.hitDice || '');
+                    formPdf.getTextField('AttacksSpellcasting').setText(details.attacksList || '');
+
+                    // Biografia e Tratti
+                    formPdf.getTextField('PersonalityTraits ').setText(details.traits || '');
+                    formPdf.getTextField('Ideals').setText(details.ideals || '');
+                    formPdf.getTextField('Bonds').setText(details.bonds || '');
+                    formPdf.getTextField('Flaws').setText(details.flaws || '');
+                    formPdf.getTextField('Features and Traits').setText(details.features || '');
+
+                } catch (campoErro) {
+                    console.warn("Qualche campo secondario è stato ignorato durante l'unione.", campoErro);
+                }
+
+                // Salva e Forza il Download per il PC del Giocatore
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${sheetData.charName}_Scheda_Ufficiale.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                Swal.close();
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Errore', 'Impossibile generare il PDF. Assicurati che il file template sia nella cartella "pdf" del server.', 'error');
+            }
+        };
     }
 }
