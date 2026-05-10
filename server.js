@@ -37,6 +37,7 @@ db.serialize(() => {
     db.run(`ALTER TABLE schede ADD COLUMN charGender TEXT`, (err) => {}); 
 
     db.run(`ALTER TABLE campagne ADD COLUMN mapUrl TEXT`, (err) => {}); 
+    db.run('ALTER TABLE campagne ADD COLUMN activeCharacters TEXT', (err) => {});
 });
 
 // QUesto è per uploadare l'avatar del personaggio.
@@ -262,18 +263,35 @@ app.get('/api/sheets', (req, res) => {
 });
 
 // Mostra le schede dei giocatori iscritti alla campagna al Master
+app.post('/api/campaigns/:campName/set-active-char', (req, res) => {
+    const { campName, owner, charName } = req.body;
+    db.get('SELECT activeCharacters FROM campagne WHERE campName = ?', [campName], (err, row) => {
+        if (err || !row) return res.status(404).send();
+        
+        let active = {}
+        try { active = JSON.parse(row.activeCharacters || "{}");} catch(e){}
+    
+        active[owner] = charName; 
+    
+        db.run('UPDATE campagne SET activeCharacters = ? WHERE campName = ?', [JSON.stringify(active), campName], () => {
+            res.json({success: true});
+        });
+    });
+});
+
 app.get('/api/campaigns/:campName/party', (req, res) => {
     const campName = req.params.campName;
-    db.get(`SELECT joinedPlayers FROM campagne WHERE campName = ?`, [campName], (err, row) => {
-        if (err || !row) return res.status(404).json({error: "Campagna non trovata"});
-        
-        let players = [];
-        try { players = JSON.parse(row.joinedPlayers || "[]"); } catch(e){}
-        if (players.length === 0) return res.json([]);
+    db.get('SELECT activeCharacters FROM campagne WHERE campName = ?', [campName], (err, row) => {
+        if(err || !row) return res.status(404).json({error: "Campagna non trovata"});
 
-        // Cerca le schede dei giocatori iscritti
-        const placeholders = players.map(() => '?').join(',');
-        db.all(`SELECT * FROM schede WHERE owner IN (${placeholders})`, players, (err, sheets) => {
+        let active = {};
+        try { active = JSON.parse(row.activeCharacters || "{}"); } catch(e){}
+
+        const charNames = Object.values(active);
+        if (charNames.length === 0) return res.json([]);
+
+        const placeholders = charNames.map(() => '?').json(',');
+        db.all('SELECT * FROM schede WHERE charName IN (${placeholders})', charNames, (err, sheets) => {
             if (err) return res.status(500).json({error: err.message});
             const parsedSheets = (sheets || []).map(s => ({
                 ...s,

@@ -92,10 +92,14 @@ window.openCharacterSelectorForCampaign = function(camp) {
 
 window.enterPlayerCampaign = function(sheetIndex, campName) {
   closeModal($('modal-select-char-backdrop'));
-  
-  // Assegnato una sola volta!
   const sheet = State.sheets[sheetIndex];
-  
+
+  fetch('/api/campaigns/set-active-char', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ campName: campName, owner: State.username, charName: sheet.charName })
+  });
+
   if($('dash-main')) $('dash-main').style.display = 'none';
   if($('player-campaign-detail')) $('player-campaign-detail').style.display = 'block';
   
@@ -271,16 +275,22 @@ async function caricaEroiParty(campName) {
 
 // Funzione globale chiamata dal click HTML
 window.visualizzaSchedaParty = function(charName) {
+    const container = $('master-party-sheet-container');
+
+    container.innerHTML = '<p style="color: #aaa, text-align: center; margin-top: 50px;"> Caricamento scheda di <b>${escHtml(charName)}</b>...</p>';
+
     fetch(`/api/sheets/by-name?charName=${encodeURIComponent(charName)}`)
       .then(res => res.json())
       .then(sheetData => {
-          if (!sheetData || sheetData.error) return alert("Errore nel caricamento eroe.");
-          
-          $('master-sheet-title').textContent = `Scheda di ${sheetData.charName} (Liv. ${sheetData.charLevel})`;
+        if (!sheetData || sheetData.error) {
+            container.innerHTML = '<p style="color: red; text-align: center;">Errore nel caricamento eroe.</p>';
+            return;
+        }
+          //$('master-sheet-title').textContent = `Scheda di ${sheetData.charName} (Liv. ${sheetData.charLevel})`;
           
           // Costruisce la scheda IN SOLA LETTURA (true)
           costruisciSchedaInterattiva('master-sheet-container', sheetData, true);
-          openModal($('modal-master-sheet-backdrop'));
+          //openModal($('modal-master-sheet-backdrop'));
       });
 };
 
