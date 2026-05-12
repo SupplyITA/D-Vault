@@ -343,6 +343,16 @@ app.get('/api/sheets/by-name', (req, res) => {
     });
 });
 
+// Rotta per salvare la Storia/Appunti del Master
+app.post('/api/campaigns/story', (req, res) => {
+    const { campName, owner, story } = req.body;
+    db.run(`UPDATE campagne SET campDesc = ? WHERE campName = ? AND owner = ?`, 
+    [story, campName, owner], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 // Socket Connessione alla Chat 
 io.on('connection', (socket) => {
     console.log('🟢 Un utente si è connesso al tavolo virtuale!');

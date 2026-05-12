@@ -183,6 +183,8 @@ function openCampaignDetail(camp) {
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
   if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName;
+  //Salvataggio della storia
+  if($('campaign-story-text')) $('campaign-story-text').value = camp.campDesc || '';
 
   const inviteContainer = $('campaign-invite-container');
   const inviteCodeEl = $('campaign-invite-code');
@@ -258,19 +260,33 @@ function openCampaignDetail(camp) {
   if (socket) socket.emit('entra_stanza_campagna', camp.campName);
 }
 
-// Funzione che aggiunge e permette la rimozione dei segnalini
-function aggiungiSegnalino(latlng, mappa, isLocal = true) {
+// Funzione che aggiunge e permette la rimozione dei segnalini con Proprietà
+function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username) {
     const marker = L.marker(latlng).addTo(mappa);
+    marker.proprietario = owner; // Salviamo chi ha creato il segnalino
     
-    // Al click destro (contextmenu) sul segnalino, lo rimuoviamo
     marker.on('contextmenu', () => {
+        // Controllo se sei nella schermata del Master
+        const isMaster = $('campaign-detail') && $('campaign-detail').style.display === 'block';
+        
+        // Se non sei il Master e non sei il proprietario, BLOCCO
+        if (!isMaster && marker.proprietario !== State.username) {
+            Swal.fire({
+                toast: true, position: 'bottom-end', icon: 'warning', 
+                title: 'Puoi rimuovere solo i tuoi segnalini!', 
+                showConfirmButton: false, timer: 2000, background: '#1a1108', color: '#e8c97e'
+            });
+            return;
+        }
+
+        // Se sei autorizzato, RIMUOVI
         mappa.removeLayer(marker);
-        // Invia sempre al server la direttiva di rimozione (anche se sei stato tu a metterlo o qualcun altro)
         if (socket) socket.emit('rimuovi_segnalino', latlng);
     });
 
-    // Se è un segnalino messo localmente (nuovo), lo inviamo agli altri
-    if (socket && isLocal) socket.emit('invia_segnalino', latlng);
+    if (socket && isLocal) {
+        socket.emit('invia_segnalino', { lat: latlng.lat, lng: latlng.lng, owner: State.username });
+    }
 }
 
 async function caricaEroiParty(campName) {
@@ -324,6 +340,8 @@ function openSheetDetail(sheet) {
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
   if($('sheet-detail-title')) $('sheet-detail-title').textContent = sheet.charName;
+  //Salva note
+  if($('player-notes')) $('player-notes').value = sheet.sheetDataDetails.playerNotes || '';
 
   if($('char-avatar-img')) {
       $('char-avatar-img').src = sheet.avatar || 'https://via.placeholder.com/150/111111/e8c97e?text=Click';
@@ -718,6 +736,55 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
     applicaTilt3D();
   });
 
+  // Salva Storia del Master
+  $('btn-save-story')?.addEventListener('click', async () => {
+    const story = $('campaign-story-text').value;
+    const campName = $('campaign-detail-title').textContent;
+    
+    try {
+      const res = await fetch('/api/campaigns/story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campName, owner: State.username, story })
+      });
+      if (res.ok) {
+        // Aggiorniamo la memoria locale di State
+        const camp = State.campaigns.find(c => c.campName === campName);
+        if (camp) camp.campDesc = story;
+
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success',
+          title: 'Cronache salvate!', showConfirmButton: false, timer: 2000,
+          background: '#1a1108', color: '#d4a843'
+        });
+      }
+    } catch (e) { console.error(e); }
+  });
+
+  // Autosave Appunti Personaggio
+  let notesTimeout;
+  $('player-notes')?.addEventListener('input', () => {
+    clearTimeout(notesTimeout);
+    notesTimeout = setTimeout(async () => {
+      const charName = $('sheet-detail-title').textContent;
+      const notes = $('player-notes').value;
+      const sheet = State.sheets.find(s => s.charName === charName);
+      
+      if (sheet) {
+        sheet.sheetDataDetails.playerNotes = notes;
+        await fetch('/api/sheets/update-details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            owner: State.username, 
+            charName: charName, 
+            details: sheet.sheetDataDetails 
+          })
+        });
+      }
+    }, 1000); // Salva dopo 1 secondo di inattività
+  });
+
   $('form-join-campaign')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const inviteCode = $('form-join-campaign').querySelector('[name="inviteCode"]').value.trim().toUpperCase();
@@ -985,9 +1052,11 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
           }
       });
 
-      socket.on('ricevi_segnalino', (latlng) => {
-        if (leafletMap) aggiungiSegnalino(latlng, leafletMap, false);
-        if (playerLeafletMap) aggiungiSegnalino(latlng, playerLeafletMap, false);
+      socket.on('ricevi_segnalino', (dati) => {
+        // Ricostruiamo le coordinate e passiamo il proprietario
+        const latlng = { lat: dati.lat, lng: dati.lng };
+        if (leafletMap) aggiungiSegnalino(latlng, leafletMap, false, dati.owner);
+        if (playerLeafletMap) aggiungiSegnalino(latlng, playerLeafletMap, false, dati.owner);
       });
 
       // RIMOZIONE
