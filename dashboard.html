@@ -32,7 +32,18 @@
   
   <link rel="stylesheet" href="css/sweetalert-theme.css" />
 
+  <!-- NOTA BENE: i temi sono disattivati per ora e in fase di sviluppo, togliere il commento alla riga sotto per vedere come sono--> 
+  <!-- <link rel="stylesheet" href="css/themes.css" /> -->
+
   <link rel="stylesheet" href="css/interactive-sheet.css">
+  
+  <!-- Script per il tema -->
+  <script>
+    (function(){ try {
+      var t = localStorage.getItem('dvault_theme') || 'vault';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch(_){} })();
+  </script>
   
 </head>
 <script>
@@ -234,6 +245,16 @@
           <i class="fa-solid fa-chevron-down nav-tab-caret"></i>
         </button>
         <div class="dropdown-menu nav-dd dd-user-menu" id="dd-user">
+          <div class="dropdown-section">
+            <p class="dropdown-label"><i class="fa-solid fa-user-shield"></i> Giocatore</p>
+            <ul>
+              <li class="dropdown-item" data-user-action="account"><i class="fa-solid fa-id-badge dd-item-ico"></i><span class="dd-item-label">Account</span></li>
+              <li class="dropdown-item" data-user-action="stats"><i class="fa-solid fa-chart-line dd-item-ico"></i><span class="dd-item-label">Statistiche</span></li>
+              <li class="dropdown-item" data-user-action="settings"><i class="fa-solid fa-gears dd-item-ico"></i><span class="dd-item-label">Impostazioni</span></li>
+              <li class="dropdown-item" data-user-action="theme"><i class="fa-solid fa-palette dd-item-ico"></i><span class="dd-item-label">Cambia tema</span></li>
+            </ul>
+          </div>
+          <div class="dropdown-divider"></div>
           <a href="index.html" class="dropdown-logout"><i class="fa-solid fa-door-open"></i> Esci dal Vault</a>
         </div>
       </div>
@@ -615,6 +636,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module" src="js/dashboard.js"></script>
+  <script src="js/user-menu.js"></script>
 
   <div id="avatar-context-menu" class="lux-avatar-menu">
     <button id="menu-view-avatar"> Visualizza avatar</button>

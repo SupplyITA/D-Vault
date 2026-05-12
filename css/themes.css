@@ -1,0 +1,378 @@
+/* ════════════════════════════════════════════════
+   THEMES — Si attiva con <html data-theme="vault|verdant|azure">
+   ════════════════════════════════════════════════ */
+
+/* ---- VERDANT — rosa antico + verde smeraldo ---- */
+html[data-theme="verdant"] {
+  --bg-deep:       #06140e;
+  --bg-dark:       #0c1f17;
+  --bg-card:       #112a20;
+  --bg-card-hover: #163528;
+  --red-dark:      #4a1230;
+  --red-mid:       #8a2756;
+  --red-bright:    #c84b86;
+  --red-accent:    #ff7ab0;
+  --gold:          #7be0a8;
+  --gold-dark:     #2f8a5b;
+  --text-primary:  #eafff3;
+  --text-muted:    #98c4ad;
+  --text-dim:      #5d8a76;
+  --border:        rgba(123, 224, 168, 0.30);
+  --border-gold:   rgba(255, 122, 176, 0.30);
+  --glass:         rgba(10, 28, 20, 0.78);
+  --glass-light:   rgba(18, 42, 30, 0.65);
+}
+
+/* ---- AZURE — celeste/bianco ---- */
+html[data-theme="azure"] {
+  --bg-deep:       #07111c;
+  --bg-dark:       #0d1b2c;
+  --bg-card:       #142640;
+  --bg-card-hover: #1b3252;
+  --red-dark:      #1a3a5e;
+  --red-mid:       #2a6fb0;
+  --red-bright:    #4aa3ff;
+  --red-accent:    #7fc8ff;
+  --gold:          #f4faff;
+  --gold-dark:     #b9d4ee;
+  --text-primary:  #f4faff;
+  --text-muted:    #aac4dc;
+  --text-dim:      #6f8aa6;
+  --border:        rgba(125, 200, 255, 0.30);
+  --border-gold:   rgba(244, 250, 255, 0.30);
+  --glass:         rgba(8, 20, 35, 0.78);
+  --glass-light:   rgba(15, 32, 55, 0.65);
+}
+
+/* ════════════════════════════════════════════════
+   Override mirati
+   ════════════════════════════════════════════════ */
+
+/* --- VERDANT remap ---*/
+html[data-theme="verdant"] {
+  --accent-1: 123,224,168;   /* sostituto del "gold" */
+  --accent-2: 255,122,176;   /* sostituto del "red"  */
+}
+/* --- AZURE remap --- */
+html[data-theme="azure"] {
+  --accent-1: 200,230,255;
+  --accent-2: 122,180,255;
+}
+/* --- VAULT (default) remap esplicito --- */
+html:not([data-theme="verdant"]):not([data-theme="azure"]) {
+  --accent-1: 212,168,67;
+  --accent-2: 192,57,43;
+}
+
+/* Pittura globale dei bordi/aloni più visibili */
+html[data-theme="verdant"] .navbar,
+html[data-theme="azure"]   .navbar {
+  background: linear-gradient(180deg, var(--glass), var(--glass-light)) !important;
+  border-bottom: 1px solid rgba(var(--accent-1), .35) !important;
+}
+html[data-theme="verdant"] .nav-tab,
+html[data-theme="verdant"] .nav-user-btn,
+html[data-theme="azure"]   .nav-tab,
+html[data-theme="azure"]   .nav-user-btn {
+  background: linear-gradient(180deg, rgba(var(--accent-1),.08), rgba(var(--accent-1),.02)) !important;
+  border-color: rgba(var(--accent-1), .30) !important;
+  color: var(--gold) !important;
+}
+html[data-theme="verdant"] .nav-tab:hover,
+html[data-theme="verdant"] .nav-user-btn:hover,
+html[data-theme="azure"]   .nav-tab:hover,
+html[data-theme="azure"]   .nav-user-btn:hover {
+  background: linear-gradient(180deg, rgba(var(--accent-1),.22), rgba(var(--accent-1),.06)) !important;
+  border-color: rgba(var(--accent-1), .65) !important;
+  box-shadow: 0 0 18px rgba(var(--accent-1),.25) !important;
+}
+html[data-theme="verdant"] .dropdown-menu,
+html[data-theme="azure"]   .dropdown-menu {
+  background: linear-gradient(160deg, var(--glass) 0%, var(--glass-light) 100%) !important;
+  border-color: rgba(var(--accent-1), .35) !important;
+}
+html[data-theme="verdant"] .dropdown-label,
+html[data-theme="azure"]   .dropdown-label {
+  color: var(--gold) !important;
+  border-bottom-color: rgba(var(--accent-1), .25) !important;
+}
+
+/* SweetAlert: ridipingiamo cornice dorata e bottone confirm */
+html[data-theme="verdant"] .swal2-popup,
+html[data-theme="azure"]   .swal2-popup {
+  background:
+    linear-gradient(160deg, rgba(var(--accent-1), .14) 0%, rgba(var(--accent-2), .10) 100%),
+    var(--glass) !important;
+  border: 1px solid rgba(var(--accent-1), .55) !important;
+  color: var(--text-primary) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 0 0 1px rgba(0,0,0,.5),
+    0 30px 80px -20px rgba(0,0,0,.85),
+    0 0 60px -10px rgba(var(--accent-1), .30) !important;
+}
+html[data-theme="verdant"] .swal2-title,
+html[data-theme="azure"]   .swal2-title {
+  background: linear-gradient(180deg, var(--text-primary) 0%, var(--gold) 60%, var(--gold-dark) 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html[data-theme="verdant"] .swal2-styled.swal2-confirm,
+html[data-theme="azure"]   .swal2-styled.swal2-confirm {
+  background:
+    linear-gradient(180deg,
+      rgba(var(--accent-1), .95) 0%,
+      rgba(var(--accent-1), .70) 50%,
+      rgba(var(--accent-2), .85) 100%) !important;
+  color: #08121b !important;
+  border: 1px solid rgba(0,0,0,.55) !important;
+}
+html[data-theme="verdant"] .swal2-styled.swal2-cancel,
+html[data-theme="azure"]   .swal2-styled.swal2-cancel {
+  color: var(--gold) !important;
+  border: 1px solid rgba(var(--accent-1), .55) !important;
+}
+
+/* Hero banner & section header sui temi */
+html[data-theme="verdant"] .vault-hero-banner,
+html[data-theme="azure"]   .vault-hero-banner {
+  background:
+    linear-gradient(135deg, rgba(var(--accent-1),.10), rgba(var(--accent-2),.06)),
+    var(--glass) !important;
+  border: 1px solid rgba(var(--accent-1), .35) !important;
+}
+html[data-theme="verdant"] .vault-hero-name,
+html[data-theme="azure"]   .vault-hero-name,
+html[data-theme="verdant"] .nav-logo-text,
+html[data-theme="azure"]   .nav-logo-text,
+html[data-theme="verdant"] .hero-title .title-d,
+html[data-theme="verdant"] .hero-title .title-vault,
+html[data-theme="azure"]   .hero-title .title-d,
+html[data-theme="azure"]   .hero-title .title-vault {
+  background: linear-gradient(135deg, var(--text-primary), var(--gold)) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Card "luxury": titolo e cornice */
+html[data-theme="verdant"] .vault-card.luxury .card-title,
+html[data-theme="azure"]   .vault-card.luxury .card-title {
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.55),
+    0 0 14px rgba(var(--accent-1), .55),
+    0 0 1px rgba(var(--accent-2), .65) !important;
+}
+html[data-theme="verdant"] .vault-card.luxury::before,
+html[data-theme="azure"]   .vault-card.luxury::before {
+  border-color: rgba(var(--accent-1), .55) !important;
+}
+
+/* Bottoni primari */
+html[data-theme="verdant"] .btn-primary,
+html[data-theme="azure"]   .btn-primary {
+  background: linear-gradient(180deg, rgba(var(--accent-2), .85), rgba(var(--accent-2), .55)) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(var(--accent-1), .55) !important;
+}
+html[data-theme="verdant"] .btn-primary:hover,
+html[data-theme="azure"]   .btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 22px rgba(var(--accent-1),.35) !important;
+}
+
+/* Particelle: dorate -> tono accent */
+html[data-theme="verdant"] .particle,
+html[data-theme="azure"]   .particle {
+  background: rgba(var(--accent-1), .8) !important;
+  box-shadow: 0 0 8px rgba(var(--accent-1), .6) !important;
+}
+
+/* Section header divider/gem */
+html[data-theme="verdant"] .section-header::before,
+html[data-theme="azure"]   .section-header::before {
+  color: var(--gold) !important;
+  text-shadow: 0 0 8px rgba(var(--accent-1), .5) !important;
+}
+
+/* Sfondo landing più "tematico" sui temi non-vault (overlay colorato) */
+html[data-theme="verdant"] .bg-overlay {
+  background: linear-gradient(160deg, rgba(6,30,18,.75), rgba(8,40,24,.85)) !important;
+}
+html[data-theme="azure"] .bg-overlay {
+  background: linear-gradient(160deg, rgba(8,20,38,.75), rgba(10,30,55,.85)) !important;
+}
+
+/* Theme picker (UI) */
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .8rem;
+  margin-top: .6rem;
+}
+.theme-card {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: .9rem .6rem .7rem;
+  border: 1px solid rgba(var(--accent-1, 212,168,67), .35);
+  background: rgba(0,0,0,.35);
+  text-align: center;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.theme-card:hover { transform: translateY(-2px); }
+.theme-card.is-active {
+  border-color: rgba(var(--accent-1, 212,168,67), .9);
+  box-shadow: 0 0 18px rgba(var(--accent-1, 212,168,67), .4);
+}
+.theme-swatch {
+  display: flex;
+  height: 38px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: .5rem;
+  border: 1px solid rgba(0,0,0,.5);
+}
+.theme-swatch span { flex: 1; }
+.theme-name {
+  font-family: 'Cinzel', serif;
+  font-size: .72rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold, #e8c97e);
+}
+
+/* Stat grid per popup statistiche */
+.vault-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .7rem;
+  margin-top: .8rem;
+}
+.vault-stat {
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(var(--accent-1, 212,168,67), .25);
+  border-radius: 6px;
+  padding: .7rem .6rem;
+}
+.vault-stat .v-label {
+  font-family: 'Cinzel', serif;
+  font-size: .62rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--text-muted, #9a8878);
+  margin-bottom: .3rem;
+}
+.vault-stat .v-value {
+  font-family: 'Cinzel', serif;
+  font-size: 1.4rem;
+  color: var(--gold, #e8c97e);
+  font-weight: 700;
+}
+.vault-account-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .5rem .2rem;
+  border-bottom: 1px dashed rgba(var(--accent-1, 212,168,67), .2);
+}
+.vault-account-row:last-child { border-bottom: none; }
+.vault-account-row .k {
+  font-family: 'Cinzel', serif;
+  font-size: .7rem;
+  letter-spacing: .14em;
+  color: var(--text-muted, #9a8878);
+  text-transform: uppercase;
+}
+.vault-account-row .v {
+  font-family: 'Crimson Text', Georgia, serif;
+  color: var(--gold, #e8c97e);
+}
+
+/* ════════════════════════════════════════════════
+   DASHBOARD — sfondo + pannelli centrali per tema
+   ════════════════════════════════════════════════ */
+
+/* VERDANT — sfondo foresta smeraldo + bagliori rosa */
+html[data-theme="verdant"] .dash-bg {
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(40, 130, 80, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 75%, rgba(200, 75, 134, 0.28) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(20, 50, 35, 0.25) 0%, transparent 70%),
+    #04110b !important;
+}
+html[data-theme="verdant"] .dash-bg-overlay {
+  background-image:
+    linear-gradient(rgba(123, 224, 168, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123, 224, 168, 0.04) 1px, transparent 1px) !important;
+}
+
+/* AZURE — sfondo notturno celeste */
+html[data-theme="azure"] .dash-bg {
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(74, 163, 255, 0.32) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 75%, rgba(127, 200, 255, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(15, 35, 60, 0.30) 0%, transparent 70%),
+    #050d18 !important;
+}
+html[data-theme="azure"] .dash-bg-overlay {
+  background-image:
+    linear-gradient(rgba(180, 215, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 215, 255, 0.045) 1px, transparent 1px) !important;
+}
+
+/* Pannelli centrali (.dashboard-section) — sfondo + bordo + alone */
+html[data-theme="verdant"] .dashboard-section {
+  background: linear-gradient(145deg,
+    rgba(14, 38, 26, 0.93) 0%,
+    rgba(8, 22, 16, 0.97) 100%) !important;
+  border: 1px solid rgba(123, 224, 168, 0.30) !important;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6) inset,
+    0 2px 0 rgba(123, 224, 168, 0.08) inset,
+    0 32px 80px rgba(0,0,0,0.7),
+    0 0 40px rgba(40, 100, 70, 0.25) !important;
+}
+html[data-theme="azure"] .dashboard-section {
+  background: linear-gradient(145deg,
+    rgba(12, 30, 50, 0.93) 0%,
+    rgba(7, 18, 32, 0.97) 100%) !important;
+  border: 1px solid rgba(127, 200, 255, 0.30) !important;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6) inset,
+    0 2px 0 rgba(180, 215, 255, 0.08) inset,
+    0 32px 80px rgba(0,0,0,0.7),
+    0 0 40px rgba(40, 110, 180, 0.25) !important;
+}
+
+/* Filetto/sweep superiore dei pannelli */
+html[data-theme="verdant"] .dashboard-section::before {
+  background: linear-gradient(90deg,
+    transparent, rgba(123, 224, 168, 0.7) 35%,
+    rgba(255, 122, 176, 0.85) 50%,
+    rgba(123, 224, 168, 0.7) 65%, transparent) !important;
+}
+html[data-theme="azure"] .dashboard-section::before {
+  background: linear-gradient(90deg,
+    transparent, rgba(127, 200, 255, 0.7) 35%,
+    rgba(244, 250, 255, 0.95) 50%,
+    rgba(127, 200, 255, 0.7) 65%, transparent) !important;
+}
+
+/* Veli diagonali interni dei pannelli */
+html[data-theme="verdant"] .dashboard-section::after {
+  background: linear-gradient(160deg, rgba(123, 224, 168, 0.05) 0%, transparent 45%) !important;
+}
+html[data-theme="azure"] .dashboard-section::after {
+  background: linear-gradient(160deg, rgba(200, 230, 255, 0.06) 0%, transparent 45%) !important;
+}
+
+/* Titolo H2 dei pannelli */
+html[data-theme="verdant"] .dashboard-section h2 {
+  background: linear-gradient(150deg, #f4ffea 0%, #7be0a8 40%, #2f8a5b 75%, #ff7ab0 100%) !important;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+html[data-theme="azure"] .dashboard-section h2 {
+  background: linear-gradient(150deg, #ffffff 0%, #cfe6ff 35%, #7fc8ff 70%, #2a6fb0 100%) !important;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
