@@ -2,7 +2,7 @@ import { $, escHtml } from './utils.js';
 
 export const socket = typeof io !== 'undefined' ? io() : null;
 
-// --- NUOVA MEMORIA CHAT ---
+// --- MEMORIA CHAT ---
 const chatMemoria = {}; // Salva i messaggi: { "Nome Campagna": [ {sender, text, type}, ... ] }
 
 export function salvaMessaggioInMemoria(campName, sender, text, type) {
@@ -14,10 +14,7 @@ export function caricaMemoriaChat(campName, containerId) {
     const container = $(containerId);
     if (!container) return;
     
-    // Pulisce lo schermo, ma...
     container.innerHTML = '<div class="chat-msg system">Tavolo virtuale aperto. Pronti all\'avventura!</div>';
-    
-    // ...ci riscrive subito tutti i vecchi messaggi di questa sessione!
     if (chatMemoria[campName]) {
         chatMemoria[campName].forEach(msg => {
             const msgDiv = document.createElement('div');
@@ -28,7 +25,6 @@ export function caricaMemoriaChat(campName, containerId) {
         container.scrollTop = container.scrollHeight;
     }
 }
-// -------------------------
 
 export function appendChatMessage(sender, text, type, containerId = 'chat-messages') {
   const container = $(containerId);

@@ -12,7 +12,7 @@ let playerLeafletMap = null;
 let vueData = null; 
 let currentImageOverlay = null;
 
-// --- 1. FUNZIONE SPAZZINA UNICA E GLOBALE ---
+// ---  FUNZIONE SPAZZINA ---  
 function hideAllSections() {
   const sections = ['dash-main', 'campaign-detail', 'sheet-detail', 'player-campaign-detail'];
   sections.forEach(id => {
@@ -21,7 +21,7 @@ function hideAllSections() {
   });
 }
 
-// --- 2. GESTIONE INGRESSO CAMPAGNA GIOCATORE ---
+// --- GESTIONE INGRESSO CAMPAGNA GIOCATORE ---
 function handlePlayerCampaignClick(camp) {
   let activeChars = {};
   try { activeChars = JSON.parse(camp.activeCharacters || "{}"); } catch(e){}
@@ -56,14 +56,13 @@ window.openCharacterSelectorForCampaign = function(camp) {
 window.enterPlayerCampaign = async function(sheetIndex, campName) {
   closeModal($('modal-select-char-backdrop'));
   const sheet = State.sheets[sheetIndex];
-  
-  // Definiamo subito 'camp'
+
   const camp = State.campaigns.find(c => c.campName === campName);
 
-  // 1. Pulisce le altre schermate
+  // Pulisce le altre schermate
   if (typeof hideAllSections === 'function') hideAllSections(); 
   
-  // 2. Ripristina la memoria della chat!
+  // Ripristina la memoria della chat
   if($('pc-chat-messages')) caricaMemoriaChat(campName, 'pc-chat-messages');
 
   if($('dash-main')) $('dash-main').style.display = 'none';
@@ -85,7 +84,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
 
   costruisciSchedaInterattiva('pc-sheet-container', sheet, false);
 
-  // --- GESTIONE MAPPA GIOCATORE (LA TUA ORIGINALE, RIPRISTINATA!) ---
+  // --- GESTIONE MAPPA GIOCATORE ---
   const mapUrl = (camp && camp.mapUrl) ? camp.mapUrl : '/maps/mappa_1.jpg';
 
   // Inizializza la mappa Leaflet solo la prima volta
@@ -97,7 +96,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
       $('pc-map').addEventListener('contextmenu', e => e.preventDefault());
   }
 
-  // Aggiorna SEMPRE l'immagine 
+  // Aggiorna l'immagine 
   if (playerLeafletMap) {
       playerLeafletMap.eachLayer(layer => {
           if (layer instanceof L.ImageOverlay) playerLeafletMap.removeLayer(layer);
@@ -107,14 +106,11 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
       playerLeafletMap.fitBounds(bounds);
       setTimeout(() => playerLeafletMap.invalidateSize(), 100);
   }
-  // -----------------------------------------------------------------
 
   document.querySelector('.player-tab-btn[data-tab="pc-scheda"]')?.click();
   
-  // Entra nella stanza segreta della chat
   if (socket) socket.emit('entra_stanza_campagna', campName);
 
-  // --- SALVATAGGIO IN BACKGROUND BLINDATO ---
   try {
       await fetch('/api/campaigns/set-active-char', {
         method: 'POST',
@@ -122,7 +118,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
         body: JSON.stringify({ campName: campName, owner: State.username, charName: sheet.charName })
       });
       
-      // Aggiorna la memoria locale così se chiudi e riapri entra da solo!
+      // Aggiorna la memoria locale
       if (camp) {
           let active = {};
           try { active = JSON.parse(camp.activeCharacters || "{}"); } catch(e){}
@@ -132,7 +128,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
   } catch(e) { console.error("Errore salvataggio eroe in background:", e); }
 };
 
-// --- 4. INIZIALIZZAZIONE DELLA PAGINA (VUE E DATI) ---
+// --- INIZIALIZZAZIONE DELLA PAGINA ---
 document.addEventListener('DOMContentLoaded', async () => {
   if ($('nav-username')) $('nav-username').textContent = State.username;
   await State.loadFromServer();
@@ -180,8 +176,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   applicaTilt3D();
   bindEvents();
 });
-
-// IL RESTO DEL FILE CONTINUA QUI DA openCampaignDetail(camp)...
 
 function openCampaignDetail(camp) {
   hideAllSections(); // <-- Pulisce tutto prima
@@ -231,10 +225,10 @@ function openCampaignDetail(camp) {
   const primoTab = document.querySelector('.tab-btn[data-tab="storia"]');
   if(primoTab) primoTab.click();
 
-  // --- CREAZIONE E GESTIONE MAPPA MASTER (AGGIORNATA) ---
+  // --- CREAZIONE E GESTIONE MAPPA MASTER ---
   const mapUrl = camp.mapUrl || '/maps/mappa_1.jpg'; // Prende la mappa della campagna o quella base
 
-  // 1. Inizializza la mappa Leaflet solo la prima volta
+  // Inizializza la mappa Leaflet solo la prima volta
   if (!leafletMap && $('map')) {
       leafletMap = L.map('map', { crs: L.CRS.Simple, minZoom: -2 });
       
@@ -247,7 +241,7 @@ function openCampaignDetail(camp) {
       $('map').addEventListener('contextmenu', e => e.preventDefault());
   }
 
-  // 2. Aggiorna SEMPRE l'immagine (anche se la mappa Leaflet esisteva già)
+  // Aggiorna SEMPRE l'immagine
   if (leafletMap) {
       // Togliamo l'immagine vecchia
       if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
@@ -592,7 +586,7 @@ function bindEvents() {
                 try { return formPdf.getTextField(name).getText() || ''; } catch(e) { return ''; }
             };
 
-            // 1. Estrazione dati base
+            // Estrazione dati base
             const fullClassLevel = getT('ClassLevel'); // Es: "Guerriero 5"
             const classParts = fullClassLevel.split(' ');
             const charLevel = parseInt(classParts.pop()) || 1;
@@ -608,7 +602,7 @@ function bindEvents() {
                 avatar: `img/species/umano-m.jpg`
             };
 
-            // 2. Estrazione Dettagli (mappatura nomi scanner -> database)
+            // Estrazione Dettagli (mappatura nomi scanner -> database)
             const details = {
                 str: getT('STR'), dex: getT('DEX'), con: getT('CON'),
                 int: getT('INT'), wis: getT('WIS'), cha: getT('CHA'),
@@ -622,7 +616,7 @@ function bindEvents() {
                 headerXP: getT('XP')
             };
 
-            // 3. Salvataggio nel Database (Processo in due step come la creazione manuale)
+            // Salvataggio nel Database
             const res1 = await fetch('/api/sheets', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -755,7 +749,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
   $('pc-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-pc-send-chat').click(); });
 
 // Avatar Base + aggiungi immagine + ripristina default
-  function initAvatarMenu(imgId, inputId, getCharName) { // <-- Aggiunto getCharName
+  function initAvatarMenu(imgId, inputId, getCharName) {
       const imgEl = $(imgId);
       const menu = $('avatar-context-menu');
       const zoomOverlay = $('avatar-zoom-overlay');
@@ -796,7 +790,6 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
               // Ricostruiamo il percorso di default esatto
               const slug = sheet.charRace.toLowerCase().replace(/\s+/g, '-');
               const gender = sheet.charGender || 'm';
-              // Usiamo lo slash iniziale per la "root giusta" che abbiamo sistemato prima!
               const defaultAvatarUrl = `/img/species/${slug}-${gender}.jpg`; 
 
               // Aggiorniamo l'immagine a schermo
@@ -997,7 +990,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
         if (playerLeafletMap) aggiungiSegnalino(latlng, playerLeafletMap, false);
       });
 
-      // RIMOZIONE: Aggiunto fix con la tolleranza!
+      // RIMOZIONE
       socket.on('segnalino_rimosso', (latlng) => {
           const rimuoviDaMappa = (mappa) => {
               if(!mappa) return;
@@ -1058,8 +1051,6 @@ function applicaTilt3D() {
         async function scopriNomiCampiPDF() {
             console.log(" Avvio scansione del PDF...");
             try {
-                // Assicurati che il percorso sia corretto! 
-                // Se lo hai messo nella cartella uploads, cambia in '/uploads/pdf/5E_...'
                 const url = '/pdf/scheda_dnd_5e.pdf'; 
                 
                 const res = await fetch(url);

@@ -289,11 +289,7 @@ app.get('/api/campaigns/:campName/party', (req, res) => {
 
         const charNames = Object.values(active);
         if (charNames.length === 0) return res.json([]);
-
-        // 1. CORRETTO: .join invece di .json
         const placeholders = charNames.map(() => '?').join(','); 
-        
-        // 2. CORRETTO: Usati i backtick ( ` ) per permettere a ${placeholders} di funzionare
         db.all(`SELECT * FROM schede WHERE charName IN (${placeholders})`, charNames, (err, sheets) => {
             if (err) return res.status(500).json({error: err.message});
             const parsedSheets = (sheets || []).map(s => ({
