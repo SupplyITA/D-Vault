@@ -1,26 +1,79 @@
 import { $, escHtml } from './utils.js';
 import { State } from './state.js';
 
+function emptyState({ icon, title, subtitle }) {
+  return `
+    <div class="lux-empty">
+      <div class="lux-empty-sigil" aria-hidden="true">
+        <svg viewBox="0 0 120 120">
+          <defs>
+            <linearGradient id="leg-${Math.random().toString(36).slice(2,8)}" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#f5d98e"/><stop offset="1" stop-color="#7a5c20"/>
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(212,168,67,.35)" stroke-width="1"/>
+          <circle cx="60" cy="60" r="38" fill="none" stroke="rgba(212,168,67,.18)" stroke-width="1" stroke-dasharray="3 5"/>
+          <path d="M60 18 L66 60 L60 102 L54 60 Z" fill="rgba(245,217,142,.12)"/>
+          <path d="M18 60 L60 54 L102 60 L60 66 Z" fill="rgba(245,217,142,.08)"/>
+          <circle cx="60" cy="60" r="3" fill="rgba(245,217,142,.6)"/>
+        </svg>
+        <i class="${icon} lux-empty-icon" aria-hidden="true"></i>
+      </div>
+      <p class="lux-empty-title">${title}</p>
+      <p class="lux-empty-sub">${subtitle}</p>
+    </div>`;
+}
+
+function dropdownItemHtml(label, type, i) {
+  const ico = type === 'sheet' ? 'fa-shield-halved' : 'fa-dragon';
+  return `<li class="dropdown-item" data-type="${type}" data-index="${i}">
+    <i class="fa-solid ${ico} dd-item-ico"></i><span class="dd-item-label">${escHtml(label)}</span>
+  </li>`;
+}
+
 export function renderDropdowns() {
   const dropdownSheetsList = $('dropdown-sheets-list');
-  const dropdownCampaignsList = $('dropdown-campaigns-list');
+  const dropdownMasterList = $('dropdown-master-list'); 
+  const dropdownPlayerList = $('dropdown-player-list');
 
+  // Render Schede
   if (dropdownSheetsList) {
     if (State.sheets.length === 0) {
-      dropdownSheetsList.innerHTML = '<li class="dropdown-empty">Nessuna scheda</li>';
+      dropdownSheetsList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna scheda</li>';
     } else {
-      dropdownSheetsList.innerHTML = State.sheets.map((s, i) =>
-        `<li class="dropdown-item" data-type="sheet" data-index="${i}"> ${escHtml(s.charName)}</li>`
+      dropdownSheetsList.innerHTML = State.sheets.map((s, i) => dropdownItemHtml(s.charName, 'sheet', i)).join('');
+    }
+  }
+
+  // Filtra le campagne
+  const masterCamps = [];
+  const playerCamps = [];
+  State.campaigns.forEach((c, i) => {
+    if (c.owner === State.username) {
+        masterCamps.push({ camp: c, index: i });
+    } else {
+        playerCamps.push({ camp: c, index: i });
+    }
+  });
+
+  // Render Campagne Master
+  if (dropdownMasterList) {
+    if (masterCamps.length === 0) {
+      dropdownMasterList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna campagna</li>';
+    } else {
+      dropdownMasterList.innerHTML = masterCamps.map(item => 
+        dropdownItemHtml(item.camp.campName, 'campaign', item.index)
       ).join('');
     }
   }
 
-  if (dropdownCampaignsList) {
-    if (State.campaigns.length === 0) {
-      dropdownCampaignsList.innerHTML = '<li class="dropdown-empty">Nessuna campagna</li>';
+  // Render Campagne Giocatore
+  if (dropdownPlayerList) {
+    if (playerCamps.length === 0) {
+      dropdownPlayerList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna avventura</li>';
     } else {
-      dropdownCampaignsList.innerHTML = State.campaigns.map((c, i) =>
-        `<li class="dropdown-item" data-type="campaign" data-index="${i}"> ${escHtml(c.campName)}</li>`
+      dropdownPlayerList.innerHTML = playerCamps.map(item => 
+        dropdownItemHtml(item.camp.campName, 'campaign', item.index)
       ).join('');
     }
   }
@@ -29,7 +82,11 @@ export function renderDropdowns() {
 export function renderGrid() {
   if ($('grid-heroes')) {
     if (State.sheets.length === 0) {
-      $('grid-heroes').innerHTML = '<p style="color:#aaa; font-style:italic; padding: 20px;">Nessun eroe forgiato. Clicca su "+ Forgia Eroe" per iniziare.</p>';
+      $('grid-heroes').innerHTML = emptyState({
+        icon: 'fa-solid fa-shield-halved',
+        title: 'Nessun eroe ancora forgiato',
+        subtitle: 'L\'incudine è fredda. Clicca su <em>“+ Forgia Eroe”</em> per dare vita al tuo primo campione.'
+      });
     } else {
       $('grid-heroes').innerHTML = State.sheets.map((s, i) => makeSheetCard(s, i)).join('');
     }
@@ -44,7 +101,11 @@ export function renderGrid() {
 
   if ($('grid-master')) {
     if (masterCamps.length === 0) {
-      $('grid-master').innerHTML = '<p style="color:#aaa; font-style:italic; padding: 20px;">Nessuna campagna da Master. Crea un mondo tutto tuo!</p>';
+      $('grid-master').innerHTML = emptyState({
+        icon: 'fa-solid fa-dragon',
+        title: 'Il trono del Master attende',
+        subtitle: 'Nessun mondo plasmato dalla tua mano. Forgia una nuova campagna e siedi al capotavola.'
+      });
     } else {
       $('grid-master').innerHTML = masterCamps.map(item => makeCampaignCard(item.camp, item.index, true)).join('');
     }
@@ -52,7 +113,11 @@ export function renderGrid() {
 
   if ($('grid-player')) {
     if (playerCamps.length === 0) {
-      $('grid-player').innerHTML = '<p style="color:#aaa; font-style:italic; padding: 20px;">Non partecipi a nessuna avventura. Unisciti con un codice!</p>';
+      $('grid-player').innerHTML = emptyState({
+        icon: 'fa-solid fa-scroll',
+        title: 'Nessuna avventura in corso',
+        subtitle: 'Le taverne sono piene di voci. Unisciti a un tavolo con il <em>codice invito</em> del tuo Master.'
+      });
     } else {
       $('grid-player').innerHTML = playerCamps.map(item => makeCampaignCard(item.camp, item.index, false)).join('');
     }

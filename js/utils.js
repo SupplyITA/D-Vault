@@ -18,9 +18,12 @@ export function closeModal(el) {
     document.body.style.overflow = ''; 
 }
 
-export function closeDropdown() { 
-    $('dropdown-menu')?.classList.remove('open'); 
-    $('hamburger-btn')?.classList.remove('open'); 
+export function closeDropdown() {
+    document.querySelectorAll('.nav-dd.open').forEach(el => el.classList.remove('open'));
+    document.querySelectorAll('.nav-tab.open, .nav-user-btn.open').forEach(el => el.classList.remove('open'));
+    // legacy fallback
+    $('dropdown-menu')?.classList.remove('open');
+    $('hamburger-btn')?.classList.remove('open');
 }
 
 export function closeDetails() {

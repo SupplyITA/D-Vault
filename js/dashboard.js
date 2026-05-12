@@ -507,19 +507,17 @@ function bindEvents() {
   $('btn-back-sheet')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
   $('btn-back-player-camp')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
   
-  // --- Gestione click sulle voci del Dropdown ---
-  $('dropdown-menu')?.addEventListener('click', (e) => {
-    const item = e.target.closest('.dropdown-item');
+  // --- Gestione click sulle voci dei Dropdown ---
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest('.nav-dd .dropdown-item');
     if (!item) return;
-
     const type = item.dataset.type;
     const index = parseInt(item.dataset.index);
-
     if (type === 'sheet') {
       // Se clicco su un eroe, apro la sua scheda
       openSheetDetail(State.sheets[index]);
     } else if (type === 'campaign') {
-      // Se clicco su una campagna, uso la logica esistente (Master o Giocatore)
+     
       const camp = State.campaigns[index];
       if (camp.owner === State.username) {
         openCampaignDetail(camp);
@@ -532,14 +530,23 @@ function bindEvents() {
     closeDropdown();
   });
 
-  // Menu
-  $('hamburger-btn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isOpen = $('dropdown-menu')?.classList.toggle('open');
-    $('hamburger-btn').classList.toggle('open', isOpen);
+  // Apertura dropdown navbar (Personaggi / Master / Utente)
+  document.querySelectorAll('[data-dd-target]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = btn.dataset.ddTarget;
+      const target = document.getElementById(targetId);
+      const wasOpen = target?.classList.contains('open');
+      closeDropdown();
+      if (!wasOpen) {
+        target?.classList.add('open');
+        btn.classList.add('open');
+      }
+    });
   });
   document.addEventListener('click', (e) => {
-    if (!$('dropdown-menu')?.contains(e.target) && e.target !== $('hamburger-btn')) closeDropdown();
+    if (e.target.closest('.nav-dd') || e.target.closest('[data-dd-target]')) return;
+    closeDropdown();
   });
 
   // Modali
@@ -1142,7 +1149,7 @@ function applicaTilt3D() {
             }
         }
         
-        // Questa riga fa partire fisicamente la funzione!
+        // Questa riga fa partire fisicamente la funzione
         scopriNomiCampiPDF();
     });
 }

@@ -173,29 +173,69 @@
 
   <!-- Navbar -->
   <nav class="navbar">
-    <a href="dashboard.html" class="nav-logo"> 
+    <a href="dashboard.html" class="nav-logo">
       <span class="nav-logo-icon">⚔</span>
       <span class="nav-logo-text">D-Vault</span>
     </a>
-    <div class="nav-center"><span class="nav-section">— Archivio —</span></div>
+
+    <div class="nav-tabs">
+      <div class="nav-tab-wrap">
+        <button class="nav-tab" data-dd-target="dd-sheets" type="button">
+          <i class="fa-solid fa-shield-halved nav-tab-ico"></i>
+          <span class="nav-tab-label">Personaggi</span>
+          <i class="fa-solid fa-chevron-down nav-tab-caret"></i>
+        </button>
+        <div class="dropdown-menu nav-dd" id="dd-sheets">
+          <div class="dropdown-section dd-section-sheets">
+            <p class="dropdown-label"><i class="fa-solid fa-shield-halved"></i> Le mie Schede</p>
+            <ul id="dropdown-sheets-list"></ul>
+            <button class="dropdown-add-btn" id="btn-add-sheet"><i class="fa-solid fa-plus"></i> Aggiungi Scheda</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-tab-wrap">
+        <button class="nav-tab" data-dd-target="dd-camps-master" type="button">
+          <i class="fa-solid fa-dragon nav-tab-ico"></i>
+          <span class="nav-tab-label">Master</span>
+          <i class="fa-solid fa-chevron-down nav-tab-caret"></i>
+        </button>
+        <div class="dropdown-menu nav-dd" id="dd-camps-master">
+          <div class="dropdown-section dd-section-camps">
+            <p class="dropdown-label"><i class="fa-solid fa-dragon"></i> Le mie Campagne</p>
+            <ul id="dropdown-master-list"></ul>
+            <button class="dropdown-add-btn" id="btn-add-campaign"><i class="fa-solid fa-plus"></i> Nuova Campagna</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-tab-wrap">
+        <button class="nav-tab" data-dd-target="dd-camps-player" type="button">
+          <i class="fa-solid fa-scroll nav-tab-ico"></i>
+          <span class="nav-tab-label">Avventure</span>
+          <i class="fa-solid fa-chevron-down nav-tab-caret"></i>
+        </button>
+        <div class="dropdown-menu nav-dd" id="dd-camps-player">
+          <div class="dropdown-section dd-section-camps">
+            <p class="dropdown-label"><i class="fa-solid fa-scroll nav-tab-ico"></i> Le mie Campagne</p>
+            <ul id="dropdown-player-list"></ul>
+            <button class="dropdown-add-btn dropdown-add-accent" id="btn-join-campaign-dd"><i class="fa-solid fa-key"></i> Unisciti con Codice</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
     <div class="nav-right">
-      <span class="nav-username" id="nav-username">Avventuriero</span>
-      <button class="hamburger" id="hamburger-btn"><span></span><span></span><span></span><span></span><span></span></button>
-      <div class="dropdown-menu" id="dropdown-menu">
-        <div class="dropdown-section">
-          <p class="dropdown-label">Le mie Schede</p>
-          <ul id="dropdown-sheets-list"></ul>
-          <button class="dropdown-add-btn" id="btn-add-sheet">+ Aggiungi Scheda</button>
+      <div class="nav-tab-wrap">
+        <button class="nav-user-btn" data-dd-target="dd-user" type="button">
+          <i class="fa-solid fa-user-shield"></i>
+          <span class="nav-username" id="nav-username">Avventuriero</span>
+          <i class="fa-solid fa-chevron-down nav-tab-caret"></i>
+        </button>
+        <div class="dropdown-menu nav-dd dd-user-menu" id="dd-user">
+          <a href="index.html" class="dropdown-logout"><i class="fa-solid fa-door-open"></i> Esci dal Vault</a>
         </div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-section">
-          <p class="dropdown-label">Le mie Campagne</p>
-          <ul id="dropdown-campaigns-list"></ul>
-          <button class="dropdown-add-btn" id="btn-add-campaign">+ Nuova Campagna</button>
-          <button class="dropdown-add-btn" id="btn-join-campaign-dd" style="margin-top: 5px; color: #e8c97e; border-color: #e8c97e;">Unisciti con Codice</button>
-        </div>
-        <div class="dropdown-divider"></div>
-        <a href="index.html" class="dropdown-logout"> Esci dal Vault</a>
       </div>
     </div>
   </nav>
@@ -222,8 +262,12 @@
 
     <!-- SEZIONE 1: EROI -->
     <section class="dashboard-section section-heroes">
+      <span class="section-rune section-rune-tl" aria-hidden="true"></span>
+      <span class="section-rune section-rune-br" aria-hidden="true"></span>
       <div class="section-header">
+        <span class="section-icon" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></span>
         <h2>I Miei Eroi</h2>
+        <span class="section-flourish" aria-hidden="true"></span>
         <button class="btn-primary section-cta" id="btn-add-sheet-main">+ Forgia Eroe</button>
       </div>
       <div class="content-grid" id="grid-heroes"></div>
@@ -231,8 +275,12 @@
 
     <!-- SEZIONE 2: CAMPAGNE MASTER -->
     <section class="dashboard-section section-master">
+      <span class="section-rune section-rune-tl" aria-hidden="true"></span>
+      <span class="section-rune section-rune-br" aria-hidden="true"></span>
       <div class="section-header">
+        <span class="section-icon" aria-hidden="true"><i class="fa-solid fa-dragon"></i></span>
         <h2>Le Mie Campagne · Master</h2>
+        <span class="section-flourish" aria-hidden="true"></span>
         <button class="btn-primary section-cta" id="btn-add-camp-main">+ Nuova Campagna</button>
       </div>
       <div class="content-grid" id="grid-master"></div>
@@ -240,8 +288,12 @@
 
     <!-- SEZIONE 3: CAMPAGNE GIOCATORE -->
     <section class="dashboard-section section-player">
+      <span class="section-rune section-rune-tl" aria-hidden="true"></span>
+      <span class="section-rune section-rune-br" aria-hidden="true"></span>
       <div class="section-header">
+        <span class="section-icon" aria-hidden="true"><i class="fa-solid fa-scroll"></i></span>
         <h2>Avventure in Corso · Giocatore</h2>
+        <span class="section-flourish" aria-hidden="true"></span>
         <button class="btn-primary section-cta" id="btn-join-camp-main">Unisciti con Codice</button>
       </div>
       <div class="content-grid" id="grid-player"></div>
