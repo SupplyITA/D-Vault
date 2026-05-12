@@ -113,9 +113,28 @@ export function makeCampaignCard(camp, i, isMaster) {
   const variant = isMaster ? 'luxury-master' : 'luxury-player';
   const tagText = isMaster ? 'Master' : 'Giocatore';
   const btnDelete = isMaster ? `<button class="btn-delete" data-type="campaign" data-index="${i}" title="Elimina">×</button>` : '';
+  
+  // --- Cerca l'eroe del giocatore ---
+  let myCharInfo = '';
+  if (!isMaster) {
+      let active = {};
+      try { active = JSON.parse(camp.activeCharacters || "{}"); } catch(e){}
+      const charName = active[State.username];
+
+      if (charName) {
+          // Se hai già scelto l'eroe, lo scrive in oro
+          myCharInfo = `<div class="lux-meta" style="margin-top: 4px; color: #d4a843;">In gioco con · <strong style="color: #f5d98e;">${escHtml(charName)}</strong></div>`;
+      } else {
+          // Se non lo hai ancora scelto, te lo ricorda
+          myCharInfo = `<div class="lux-meta" style="margin-top: 4px; color: #888; font-style: italic;">Nessun eroe selezionato</div>`;
+      }
+  }
+
+  // Info eroe
   const inviteInfo = isMaster
       ? `<div class="lux-invite">Codice <strong>${escHtml(String(camp.inviteCode||''))}</strong></div>`
-      : `<div class="lux-meta">Master · <strong>${escHtml(camp.owner)}</strong></div>`;
+      : `<div class="lux-meta">Master · <strong>${escHtml(camp.owner)}</strong></div>
+         ${myCharInfo}`;
 
   const mapSrc = camp.mapUrl || camp.campMap || '/maps/mappa_1.jpg';
   const mapBlock = mapSrc
