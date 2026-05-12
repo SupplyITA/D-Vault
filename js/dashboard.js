@@ -1,6 +1,6 @@
 import { $, escHtml, openModal, closeModal, closeDropdown, closeDetails } from './utils.js';
 import { State } from './state.js';
-import { socket, appendChatMessage, gestisciInvioChat } from './chat.js';
+import { socket, appendChatMessage, gestisciInvioChat, inviaChatCampagna, salvaMessaggioInMemoria, caricaMemoriaChat } from './chat.js';
 import { renderDropdowns, renderGrid, renderizzaBestiario } from './ui.js';
 import { costruisciSchedaInterattiva } from './interactive-sheet.js';
 import { dndData } from './dnd-data.js';
@@ -12,13 +12,132 @@ let playerLeafletMap = null;
 let vueData = null; 
 let currentImageOverlay = null;
 
+// --- 1. FUNZIONE SPAZZINA UNICA E GLOBALE ---
+function hideAllSections() {
+  const sections = ['dash-main', 'campaign-detail', 'sheet-detail', 'player-campaign-detail'];
+  sections.forEach(id => {
+    const el = $(id);
+    if (el) el.style.display = 'none';
+  });
+}
+
+// --- 2. GESTIONE INGRESSO CAMPAGNA GIOCATORE ---
+function handlePlayerCampaignClick(camp) {
+  let activeChars = {};
+  try { activeChars = JSON.parse(camp.activeCharacters || "{}"); } catch(e){}
+  
+  if (activeChars[State.username]) {
+      const charName = activeChars[State.username];
+      const sheetIndex = State.sheets.findIndex(s => s.charName === charName);
+      
+      if (sheetIndex !== -1) {
+          enterPlayerCampaign(sheetIndex, camp.campName);
+          return;
+      }
+  }
+  window.openCharacterSelectorForCampaign(camp);
+}
+
+window.openCharacterSelectorForCampaign = function(camp) {
+    const listContainer = $('char-selection-list');
+    if (State.sheets.length === 0) {
+        listContainer.innerHTML = '<p style="color:#aaa;">Non hai nessun eroe. Forgiane uno prima di unirti al tavolo!</p>';
+    } else {
+        listContainer.innerHTML = State.sheets.map((sheet, i) => `
+            <button class="btn-ghost" style="text-align: left; padding: 10px; display: flex; justify-content: space-between;" onclick="enterPlayerCampaign(${i}, '${escHtml(camp.campName)}')">
+                <span> ${escHtml(sheet.charName)} (Liv ${sheet.charLevel})</span>
+                <span style="color:#e8c97e;">Scegli ➔</span>
+            </button>
+        `).join('');
+    }
+    openModal($('modal-select-char-backdrop'));
+};
+
+window.enterPlayerCampaign = async function(sheetIndex, campName) {
+  closeModal($('modal-select-char-backdrop'));
+  const sheet = State.sheets[sheetIndex];
+  
+  // Definiamo subito 'camp'
+  const camp = State.campaigns.find(c => c.campName === campName);
+
+  // 1. Pulisce le altre schermate
+  if (typeof hideAllSections === 'function') hideAllSections(); 
+  
+  // 2. Ripristina la memoria della chat!
+  if($('pc-chat-messages')) caricaMemoriaChat(campName, 'pc-chat-messages');
+
+  if($('dash-main')) $('dash-main').style.display = 'none';
+  if($('player-campaign-detail')) $('player-campaign-detail').style.display = 'block';
+  
+  if($('player-camp-title')) $('player-camp-title').textContent = campName;
+  if($('player-camp-char')) {
+      $('player-camp-char').textContent = "Eroe: " + sheet.charName;
+      $('player-camp-char').dataset.charname = sheet.charName; 
+  }
+
+  if($('pc-avatar-img')) $('pc-avatar-img').src = sheet.avatar || '/img/species/_default.jpg';
+
+  if ($('tab-pc-mappa')) {
+      $('tab-pc-mappa').style.display = 'block';
+      $('tab-pc-mappa').style.height = '100%';
+      $('tab-pc-mappa').style.width = '100%';
+  }
+
+  costruisciSchedaInterattiva('pc-sheet-container', sheet, false);
+
+  // --- GESTIONE MAPPA GIOCATORE (LA TUA ORIGINALE, RIPRISTINATA!) ---
+  const mapUrl = (camp && camp.mapUrl) ? camp.mapUrl : '/maps/mappa_1.jpg';
+
+  // Inizializza la mappa Leaflet solo la prima volta
+  if (!playerLeafletMap && $('pc-map')) {
+      playerLeafletMap = L.map('pc-map', { crs: L.CRS.Simple, minZoom: -2 });
+      playerLeafletMap.on('click', function(e) {
+          aggiungiSegnalino(e.latlng, playerLeafletMap, true);
+      });
+      $('pc-map').addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  // Aggiorna SEMPRE l'immagine 
+  if (playerLeafletMap) {
+      playerLeafletMap.eachLayer(layer => {
+          if (layer instanceof L.ImageOverlay) playerLeafletMap.removeLayer(layer);
+      });
+      const bounds = [[0,0], [1000,1000]]; 
+      L.imageOverlay(mapUrl, bounds).addTo(playerLeafletMap);
+      playerLeafletMap.fitBounds(bounds);
+      setTimeout(() => playerLeafletMap.invalidateSize(), 100);
+  }
+  // -----------------------------------------------------------------
+
+  document.querySelector('.player-tab-btn[data-tab="pc-scheda"]')?.click();
+  
+  // Entra nella stanza segreta della chat
+  if (socket) socket.emit('entra_stanza_campagna', campName);
+
+  // --- SALVATAGGIO IN BACKGROUND BLINDATO ---
+  try {
+      await fetch('/api/campaigns/set-active-char', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ campName: campName, owner: State.username, charName: sheet.charName })
+      });
+      
+      // Aggiorna la memoria locale così se chiudi e riapri entra da solo!
+      if (camp) {
+          let active = {};
+          try { active = JSON.parse(camp.activeCharacters || "{}"); } catch(e){}
+          active[State.username] = sheet.charName;
+          camp.activeCharacters = JSON.stringify(active);
+      }
+  } catch(e) { console.error("Errore salvataggio eroe in background:", e); }
+};
+
+// --- 4. INIZIALIZZAZIONE DELLA PAGINA (VUE E DATI) ---
 document.addEventListener('DOMContentLoaded', async () => {
   if ($('nav-username')) $('nav-username').textContent = State.username;
   await State.loadFromServer();
   
-// Inizializzazione Vue.js
   if (typeof Vue !== 'undefined') {
-      // Importa anche 'watch' da Vue
       const { createApp, ref, computed, watch } = Vue;
       createApp({
           setup() {
@@ -26,37 +145,26 @@ document.addEventListener('DOMContentLoaded', async () => {
               const bonusCompetenza = computed(() => Math.ceil(livello.value / 4) + 1);
               vueData = { livello }; 
               
-              // Ascolta i cambiamenti della variabile 'livello'
               watch(livello, async (nuovoLivello) => {
                   const charName = $('sheet-detail-title')?.textContent;
                   if (!charName) return;
 
-                  // Cerca la scheda tra quelle caricate per aggiornarla istantaneamente
                   const sheet = State.sheets.find(s => s.charName === charName);
                   const livelloParsato = parseInt(nuovoLivello) || 1;
                   const container = document.getElementById('base-sheet-container') || document.getElementById('pc-sheet-container');
 
                   if (sheet && sheet.charLevel !== livelloParsato) {
                       sheet.charLevel = livelloParsato;
-                      
-                      // Salva il dato in background sul Database
                       try {
                           await fetch('/api/sheets/update-level', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ 
-                                  owner: State.username, 
-                                  charName: charName, 
-                                  charLevel: livelloParsato 
-                              })
+                              body: JSON.stringify({ owner: State.username, charName: charName, charLevel: livelloParsato })
                           });
-                      } catch(e) { 
-                          console.error("Errore durante il salvataggio del livello:", e); 
-                      }
+                      } catch(e) { console.error(e); }
                   }
                   
                  if (container) {
-                    //Avvia la funzione aggiornaTuttiICalcoli per ricalcolare tutto in base al nuovo bonus competenza
                     const form = container.querySelector('form');
                     if (form) form.dispatchEvent(new Event('input'));
                  }
@@ -73,90 +181,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();
 });
 
-
-// Assegnazione globale delle funzioni HTML inline
-window.openCharacterSelectorForCampaign = function(camp) {
-    const listContainer = $('char-selection-list');
-    if (State.sheets.length === 0) {
-        listContainer.innerHTML = '<p style="color:#aaa;">Non hai nessun eroe. Forgiane uno prima di unirti al tavolo!</p>';
-    } else {
-        listContainer.innerHTML = State.sheets.map((sheet, i) => `
-            <button class="btn-ghost" style="text-align: left; padding: 10px; display: flex; justify-content: space-between;" onclick="enterPlayerCampaign(${i}, '${escHtml(camp.campName)}')">
-                <span> ${escHtml(sheet.charName)} (Liv ${sheet.charLevel})</span>
-                <span style="color:#e8c97e;">Scegli ➔</span>
-            </button>
-        `).join('');
-    }
-    openModal($('modal-select-char-backdrop'));
-};
-
-window.enterPlayerCampaign = function(sheetIndex, campName) {
-  closeModal($('modal-select-char-backdrop'));
-  const sheet = State.sheets[sheetIndex];
-
-  fetch('/api/campaigns/set-active-char', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ campName: campName, owner: State.username, charName: sheet.charName })
-  });
-
-  if($('dash-main')) $('dash-main').style.display = 'none';
-  if($('player-campaign-detail')) $('player-campaign-detail').style.display = 'block';
-  
-  if($('player-camp-title')) $('player-camp-title').textContent = campName;
-  if($('player-camp-char')) {
-      $('player-camp-char').textContent = "Eroe: " + sheet.charName;
-      $('player-camp-char').dataset.charname = sheet.charName; 
-  }
-
-  if($('pc-avatar-img')) $('pc-avatar-img').src = sheet.avatar || 'https://via.placeholder.com/150/111111/e8c97e?text=Click';
-
-  if ($('tab-pc-mappa')) {
-      $('tab-pc-mappa').style.display = 'block';
-      $('tab-pc-mappa').style.height = '100%';
-      $('tab-pc-mappa').style.width = '100%';
-  }
-
-  costruisciSchedaInterattiva('pc-sheet-container', sheet, false);
-
-  // --- GESTIONE MAPPA GIOCATORE AGGIORNATA ---
-  
-  // Troviamo la campagna per sapere che mappa ha salvato
-  const camp = State.campaigns.find(c => c.campName === campName);
-  const mapUrl = (camp && camp.mapUrl) ? camp.mapUrl : '/maps/mappa_1.jpg';
-
-  // 1. Inizializza la mappa Leaflet solo la prima volta
-  if (!playerLeafletMap && $('pc-map')) {
-      playerLeafletMap = L.map('pc-map', { crs: L.CRS.Simple, minZoom: -2 });
-
-      playerLeafletMap.on('click', function(e) {
-          aggiungiSegnalino(e.latlng, playerLeafletMap, true);
-      });
-      
-      $('pc-map').addEventListener('contextmenu', e => e.preventDefault());
-  }
-
-  // 2. Aggiorna SEMPRE l'immagine (anche se la mappa Leaflet esisteva già)
-  if (playerLeafletMap) {
-      // Puliamo il tavolo togliendo la mappa precedente
-      playerLeafletMap.eachLayer(layer => {
-          if (layer instanceof L.ImageOverlay) {
-              playerLeafletMap.removeLayer(layer);
-          }
-      });
-      
-      // Mettiamo la mappa della campagna attuale
-      const bounds = [[0,0], [1000,1000]]; 
-      L.imageOverlay(mapUrl, bounds).addTo(playerLeafletMap);
-      playerLeafletMap.fitBounds(bounds);
-      
-      setTimeout(() => playerLeafletMap.invalidateSize(), 100);
-  }
-  
-  document.querySelector('.player-tab-btn[data-tab="pc-scheda"]')?.click();
-};
+// IL RESTO DEL FILE CONTINUA QUI DA openCampaignDetail(camp)...
 
 function openCampaignDetail(camp) {
+  hideAllSections(); // <-- Pulisce tutto prima
+  if($('dm-chat-messages')) caricaMemoriaChat(camp.campName, 'dm-chat-messages');
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
   if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName;
@@ -231,6 +260,8 @@ function openCampaignDetail(camp) {
       // Assicura che le dimensioni si calcolino correttamente senza ricaricare la pagina
       setTimeout(() => leafletMap.invalidateSize(), 100);
   }
+
+  if (socket) socket.emit('entra_stanza_campagna', camp.campName);
 }
 
 // Funzione che aggiunge e permette la rimozione dei segnalini
@@ -277,7 +308,7 @@ async function caricaEroiParty(campName) {
 window.visualizzaSchedaParty = function(charName) {
     const container = $('master-party-sheet-container');
 
-    container.innerHTML = '<p style="color: #aaa, text-align: center; margin-top: 50px;"> Caricamento scheda di <b>${escHtml(charName)}</b>...</p>';
+    container.innerHTML = `<p style="color: #aaa; text-align: center; margin-top: 50px;"> Caricamento scheda di <b>${escHtml(charName)}</b>...</p>`;
 
     fetch(`/api/sheets/by-name?charName=${encodeURIComponent(charName)}`)
       .then(res => res.json())
@@ -295,6 +326,7 @@ window.visualizzaSchedaParty = function(charName) {
 };
 
 function openSheetDetail(sheet) {
+  hideAllSections(); // <-- Pulisce tutto prima
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
   if($('sheet-detail-title')) $('sheet-detail-title').textContent = sheet.charName;
@@ -352,7 +384,7 @@ function bindEvents() {
       if (type === 'campaign') {
           const camp = State.campaigns[index];
           if (camp.owner === State.username) openCampaignDetail(camp);
-          else openCharacterSelectorForCampaign(camp);
+          else handlePlayerCampaignClick(camp);
       }
       if (type === 'sheet') openSheetDetail(State.sheets[index]);
     }
@@ -463,6 +495,31 @@ function bindEvents() {
   $('btn-back-sheet')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
   $('btn-back-player-camp')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
   
+  // --- Gestione click sulle voci del Dropdown ---
+  $('dropdown-menu')?.addEventListener('click', (e) => {
+    const item = e.target.closest('.dropdown-item');
+    if (!item) return;
+
+    const type = item.dataset.type;
+    const index = parseInt(item.dataset.index);
+
+    if (type === 'sheet') {
+      // Se clicco su un eroe, apro la sua scheda
+      openSheetDetail(State.sheets[index]);
+    } else if (type === 'campaign') {
+      // Se clicco su una campagna, uso la logica esistente (Master o Giocatore)
+      const camp = State.campaigns[index];
+      if (camp.owner === State.username) {
+        openCampaignDetail(camp);
+      } else {
+        handlePlayerCampaignClick(camp);
+      }
+    }
+    
+    // Chiudiamo il menu dopo il click
+    closeDropdown();
+  });
+
   // Menu
   $('hamburger-btn')?.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -691,14 +748,14 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
   $('btn-send-chat')?.addEventListener('click', () => gestisciInvioChat('chat-input', 'chat-messages', State.username));
   $('chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-send-chat').click(); });
 
-  $('btn-send-dm-chat')?.addEventListener('click', () => gestisciInvioChat('dm-chat-input', 'dm-chat-messages', State.username));
+  $('btn-send-dm-chat')?.addEventListener('click', () => inviaChatCampagna('dm-chat-input', 'dm-chat-messages', State.username, $('campaign-detail-title').textContent));
   $('dm-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-send-dm-chat').click(); });
 
-  $('btn-pc-send-chat')?.addEventListener('click', () => gestisciInvioChat('pc-chat-input', 'pc-chat-messages', State.username));
+  $('btn-pc-send-chat')?.addEventListener('click', () => inviaChatCampagna('pc-chat-input', 'pc-chat-messages', State.username, $('player-camp-title').textContent));
   $('pc-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-pc-send-chat').click(); });
 
-  // Avatar Base
-function initAvatarMenu(imgId, inputId) {
+// Avatar Base + aggiungi immagine + ripristina default
+  function initAvatarMenu(imgId, inputId, getCharName) { // <-- Aggiunto getCharName
       const imgEl = $(imgId);
       const menu = $('avatar-context-menu');
       const zoomOverlay = $('avatar-zoom-overlay');
@@ -723,11 +780,61 @@ function initAvatarMenu(imgId, inputId) {
               $(inputId).click();
               menu.style.display = 'none';
           };
+
+          // --- RIPRISTINA DEFAULT ---
+          $('menu-reset-avatar').onclick = async (e) => {
+              e.stopPropagation();
+              menu.style.display = 'none';
+
+              const charName = getCharName(); // Recuperiamo il nome dell'eroe
+              if (!charName) return;
+
+              // Troviamo la scheda nei dati locali
+              const sheet = State.sheets.find(s => s.charName === charName);
+              if (!sheet) return;
+
+              // Ricostruiamo il percorso di default esatto
+              const slug = sheet.charRace.toLowerCase().replace(/\s+/g, '-');
+              const gender = sheet.charGender || 'm';
+              // Usiamo lo slash iniziale per la "root giusta" che abbiamo sistemato prima!
+              const defaultAvatarUrl = `/img/species/${slug}-${gender}.jpg`; 
+
+              // Aggiorniamo l'immagine a schermo
+              imgEl.src = defaultAvatarUrl;
+
+              // Salviamo la modifica nel database usando la rotta esistente
+              try {
+                  await fetch('/api/sheets/avatar', { 
+                      method: 'POST', 
+                      headers: { 'Content-Type': 'application/json' }, 
+                      body: JSON.stringify({ 
+                          owner: State.username, 
+                          charName: charName, 
+                          avatarUrl: defaultAvatarUrl 
+                      }) 
+                  });
+
+                  // Aggiorniamo lo stato locale
+                  sheet.avatar = defaultAvatarUrl;
+
+                  Swal.fire({ 
+                      title: 'Magia annullata!', 
+                      text: 'Ritratto di default ripristinato.',
+                      icon: 'success', 
+                      customClass: { popup: 'vault-popup' }, 
+                      timer: 1500, 
+                      showConfirmButton: false 
+                  });
+              } catch (err) { 
+                  Swal.fire({ title: 'Errore', text: "Impossibile ripristinare l'avatar.", icon: 'error', customClass: { popup: 'vault-popup' } });
+              }
+          };
       };
   }
 
-  initAvatarMenu('char-avatar-img', 'char-avatar-input');
-  initAvatarMenu('pc-avatar-img', 'pc-avatar-input');
+  // Come trovare il nome
+  initAvatarMenu('char-avatar-img', 'char-avatar-input', () => $('sheet-detail-title').textContent);
+  initAvatarMenu('pc-avatar-img', 'pc-avatar-input', () => $('player-camp-char').dataset.charname);
 
   document.addEventListener('click', () => {
       if($('avatar-context-menu')) $('avatar-context-menu').style.display = 'none';
@@ -873,10 +980,16 @@ function initAvatarMenu(imgId, inputId) {
 
   // Ricezione Eventi Socket
   if (socket) {
-      socket.on('ricevi_messaggio', (dati) => {
-          appendChatMessage(dati.mittente, dati.testo, 'other', 'chat-messages');
-          appendChatMessage(dati.mittente, dati.testo, 'other', 'dm-chat-messages');
-          appendChatMessage(dati.mittente, dati.testo, 'other', 'pc-chat-messages'); 
+      socket.on('ricevi_messaggio_campagna', (dati) => {
+          // 1. Salva il messaggio in memoria a prescindere da dove ti trovi
+          salvaMessaggioInMemoria(dati.campName, dati.mittente, dati.testo, 'other');
+
+          // 2. Stampalo a video SOLO SE hai aperta esattamente quella campagna in questo momento
+          if ($('campaign-detail').style.display === 'block' && $('campaign-detail-title').textContent === dati.campName) {
+              appendChatMessage(dati.mittente, dati.testo, 'other', 'dm-chat-messages');
+          } else if ($('player-campaign-detail').style.display === 'block' && $('player-camp-title').textContent === dati.campName) {
+              appendChatMessage(dati.mittente, dati.testo, 'other', 'pc-chat-messages');
+          }
       });
 
       socket.on('ricevi_segnalino', (latlng) => {
@@ -943,7 +1056,7 @@ function applicaTilt3D() {
 
     import('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm').then(async ({ PDFDocument }) => {
         async function scopriNomiCampiPDF() {
-            console.log("⏳ Avvio scansione del PDF...");
+            console.log(" Avvio scansione del PDF...");
             try {
                 // Assicurati che il percorso sia corretto! 
                 // Se lo hai messo nella cartella uploads, cambia in '/uploads/pdf/5E_...'
@@ -957,15 +1070,15 @@ function applicaTilt3D() {
                 const form = pdfDoc.getForm();
                 
                 const campi = form.getFields();
-                console.log("🔥 INIZIO LISTA CAMPI PDF 🔥");
+                console.log("- INIZIO LISTA CAMPI PDF -");
                 campi.forEach(campo => {
                     console.log(`Nome Interno: "${campo.getName()}" | Tipo: ${campo.constructor.name}`);
                 });
-                console.log("✅ FINE LISTA CAMPI PDF ✅");
+                console.log("- FINE LISTA CAMPI PDF -");
                 console.log("Ci sono in totale " + campi.length + " campi compilabili.");
                 
             } catch (e) {
-                console.error("❌ Errore lettura PDF:", e);
+                console.error("- Errore lettura PDF:", e);
             }
         }
         

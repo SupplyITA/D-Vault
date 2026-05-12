@@ -132,6 +132,11 @@ export function makeCampaignCard(camp, i, isMaster) {
          </svg>
        </div>`;
 
+  // --- CALCOLO DEI POSTI LIBERI ---
+  const totali = camp.campPlayers || 4;
+  const occupati = camp.joinedPlayers ? camp.joinedPlayers.length : 0;
+  const liberi = totali - occupati;
+
   return `
     <div class="vault-card luxury ${variant}" data-type="campaign" data-index="${i}">
       <span class="lux-paper"></span>
@@ -151,7 +156,9 @@ export function makeCampaignCard(camp, i, isMaster) {
       </div>
       <div class="lux-divider"></div>
       <div class="card-sub">${escHtml(camp.campSetting)||'Ambientazione libera'}</div>
-      <div class="card-level">${escHtml(String(camp.campPlayers||4))} posti</div>
+      
+      <div class="card-level">${liberi} posti liberi</div>
+      
       ${inviteInfo}
       <div class="lux-actions">
         <button class="btn-primary lux-btn">Entra al Tavolo</button>

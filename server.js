@@ -263,7 +263,7 @@ app.get('/api/sheets', (req, res) => {
 });
 
 // Mostra le schede dei giocatori iscritti alla campagna al Master
-app.post('/api/campaigns/:campName/set-active-char', (req, res) => {
+app.post('/api/campaigns/set-active-char', (req, res) => {
     const { campName, owner, charName } = req.body;
     db.get('SELECT activeCharacters FROM campagne WHERE campName = ?', [campName], (err, row) => {
         if (err || !row) return res.status(404).send();
@@ -290,8 +290,11 @@ app.get('/api/campaigns/:campName/party', (req, res) => {
         const charNames = Object.values(active);
         if (charNames.length === 0) return res.json([]);
 
-        const placeholders = charNames.map(() => '?').json(',');
-        db.all('SELECT * FROM schede WHERE charName IN (${placeholders})', charNames, (err, sheets) => {
+        // 1. CORRETTO: .join invece di .json
+        const placeholders = charNames.map(() => '?').join(','); 
+        
+        // 2. CORRETTO: Usati i backtick ( ` ) per permettere a ${placeholders} di funzionare
+        db.all(`SELECT * FROM schede WHERE charName IN (${placeholders})`, charNames, (err, sheets) => {
             if (err) return res.status(500).json({error: err.message});
             const parsedSheets = (sheets || []).map(s => ({
                 ...s,
@@ -361,7 +364,7 @@ io.on('connection', (socket) => {
     socket.on('rimuovi_segnalino', (latlng) => {
     // Rimbalza l'ordine di rimozione a tutti gli altri client
     socket.broadcast.emit('segnalino_rimosso', latlng);
-});
+    });
 
     // Cambio mappa per tutti i giocatori connessi
     socket.on('cambia_sfondo_mappa', (url) => {
@@ -370,6 +373,17 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('🔴 Un utente ha lasciato il tavolo.');
+    });
+
+    // Entra in una stanza specifica
+    socket.on('entra_stanza_campagna', (campName) => {
+        // Unisciti alla stanza senza abbandonare le altre!
+        socket.join(campName); 
+    });
+
+    // Invia un messaggio SOLO a chi è dentro la stanza
+    socket.on('invia_messaggio_campagna', (dati) => {
+        socket.to(dati.campName).emit('ricevi_messaggio_campagna', dati);
     });
 });
 
