@@ -364,6 +364,15 @@ app.post('/api/sheets/notes', (req, res) => {
     });
 });
 
+// Rotta per resettare TUTTE le note di un utente in un colpo solo
+app.post('/api/sheets/reset-all-notes', (req, res) => {
+    const { owner } = req.body;
+    db.run(`UPDATE schede SET playerNotes = '' WHERE owner = ?`, [owner], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, message: "Tutte le pergamene sono state ripulite." });
+    });
+});
+
 // Socket Connessione alla Chat 
 io.on('connection', (socket) => {
     console.log('🟢 Un utente si è connesso al tavolo virtuale!');
