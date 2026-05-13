@@ -357,3 +357,39 @@
   .lux-portrait-frame { width: 78px; height: 98px; }
   .lux-map-thumb { width: 68px; height: 44px; }
 }
+
+/* ════════════════════════════════════════════════
+   VISIONE DA TELEFONO / TABLET QUALSIASI DISPOSITIVO NO PC 
+   ════════════════════════════════════════════════ */
+
+  @media (max-width: 900px){
+    .sheet-layout{
+      flex-direction: column !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+    .sheet-left{
+      width: 100% !important;
+      flex: none !important;
+      min-width: 0 !important;
+    }
+    .sheet-right{
+      margin-top: 20px ;
+      padding-right: 0 !important;
+    }
+
+    .campaign-tabs{
+      flex-wrap: nowrap !important;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 10px;
+    }
+    .tab-btn{
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .map-hover-effect, #pc-map #map{
+      min-height: 450px !important;
+    }
+  }

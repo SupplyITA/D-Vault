@@ -398,3 +398,26 @@
   .section-flourish { display: none; }
   .section-rune { display: none; }
 }
+
+@media (max-width: 768px){
+  .dash-main{
+    padding: 1rem 0.5rem 2rem !important;
+  }
+  
+  .dashboard-section{
+    padding: 1.5rem 1rem !important;
+  }
+
+  .detail-section{
+    padding: 10px !important;
+  }
+
+  #campaign-detail-title, #sheet-detail-title, #player-camp-title{
+    font-size: 1.5rem !important;
+  }
+
+  .vue-stats-box{
+    width: 100%;
+    justify-content: space-between;
+  }
+}
