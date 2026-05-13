@@ -58,3 +58,27 @@ export function inviaChatCampagna(inputId, containerId, username, campName) {
         input.value = '';
     }
 }
+
+// --- LANCIO DEI DADI ---
+export function tiraDado(faccie, username, campName, containerId) {
+    // Calcola il risultato (es. da 1 a 20)
+    const risultato = Math.floor(Math.random() * faccie) + 1;
+    
+    // Formatta il messaggio
+    const text = `...lancia un d${faccie} e ottiene: **${risultato}**`;
+    const type = 'dice'; // Tipo speciale per il CSS
+
+    // Mostra sùbito a te stesso
+    appendChatMessage(username, text, type, containerId);
+    salvaMessaggioInMemoria(campName, username, text, type);
+
+    // Invia al server per mostrarlo agli altri
+    if (socket) {
+        socket.emit('invia_messaggio_campagna', { 
+            mittente: username, 
+            testo: text, 
+            type: type, 
+            campName: campName 
+        });
+    }
+}

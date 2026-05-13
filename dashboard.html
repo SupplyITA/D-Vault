@@ -387,15 +387,27 @@
         </div>
       </div>
 
-      <div class="sheet-right">
-        <div class="right-panel-box" style="height: 100%;">
-          <h3 class="panel-box-title"> Chat Campagna</h3>
-          <div id="dm-chat-messages" class="chat-messages" style="flex: 1; overflow-y: auto;">
+      <div class="sheet-right" style="flex: 0 0 360px; width: 360px; display: flex; flex-direction: column; height: 100%; padding-right: 10px;">
+        <div class="right-panel-box" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+          <h3 class="panel-box-title" style="flex-shrink: 0;"> Chat Campagna</h3>
+          
+          <div id="dm-chat-messages" class="chat-messages" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; margin-top: 15px; margin-bottom: 15px; border: 1px solid #333;">
             <div class="chat-msg system">Tavolo virtuale aperto. Pronti all'avventura!</div>
           </div>
-          <div class="chat-input-area">
-            <input type="text" id="dm-chat-input" placeholder="Scrivi al gruppo...">
-            <button id="btn-send-dm-chat" class="btn-primary" style="padding: 0.5rem 1rem; margin: 0;">Invia</button>
+          
+          <div class="dice-bar" style="display: flex; gap: 5px; margin-bottom: 8px; justify-content: center; flex-wrap: wrap; flex-shrink: 0;">
+            <button class="btn-dice" data-dice="4">d4</button>
+            <button class="btn-dice" data-dice="6">d6</button>
+            <button class="btn-dice" data-dice="8">d8</button>
+            <button class="btn-dice" data-dice="10">d10</button>
+            <button class="btn-dice" data-dice="12">d12</button>
+            <button class="btn-dice" data-dice="20">d20</button>
+            <button class="btn-dice" data-dice="100">d100</button>
+          </div>
+          
+          <div class="chat-input-area" style="display: flex; gap: 10px; flex-shrink: 0;">
+            <input type="text" id="dm-chat-input" placeholder="Scrivi al gruppo..." style="flex: 1; padding: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 4px;">
+            <button id="btn-send-dm-chat" class="btn-primary" style="padding: 0 20px; margin: 0;">Invia</button>
           </div>
         </div>
       </div>
@@ -422,11 +434,11 @@
       </div>
 
       <div class="sheet-right" style="flex: 0 0 320px; width: 320px; overflow-y: auto; height: 100%; padding-right: 10px;">
-        <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px; text-align: center;">
+        <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px; text-align: center; flex: 0 0 auto; display: block; overflow: visible;">
           <p style="margin-top: 0; margin-bottom: 10px; color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.9rem; text-transform: uppercase;">Ritratto Eroe</p>
           <img id="char-avatar-img" src="https://via.placeholder.com/150/111111/e8c97e?text=+" 
                alt="Avatar"
-               style="width: 130px; height: 130px; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; cursor: pointer; transition: opacity 0.2s; margin: 0 auto;" 
+               style="width: 130px; height: 130px; flex-shrink: 0; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; box-shadow: 0 0 15px rgba(0,0,0,0.8); cursor: pointer; transition: opacity 0.2s; margin: 0 auto; display: block;" 
                title="Clicca per caricare il ritratto" 
                onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">
           <input type="file" id="char-avatar-input" accept="image/*" style="display: none;">
@@ -435,6 +447,7 @@
         <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px;">
           <h3 class="panel-box-title"> Appunti</h3>
           <textarea id="player-notes" style="display: block; width: 100%; min-height: 120px; resize: vertical; background: rgba(0,0,0,0.3); color: #ccc; border: 1px solid #444; border-radius: 4px; padding: 10px; font-family: sans-serif; margin-top: 15px;" placeholder="Scrivi i tuoi appunti..."></textarea>
+          <button id="btn-save-notes" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 8px;">✦ Salva Appunti</button>
         </div>
 
       </div>
@@ -469,18 +482,31 @@
         </div>
       </div>
 
-      <div class="sheet-right" style="flex: 0 0 320px; width: 320px; overflow-y: auto; height: 100%; padding-right: 10px;">
-        <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px; text-align: center;">
+      <div class="sheet-right" style="flex: 0 0 360px; width: 360px; display: flex; flex-direction: column; overflow-y: auto; height: 100%; padding-right: 10px;">
+        
+        <div class="right-panel-box" style="padding: 15px; margin-bottom: 20px; text-align: center; flex: 0 0 auto; display: block; overflow: visible;">
           <p style="margin-top: 0; margin-bottom: 10px; color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.9rem; text-transform: uppercase;">Ritratto Eroe</p>
           <img id="pc-avatar-img" src="https://via.placeholder.com/150/111111/e8c97e?text=+" 
-               style="width: 130px; height: 130px; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; cursor: pointer; transition: opacity 0.2s; margin: 0 auto;">
+               style="width: 130px; height: 130px; flex-shrink: 0; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; box-shadow: 0 0 15px rgba(0,0,0,0.8); cursor: pointer; transition: opacity 0.2s; margin: 0 auto; display: block;">
           <input type="file" id="pc-avatar-input" accept="image/*" style="display: none;">
         </div>
 
-        <div class="right-panel-box" style="padding: 15px;">
-          <h3 class="panel-box-title">Chat Party</h3>
-          <div id="pc-chat-messages" class="chat-messages" style="display: block; min-height: 150px; height: 250px; resize: vertical; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; margin-top: 15px; margin-bottom: 15px; border: 1px solid #333;"></div>
-          <div class="chat-input-area" style="display: flex; gap: 10px;">
+        <div class="right-panel-box" style="padding: 15px; flex: 1; display: flex; flex-direction: column; min-height: 400px; margin-bottom: 20px;">
+          <h3 class="panel-box-title" style="flex-shrink: 0;">Chat Party</h3>
+          
+          <div id="pc-chat-messages" class="chat-messages" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; margin-top: 15px; margin-bottom: 15px; border: 1px solid #333;"></div>
+          
+          <div class="dice-bar" style="display: flex; gap: 5px; margin-bottom: 8px; justify-content: center; flex-wrap: wrap; flex-shrink: 0;">
+            <button class="btn-dice" data-dice="4">d4</button>
+            <button class="btn-dice" data-dice="6">d6</button>
+            <button class="btn-dice" data-dice="8">d8</button>
+            <button class="btn-dice" data-dice="10">d10</button>
+            <button class="btn-dice" data-dice="12">d12</button>
+            <button class="btn-dice" data-dice="20">d20</button>
+            <button class="btn-dice" data-dice="100">d100</button>
+          </div>
+          
+          <div class="chat-input-area" style="display: flex; gap: 10px; flex-shrink: 0;">
             <input type="text" id="pc-chat-input" placeholder="Scrivi al gruppo..." style="flex: 1; padding: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 4px;">
             <button id="btn-pc-send-chat" class="btn-primary" style="padding: 0 20px; margin: 0;">Invia</button>
           </div>

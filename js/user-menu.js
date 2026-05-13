@@ -201,13 +201,50 @@
       customClass: { popup: 'vault-popup' },
       didOpen: () => {
         document.getElementById('set-theme').addEventListener('click', () => { Swal.close(); openTheme(); });
-        document.getElementById('set-clear-notes').addEventListener('click', () => {
-          const ta = document.getElementById('player-notes');
-          if (ta) ta.value = '';
+        document.getElementById('set-clear-notes').addEventListener('click', async () => {
+          // CHIEDIAMO CONFERMA
+          const result = await Swal.fire({
+            title: 'Sei sicuro?',
+            text: "Tutti gli appunti di tutti i tuoi eroi verranno cancellati per sempre. Confermi l'azione?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sì, cancella tutto!',
+            cancelButtonText: 'Annulla',
+            background: '#1a1108',
+            color: '#d4a843',
+            confirmButtonColor: '#8b1a1a',
+            customClass: { popup: 'vault-popup' }
+          });
+
+          // Se l'utente clicca annulla, ci fermiamo qui
+          if (!result.isConfirmed) return;
+
           try {
-            Object.keys(localStorage).filter(k => k.startsWith('dvault_notes_')).forEach(k => localStorage.removeItem(k));
-          } catch (_) {}
-          Swal.fire({ title: 'Note ripulite!', icon: 'success', timer: 1200, showConfirmButton: false, customClass: { popup: 'vault-popup' } });
+            //CHIAMIAMO IL SERVER
+            const resp = await fetch('/api/sheets/reset-all-notes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ owner: username() })
+            });
+
+            if (resp.ok) {
+              //PULIAMO LA UI IMMEDIATAMENTE
+              const ta = document.getElementById('player-notes');
+              if (ta) ta.value = '';
+
+              Swal.fire({ 
+                title: 'Note ripulite!', 
+                text: 'L\'Archivio è tornato immacolato.',
+                icon: 'success', 
+                timer: 2000, 
+                showConfirmButton: false, 
+                customClass: { popup: 'vault-popup' } 
+              });
+              setTimeout(() => location.reload(), 2000);
+            }
+          } catch (e) {
+            Swal.fire({ title: 'Errore magico', text: 'Non è stato possibile comunicare con il Vault.', icon: 'error' });
+          }
         });
         document.getElementById('set-clear-sheets').addEventListener('click', () => confirmAndDelete('schede'));
         document.getElementById('set-clear-camps').addEventListener('click',  () => confirmAndDelete('campagne'));

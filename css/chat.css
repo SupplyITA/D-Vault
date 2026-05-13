@@ -80,3 +80,39 @@
   outline: none;
   border-color: rgba(var(--accent-1), 0.4);
 }
+
+/* --- STILE BOTTONI DADI --- */
+.btn-dice {
+    background: rgba(10, 5, 5, 0.6);
+    border: 1px solid rgba(212, 168, 67, 0.4);
+    color: var(--gold, #e8c97e);
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.btn-dice:hover {
+    background: rgba(212, 168, 67, 0.2);
+    border-color: var(--gold-bright, #f5d98e);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(212, 168, 67, 0.3);
+}
+/* --- STILE MESSAGGIO DADO IN CHAT --- */
+.chat-msg.dice {
+    background: linear-gradient(90deg, rgba(212, 168, 67, 0.15) 0%, transparent 100%);
+    border-left: 3px solid var(--gold, #e8c97e);
+    color: var(--gold-bright, #f5d98e);
+    font-style: italic;
+    padding: 8px 12px;
+    margin: 6px 0;
+}
+
+.chat-msg.dice .sender {
+    color: var(--gold, #e8c97e);
+    font-weight: bold;
+    font-style: normal;
+}

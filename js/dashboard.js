@@ -1,6 +1,6 @@
 import { $, escHtml, openModal, closeModal, closeDropdown, closeDetails } from './utils.js';
 import { State } from './state.js';
-import { socket, appendChatMessage, gestisciInvioChat, inviaChatCampagna, salvaMessaggioInMemoria, caricaMemoriaChat } from './chat.js';
+import { socket, appendChatMessage, gestisciInvioChat, inviaChatCampagna, salvaMessaggioInMemoria, caricaMemoriaChat, tiraDado } from './chat.js';
 import { renderDropdowns, renderGrid, renderizzaBestiario } from './ui.js';
 import { costruisciSchedaInterattiva } from './interactive-sheet.js';
 import { dndData } from './dnd-data.js';
@@ -109,7 +109,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
 
   document.querySelector('.player-tab-btn[data-tab="pc-scheda"]')?.click();
   
-  if (socket) socket.emit('entra_stanza_campagna', campName);
+  if (socket) socket.emit('entra_stanza_campagna', { campName: campName, username: State.username });
 
   try {
       await fetch('/api/campaigns/set-active-char', {
@@ -257,7 +257,7 @@ function openCampaignDetail(camp) {
       setTimeout(() => leafletMap.invalidateSize(), 100);
   }
 
-  if (socket) socket.emit('entra_stanza_campagna', camp.campName);
+  if (socket) socket.emit('entra_stanza_campagna', { campName: camp.campName, username: State.username });
 }
 
 // Funzione che aggiunge e permette la rimozione dei segnalini con Proprietà
@@ -336,19 +336,25 @@ window.visualizzaSchedaParty = function(charName) {
 };
 
 function openSheetDetail(sheet) {
-  hideAllSections(); // <-- Pulisce tutto prima
+  if (!sheet) return;
+  hideAllSections(); 
+  
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
   if($('sheet-detail-title')) $('sheet-detail-title').textContent = sheet.charName;
-  //Salva note
-  if($('player-notes')) $('player-notes').value = sheet.sheetDataDetails.playerNotes || '';
+
+  // CARICA APPUNTI DALLA COLONNA DEDICATA
+  const notesArea = $('player-notes');
+  if(notesArea) {
+      // Usa sheet.playerNotes
+      notesArea.value = sheet.playerNotes || (sheet.sheetDataDetails && sheet.sheetDataDetails.playerNotes) || '';
+  }
 
   if($('char-avatar-img')) {
-      $('char-avatar-img').src = sheet.avatar || 'https://via.placeholder.com/150/111111/e8c97e?text=Click';
+      $('char-avatar-img').src = sheet.avatar || 'img/species/_default.jpg';
   }
-  // Costruisce la scheda interattiva con i dati del personaggio
-  costruisciSchedaInterattiva('base-sheet-container', sheet, false);
 
+  costruisciSchedaInterattiva('base-sheet-container', sheet, false);
   if (vueData) vueData.livello.value = parseInt(sheet.charLevel) || 1;
 }
 
@@ -546,22 +552,29 @@ function bindEvents() {
       }
   });
 
-  // Pulsanti indietro
-  $('btn-back-campaign')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
-  $('btn-back-sheet')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
-  $('btn-back-player-camp')?.addEventListener('click', () => { renderGrid(); applicaTilt3D(); closeDetails(); });
+  // Pulsanti indietro (Modificati per avvisare l'uscita dalla chat)
+  const esciDalTavolo = () => {
+      if (socket) socket.emit('esci_stanza_campagna');
+      renderGrid(); applicaTilt3D(); closeDetails();
+  };
   
+  $('btn-back-campaign')?.addEventListener('click', esciDalTavolo);
+  $('btn-back-sheet')?.addEventListener('click', esciDalTavolo);
+  $('btn-back-player-camp')?.addEventListener('click', esciDalTavolo);
   // --- Gestione click sulle voci dei Dropdown ---
   document.addEventListener('click', (e) => {
     const item = e.target.closest('.nav-dd .dropdown-item');
     if (!item) return;
     const type = item.dataset.type;
-    const index = parseInt(item.dataset.index);
+    const index = parseInt(item.dataset.index); 
+    
     if (type === 'sheet') {
-      // Se clicco su un eroe, apro la sua scheda
-      openSheetDetail(State.sheets[index]);
+      // Invece di usare l'indice, peschiamo il nome esatto e lo cerchiamo nello State.
+      const charName = item.querySelector('.dd-item-label').textContent.trim();
+      const sheet = State.sheets.find(s => s.charName === charName);
+      if (sheet) openSheetDetail(sheet);
+      
     } else if (type === 'campaign') {
-     
       const camp = State.campaigns[index];
       if (camp.owner === State.username) {
         openCampaignDetail(camp);
@@ -570,7 +583,6 @@ function bindEvents() {
       }
     }
     
-    // Chiudiamo il menu dopo il click
     closeDropdown();
   });
 
@@ -774,17 +786,40 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
     renderGrid(); 
 });
 
-  $('form-add-campaign')?.addEventListener('submit', async (e) => {
+  // --- INGRESSO IN UNA CAMPAGNA TRAMITE CODICE ---
+  $('form-join-campaign')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData($('form-add-campaign')));
-    data.owner = State.username;
-    await fetch('/api/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    await State.loadFromServer();
-    $('form-add-campaign').reset();
-    closeModal($('modal-campaign-backdrop'));
-    renderDropdowns(); 
-    renderGrid();
-    applicaTilt3D();
+    const data = Object.fromEntries(new FormData($('form-join-campaign')));
+    data.username = State.username; // Aggiungiamo chi sta provando a entrare
+
+    try {
+      const res = await fetch('/api/campaigns/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await res.json();
+      
+      if (res.ok) {
+        Swal.fire({ 
+            title: 'Benvenuto nel Party!', 
+            text: result.message, 
+            icon: 'success', 
+            background: '#1a1108', color: '#d4a843', confirmButtonColor: '#4a90e2' 
+        });
+        await State.loadFromServer(); // Ricarica le campagne
+        $('form-join-campaign').reset();
+        closeModal($('modal-join-backdrop'));
+        renderDropdowns(); 
+        renderGrid();
+        applicaTilt3D();
+      } else {
+        Swal.fire({ title: 'Accesso Negato', text: result.message, icon: 'error', background: '#1a1108', color: '#d4a843', confirmButtonColor: '#8b1a1a' });
+      }
+    } catch (err) {
+      console.error("Errore join campagna:", err);
+    }
   });
 
   // Salva Storia del Master
@@ -812,48 +847,33 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
     } catch (e) { console.error(e); }
   });
 
-  // Autosave Appunti Personaggio
-  let notesTimeout;
-  $('player-notes')?.addEventListener('input', () => {
-    clearTimeout(notesTimeout);
-    notesTimeout = setTimeout(async () => {
-      const charName = $('sheet-detail-title').textContent;
-      const notes = $('player-notes').value;
-      const sheet = State.sheets.find(s => s.charName === charName);
+// --- SALVATAGGIO APPUNTI MANUALE ---
+  $('btn-save-notes')?.addEventListener('click', async () => {
+    const notes = $('player-notes').value;
+    const charName = $('sheet-detail-title').textContent.trim();
+    
+    try {
+      const res = await fetch('/api/sheets/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ charName: charName, owner: State.username, notes: notes })
+      });
       
-      if (sheet) {
-        sheet.sheetDataDetails.playerNotes = notes;
-        await fetch('/api/sheets/update-details', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            owner: State.username, 
-            charName: charName, 
-            details: sheet.sheetDataDetails 
-          })
+      if (res.ok) {
+        // Aggiorniamo la memoria locale di State (esattamente come la storia)
+        const sheet = State.sheets.find(s => s.charName === charName);
+        if (sheet) sheet.playerNotes = notes;
+
+        // Stesso magico popup dorato della storia!
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success',
+          title: 'Appunti salvati!', showConfirmButton: false, timer: 2000,
+          background: '#1a1108', color: '#d4a843'
         });
       }
-    }, 1000); // Salva dopo 1 secondo di inattività
-  });
-
-  $('form-join-campaign')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const inviteCode = $('form-join-campaign').querySelector('[name="inviteCode"]').value.trim().toUpperCase();
-    try {
-        const response = await fetch('/api/campaigns/join', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ inviteCode: inviteCode, username: State.username })
-        });
-        const result = await response.json();
-        Swal.fire({ title: response.ok ? 'Benvenuto nel Party!' : 'Magia Fallita!', text: result.message, icon: response.ok ? 'success' : 'error', background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#e8c97e' });
-        if (response.ok) {
-          $('form-join-campaign').reset();
-          closeModal($('modal-join-backdrop'));
-          await State.loadFromServer();
-          renderDropdowns(); renderGrid();
-          applicaTilt3D();
-        }
-    } catch (error) { Swal.fire({ title: 'Errore Server!', text: 'I server sono infestati dai goblin.', icon: 'error', background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#8b1a1a' }); }
+    } catch (e) { 
+      console.error("Errore salvataggio appunti:", e); 
+    }
   });
 
   // Gestione unificata Chat:
@@ -865,6 +885,20 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
 
   $('btn-pc-send-chat')?.addEventListener('click', () => inviaChatCampagna('pc-chat-input', 'pc-chat-messages', State.username, $('player-camp-title').textContent));
   $('pc-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-pc-send-chat').click(); });
+
+// --- CLICK SUI BOTTONI DEI DADI ---
+  document.querySelectorAll('.btn-dice').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+          const faccie = parseInt(e.target.dataset.dice);
+          const isMaster = $('campaign-detail').style.display === 'block';
+          
+          // Capisce se sei Master o Giocatore per usare i dati corretti
+          const campName = isMaster ? $('campaign-detail-title').textContent : $('player-camp-title').textContent;
+          const containerId = isMaster ? 'dm-chat-messages' : 'pc-chat-messages';
+
+          tiraDado(faccie, State.username, campName, containerId);
+      });
+  });
 
 // Avatar Base + aggiungi immagine + ripristina default
   function initAvatarMenu(imgId, inputId, getCharName) {
@@ -1101,14 +1135,17 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
   // Ricezione Eventi Socket
   if (socket) {
       socket.on('ricevi_messaggio_campagna', (dati) => {
-          // 1. Salva il messaggio in memoria a prescindere da dove ti trovi
-          salvaMessaggioInMemoria(dati.campName, dati.mittente, dati.testo, 'other');
+          // Prende il tipo dal server (dice, system), altrimenti usa 'other'
+          const tipoMessaggio = dati.type || 'other';
 
-          // 2. Stampalo a video SOLO SE hai aperta esattamente quella campagna in questo momento
+          // Salva il messaggio in memoria
+          salvaMessaggioInMemoria(dati.campName, dati.mittente, dati.testo, tipoMessaggio);
+
+          // Stampalo a video SOLO SE hai aperta esattamente quella campagna
           if ($('campaign-detail').style.display === 'block' && $('campaign-detail-title').textContent === dati.campName) {
-              appendChatMessage(dati.mittente, dati.testo, 'other', 'dm-chat-messages');
+              appendChatMessage(dati.mittente, dati.testo, tipoMessaggio, 'dm-chat-messages');
           } else if ($('player-campaign-detail').style.display === 'block' && $('player-camp-title').textContent === dati.campName) {
-              appendChatMessage(dati.mittente, dati.testo, 'other', 'pc-chat-messages');
+              appendChatMessage(dati.mittente, dati.testo, tipoMessaggio, 'pc-chat-messages');
           }
       });
 
