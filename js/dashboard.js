@@ -1,6 +1,7 @@
 import { $, escHtml, openModal, closeModal, closeDropdown, closeDetails } from './utils.js';
 import { State } from './state.js';
-import { socket, appendChatMessage, gestisciInvioChat, inviaChatCampagna, caricaMemoriaChat, tiraDado } from './chat.js';import { renderDropdowns, renderGrid, renderizzaBestiario } from './ui.js';
+import { socket, appendChatMessage, gestisciInvioChat, inviaChatCampagna, caricaMemoriaChat, tiraDado } from './chat.js';
+import { renderDropdowns, renderGrid, renderizzaBestiario } from './ui.js';
 import { costruisciSchedaInterattiva } from './interactive-sheet.js';
 import { dndData } from './dnd-data.js';
 import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm';
@@ -466,6 +467,62 @@ function bindEvents() {
           else handlePlayerCampaignClick(camp);
       }
       if (type === 'sheet') openSheetDetail(State.sheets[index]);
+    }
+  });
+
+  // --- RINOMINA CAMPAGNA ---
+  $('btn-rename-camp')?.addEventListener('click', async () => {
+    const titleEl = $('campaign-detail-title');
+    const oldName = titleEl.textContent.trim();
+
+    const { value: newName } = await Swal.fire({
+      title: 'Rinomina Campagna',
+      input: 'text',
+      inputValue: oldName,
+      showCancelButton: true,
+      background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#4a90e2',
+      inputValidator: (value) => { if (!value) return "Devi inserire un nome!" }
+    });
+
+    if (newName && newName !== oldName) {
+      const res = await fetch('/api/campaigns/rename', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldName: oldName, newName: newName, owner: State.username })
+      });
+      if (res.ok) {
+        titleEl.textContent = newName;
+        await State.loadFromServer(); // Sincronizza lo State
+        renderGrid(); renderDropdowns();
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Rinominata!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
+      }
+    }
+  });
+
+  // --- RINOMINA EROE ---
+  $('btn-rename-sheet')?.addEventListener('click', async () => {
+    const titleEl = $('sheet-detail-title');
+    const oldName = titleEl.textContent.trim();
+
+    const { value: newName } = await Swal.fire({
+      title: 'Rinomina Eroe',
+      input: 'text',
+      inputValue: oldName,
+      showCancelButton: true,
+      background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#4a90e2',
+      inputValidator: (value) => { if (!value) return "L'eroe ha bisogno di un nome!" }
+    });
+
+    if (newName && newName !== oldName) {
+      const res = await fetch('/api/sheets/rename', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldName: oldName, newName: newName, owner: State.username })
+      });
+      if (res.ok) {
+        titleEl.textContent = newName;
+        await State.loadFromServer(); // Sincronizza lo State
+        renderGrid(); renderDropdowns();
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Nuova identità forgiata!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
+      }
     }
   });
 

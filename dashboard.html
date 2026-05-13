@@ -324,7 +324,7 @@
     <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
       <button id="btn-back-campaign" class="btn-ghost" style="margin: 0;">← Torna all'Archivio</button>
       <h1 id="campaign-detail-title" style="font-family: 'Cinzel', serif; font-size: 2.2rem; color: #e8c97e; margin: 0;">Nome Campagna</h1>
-
+      <button id="btn-rename-camp" class="btn-ghost" style="margin: 0; padding: 5px 10px;" title="Rinomina Campagna"><i class="fa-solid fa-pen"></i></button>
       <div id="campaign-invite-container" style="margin-left: auto; display: none; align-items: center; gap: 10px; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 8px; border: 1px solid #444;">
         <span style="color: #aaa; font-size: 0.9rem; font-family: 'Cinzel', serif;">Codice Invito:</span>
           <strong id="campaign-invite-code" class="blur-code" style="letter-spacing: 3px; font-family: monospace; color: #e8c97e; font-size: 1.3rem;" title="Clicca per copiare">******</strong>        <button id="btn-toggle-invite" style="margin: 0; padding: 5px 8px; font-size: 1.1rem; cursor: pointer; border: none; background: transparent; color: #aaa; transition: color 0.2s;" title="Mostra/Nascondi Codice">
@@ -425,7 +425,7 @@
       <div style="display: flex; align-items: center; gap: 20px;">
         <button id="btn-back-sheet" class="btn-ghost" style="margin: 0;">← Torna all'Archivio</button>
         <h1 id="sheet-detail-title" style="font-family: 'Cinzel', serif; font-size: 2.2rem; color: #e8c97e; margin: 0;">Nome Scheda</h1>
-      </div>
+        <button id="btn-rename-sheet" class="btn-ghost" style="margin: 0; padding: 5px 10px;" title="Rinomina Eroe"><i class="fa-solid fa-pen"></i></button>      </div>
       
       <div id="vue-scheda-personaggio" class="vue-stats-box" style="margin: 0; padding: 10px 20px; display: flex; align-items: center; gap: 20px;">
         <label style="font-family: 'Cinzel', serif; font-size: 1.1rem;">Livello: <input type="number" v-model="livello" min="1" max="20" style="width: 55px;"></label>
