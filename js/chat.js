@@ -27,7 +27,10 @@ export async function caricaMemoriaChat(campName, containerId) {
 
             const msgDiv = document.createElement('div');
             msgDiv.className = `chat-msg ${cssClass}`;
-            msgDiv.innerHTML = `<span class="sender">${escHtml(msg.sender)}${privacyTag}</span>${escHtml(msg.testo)}`;
+
+            const testoSicuro = (msg.type === 'dice' || msg.type === 'system') ? msg.testo : escHtml(msg.testo);
+
+            msgDiv.innerHTML = `<span class="sender">${escHtml(msg.sender)}${privacyTag}</span>${testoSicuro}`;
             container.appendChild(msgDiv);
         });
         container.scrollTop = container.scrollHeight;
@@ -39,7 +42,9 @@ export function appendChatMessage(sender, text, type, containerId = 'chat-messag
   if (!container) return;
   const msgDiv = document.createElement('div');
   msgDiv.className = `chat-msg ${type}`;
-  msgDiv.innerHTML = `<span class="sender">${escHtml(sender)}</span>${escHtml(text)}`;
+
+  const testoSicuro = (type === 'dice' || type === 'system') ? text : escHtml(text);
+  msgDiv.innerHTML = `<span class="sender">${escHtml(sender)}</span>${testoSicuro}`;
   container.appendChild(msgDiv);
   container.scrollTop = container.scrollHeight;
 }
@@ -92,7 +97,7 @@ export function tiraDado(faccie, username, campName, containerId) {
     const risultato = Math.floor(Math.random() * faccie) + 1;
     
     // Formatta il messaggio
-    const text = `...lancia un d${faccie} e ottiene: **${risultato}**`;
+    const text = `...lancia un d${faccie} e ottiene: <strong>${risultato}</strong>`;
     const type = 'dice'; // Tipo speciale per il CSS
 
     // Mostra sùbito a te stesso
