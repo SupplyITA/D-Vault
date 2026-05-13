@@ -63,11 +63,12 @@ app.post('/api/upload-avatar', uploadAvatar.single('avatarImage'), (req, res) =>
     res.json({ url: `/uploads/avatars/${req.file.filename}`, message: 'Ritratto caricato!' });
 });
 
-// Aggiunge la colonna "avatar", "pdfUrl" e "details al DB (se non c'è già)
+// Aggiunge la colonna "avatar", "pdfUrl", "details" e "playerNotes" al DB
 db.serialize(() => {
     db.run(`ALTER TABLE schede ADD COLUMN avatar TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN pdfUrl TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN details TEXT`, (err) => {});
+    db.run(`ALTER TABLE schede ADD COLUMN playerNotes TEXT`, (err) => {});
 });
 
 // Rotta per legare la foto alla scheda dell'utente nel Database
@@ -377,6 +378,25 @@ app.post('/api/campaigns/story', (req, res) => {
     });
 });
 
+// Rotta per salvare gli Appunti del Personaggio 
+app.post('/api/sheets/notes', (req, res) => {
+    const { owner, charName, notes } = req.body;
+    db.run(`UPDATE schede SET playerNotes = ? WHERE owner = ? AND charName = ?`, 
+    [notes, owner, charName], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// Rotta per resettare TUTTE le note di un utente in un colpo solo
+app.post('/api/sheets/reset-all-notes', (req, res) => {
+    const { owner } = req.body;
+    db.run(`UPDATE schede SET playerNotes = '' WHERE owner = ?`, [owner], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, message: "Tutte le pergamene sono state ripulite." });
+    });
+});
+
 // Socket Connessione alla Chat 
 io.on('connection', (socket) => {
     console.log('🟢 Un utente si è connesso al tavolo virtuale!');
@@ -401,14 +421,47 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('nuova_mappa_ricevuta', url);
     });
 
-    socket.on('disconnect', () => {
-        console.log('🔴 Un utente ha lasciato il tavolo.');
+    // Entra in una stanza specifica
+    socket.on('entra_stanza_campagna', (dati) => {
+        const { campName, username } = dati;
+        socket.join(campName); 
+        
+        socket.username = username;
+        socket.campName = campName;
+
+        socket.to(campName).emit('ricevi_messaggio_campagna', {
+            mittente: 'Taverniere',
+            testo: `${username} ha varcato la soglia del tavolo.`, // <-- Modificato qui
+            type: 'system',
+            campName: campName
+        });
     });
 
-    // Entra in una stanza specifica
-    socket.on('entra_stanza_campagna', (campName) => {
-        // Unisciti alla stanza senza abbandonare le altre!
-        socket.join(campName); 
+    // Quando l'utente preme "Torna all'archivio"
+    socket.on('esci_stanza_campagna', () => {
+        if (socket.username && socket.campName) {
+            socket.to(socket.campName).emit('ricevi_messaggio_campagna', {
+                mittente: 'Taverniere',
+                testo: `${socket.username} è tornato all'Archivio.`, // <-- Modificato qui
+                type: 'system',
+                campName: socket.campName
+            });
+            socket.leave(socket.campName);
+            socket.campName = null; 
+        }
+    });
+
+    // Quando l'utente chiude brutalmente la scheda
+    socket.on('disconnect', () => {
+        console.log('🔴 Un utente ha lasciato il tavolo.');
+        if (socket.username && socket.campName) {
+            socket.to(socket.campName).emit('ricevi_messaggio_campagna', {
+                mittente: 'Taverniere',
+                testo: `${socket.username} è svanito nel nulla (disconnesso).`, // <-- Modificato qui
+                type: 'system',
+                campName: socket.campName
+            });
+        }
     });
 
     // Invia un messaggio SOLO a chi è dentro la stanza
