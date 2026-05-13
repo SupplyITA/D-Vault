@@ -116,3 +116,24 @@
     font-weight: bold;
     font-style: normal;
 }
+
+/* Chat privata */
+.chat-msg.private {
+  background: rgba(139, 26, 26, 0.15); 
+  border: 1px dashed rgba(139, 26, 26, 0.6);
+  color: var(--gold-mid);
+  align-self: flex-start;
+  font-style: italic;
+  border-bottom-left-radius: 0;
+}
+
+.whisper-box {
+  color: #aaa;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  margin-bottom: 5px;
+  min-height: 18px;
+  text-align: right;
+  padding-right: 5px;
+  transition: opacity 0.3s ease;
+}

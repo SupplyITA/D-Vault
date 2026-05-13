@@ -33,6 +33,9 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS campagne (
         id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT, campName TEXT, campSetting TEXT, campPlayers INTEGER, campDesc TEXT, inviteCode TEXT UNIQUE, joinedPlayers TEXT
     )`);
+    db.run(`CREATE TABLE IF NOT EXISTS chat_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, campName TEXT, sender TEXT, target TEXT, testo TEXT, type TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
     db.run(`ALTER TABLE schede ADD COLUMN avatar TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN charGender TEXT`, (err) => {}); 
 
@@ -397,6 +400,14 @@ app.post('/api/sheets/reset-all-notes', (req, res) => {
     });
 });
 
+// Per salvare la chat
+app.get('/api/chat/:campName', (req, res) => {
+    db.all(`SELECT * FROM chat_logs WHERE campName = ? ORDER BY id ASC`, [req.params.campName], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
 // Socket Connessione alla Chat 
 io.on('connection', (socket) => {
     console.log('🟢 Un utente si è connesso al tavolo virtuale!');
@@ -425,13 +436,14 @@ io.on('connection', (socket) => {
     socket.on('entra_stanza_campagna', (dati) => {
         const { campName, username } = dati;
         socket.join(campName); 
+        socket.io('${campName}_{username}');
         
         socket.username = username;
         socket.campName = campName;
 
         socket.to(campName).emit('ricevi_messaggio_campagna', {
             mittente: 'Taverniere',
-            testo: `${username} ha varcato la soglia del tavolo.`, // <-- Modificato qui
+            testo: `${username} ha varcato la soglia del tavolo.`, 
             type: 'system',
             campName: campName
         });
@@ -466,7 +478,26 @@ io.on('connection', (socket) => {
 
     // Invia un messaggio SOLO a chi è dentro la stanza
     socket.on('invia_messaggio_campagna', (dati) => {
+        // Salva in SQLite
+        db.run(`INSERT INTO chat_logs (campName, sender, target, testo, type) VALUES (?, ?, 'Tutti', ?, ?)`, 
+            [dati.campName, dati.mittente, dati.testo, dati.type || 'other']);
+            
         socket.to(dati.campName).emit('ricevi_messaggio_campagna', dati);
+    });
+
+    // Invia un SUSSURRO PRIVATO
+    socket.on('invia_messaggio_privato', (dati) => {
+        const { campName, mittente, destinatario, testo } = dati;
+        
+        // Salva in SQLite
+        db.run(`INSERT INTO chat_logs (campName, sender, target, testo, type) VALUES (?, ?, ?, ?, 'private')`, 
+            [campName, mittente, destinatario, testo]);
+
+        // Invia al destinatario specifico tramite la sua stanza privata
+        socket.to(`${campName}_${destinatario}`).emit('ricevi_messaggio_privato', dati);
+        
+        // Invia indicatore a tutta la stanza
+        socket.to(campName).emit('indicatore_sussurro', { mittente, destinatario });
     });
 });
 

@@ -84,7 +84,17 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
 
   costruisciSchedaInterattiva('pc-sheet-container', sheet, false);
 
-  // --- GESTIONE MAPPA GIOCATORE ---
+  // Gestisce chat giocatore 
+  const pcTarget = $('pc-chat-target');
+  if (pcTarget && camp) {
+      pcTarget.innerHTML = `<option value="Tutti">Tutti</option><option value="${camp.owner}">Master (${camp.owner})</option>`;
+      const players = camp.joinedPlayers || [];
+      players.forEach(p => {
+          if (p !== State.username) pcTarget.innerHTML += `<option value="${p}">${p}</option>`;
+      });
+  }
+
+  // Gestisce la mappa del giocatore
   const mapUrl = (camp && camp.mapUrl) ? camp.mapUrl : '/maps/mappa_1.jpg';
 
   // Inizializza la mappa Leaflet solo la prima volta
@@ -128,7 +138,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
   } catch(e) { console.error("Errore salvataggio eroe in background:", e); }
 };
 
-// --- INIZIALIZZAZIONE DELLA PAGINA ---
+// Inizializza la pagina
 document.addEventListener('DOMContentLoaded', async () => {
   if ($('nav-username')) $('nav-username').textContent = State.username;
   await State.loadFromServer();
@@ -178,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function openCampaignDetail(camp) {
-  hideAllSections(); // <-- Pulisce tutto prima
+  hideAllSections(); 
   if($('dm-chat-messages')) caricaMemoriaChat(camp.campName, 'dm-chat-messages');
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
@@ -203,6 +213,14 @@ function openCampaignDetail(camp) {
       } else {
           inviteContainer.style.display = 'none'; 
       }
+  }
+
+  // Chat privata del master con altra gente 
+  const dmTarget = $('dm-chat-target');
+  if (dmTarget) {
+      dmTarget.innerHTML = '<option value="Tutti">Tutti</option>';
+      const players = camp.joinedPlayers || [];
+      players.forEach(p => dmTarget.innerHTML += `<option value="${p}">${p}</option>`);
   }
 
   const btnToggleInvite = $('btn-toggle-invite');
@@ -561,7 +579,7 @@ function bindEvents() {
   $('btn-back-campaign')?.addEventListener('click', esciDalTavolo);
   $('btn-back-sheet')?.addEventListener('click', esciDalTavolo);
   $('btn-back-player-camp')?.addEventListener('click', esciDalTavolo);
-  // --- Gestione click sulle voci dei Dropdown ---
+  // Gestione click sulle voci dei Dropdown 
   document.addEventListener('click', (e) => {
     const item = e.target.closest('.nav-dd .dropdown-item');
     if (!item) return;
@@ -585,6 +603,14 @@ function bindEvents() {
     
     closeDropdown();
   });
+
+  // SEzione chat- gestione private etc:
+
+  $('btn-send-dm-chat')?.addEventListener('click', () => inviaChatCampagna('dm-chat-input', 'dm-chat-messages', State.username, $('campaign-detail-title').textContent, 'dm-chat-target'));
+  $('dm-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-send-dm-chat').click(); });
+
+  $('btn-pc-send-chat')?.addEventListener('click', () => inviaChatCampagna('pc-chat-input', 'pc-chat-messages', State.username, $('player-camp-title').textContent, 'pc-chat-target'));
+  $('pc-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-pc-send-chat').click(); });
 
   // Apertura dropdown navbar (Personaggi / Master / Utente)
   document.querySelectorAll('[data-dd-target]').forEach(btn => {
@@ -1138,14 +1164,41 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
           // Prende il tipo dal server (dice, system), altrimenti usa 'other'
           const tipoMessaggio = dati.type || 'other';
 
-          // Salva il messaggio in memoria
-          salvaMessaggioInMemoria(dati.campName, dati.mittente, dati.testo, tipoMessaggio);
-
           // Stampalo a video SOLO SE hai aperta esattamente quella campagna
           if ($('campaign-detail').style.display === 'block' && $('campaign-detail-title').textContent === dati.campName) {
               appendChatMessage(dati.mittente, dati.testo, tipoMessaggio, 'dm-chat-messages');
           } else if ($('player-campaign-detail').style.display === 'block' && $('player-camp-title').textContent === dati.campName) {
               appendChatMessage(dati.mittente, dati.testo, tipoMessaggio, 'pc-chat-messages');
+          }
+      });
+
+      // CHat messaggi privati master players
+      socket.on('ricevi_messaggio_privato', (dati) => {
+          const isMaster = $('campaign-detail').style.display === 'block';
+          const isPlayer = $('player-campaign-detail').style.display === 'block';
+          if (!isMaster && !isPlayer) return;
+
+          const containerId = isMaster ? 'dm-chat-messages' : 'pc-chat-messages';
+          const msgDiv = document.createElement('div');
+          msgDiv.className = `chat-msg private`;
+          msgDiv.innerHTML = `<span class="sender">${escHtml(dati.mittente)} (sussurra)</span>${escHtml(dati.testo)}`;
+          $(containerId).appendChild(msgDiv);
+          $(containerId).scrollTop = $(containerId).scrollHeight;
+      });
+
+      socket.on('indicatore_sussurro', (dati) => {
+          const isMaster = $('campaign-detail').style.display === 'block';
+          const isPlayer = $('player-campaign-detail').style.display === 'block';
+          if (!isMaster && !isPlayer) return;
+
+          // Non avvisarti se sei tu il destinatario, hai già il messaggio!
+          if (dati.destinatario === State.username) return;
+
+          const boxId = isMaster ? 'dm-whisper-box' : 'pc-whisper-box';
+          const box = $(boxId);
+          if(box) {
+              box.innerHTML = `🔒 <em>${escHtml(dati.mittente)} sta sussurrando a ${escHtml(dati.destinatario)}...</em>`;
+              setTimeout(() => { box.innerHTML = ''; }, 4500);
           }
       });
 

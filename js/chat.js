@@ -1,29 +1,37 @@
 import { $, escHtml } from './utils.js';
+import { State } from './state.js';
 
 export const socket = typeof io !== 'undefined' ? io() : null;
 
 // --- MEMORIA CHAT ---
 const chatMemoria = {}; // Salva i messaggi: { "Nome Campagna": [ {sender, text, type}, ... ] }
 
-export function salvaMessaggioInMemoria(campName, sender, text, type) {
-    if (!chatMemoria[campName]) chatMemoria[campName] = [];
-    chatMemoria[campName].push({ sender, text, type });
-}
-
-export function caricaMemoriaChat(campName, containerId) {
+export async function caricaMemoriaChat(campName, containerId) {
     const container = $(containerId);
     if (!container) return;
     
     container.innerHTML = '<div class="chat-msg system">Tavolo virtuale aperto. Pronti all\'avventura!</div>';
-    if (chatMemoria[campName]) {
-        chatMemoria[campName].forEach(msg => {
+    
+    try {
+        const res = await fetch(`/api/chat/${encodeURIComponent(campName)}`);
+        const messaggi = await res.json();
+        
+        messaggi.forEach(msg => {
+            // Nascondi i sussurri altrui a cui non partecipi
+            if (msg.type === 'private' && msg.sender !== State.username && msg.target !== State.username) {
+                return; 
+            }
+
+            const cssClass = msg.sender === State.username ? 'me' : (msg.type === 'private' ? 'private' : msg.type);
+            const privacyTag = msg.type === 'private' ? ` (a ${escHtml(msg.target)})` : '';
+
             const msgDiv = document.createElement('div');
-            msgDiv.className = `chat-msg ${msg.type}`;
-            msgDiv.innerHTML = `<span class="sender">${escHtml(msg.sender)}</span>${escHtml(msg.text)}`;
+            msgDiv.className = `chat-msg ${cssClass}`;
+            msgDiv.innerHTML = `<span class="sender">${escHtml(msg.sender)}${privacyTag}</span>${escHtml(msg.testo)}`;
             container.appendChild(msgDiv);
         });
         container.scrollTop = container.scrollHeight;
-    }
+    } catch(e) { console.error("Errore DB Chat:", e); }
 }
 
 export function appendChatMessage(sender, text, type, containerId = 'chat-messages') {
@@ -47,19 +55,38 @@ export function gestisciInvioChat(inputId, containerId, username) {
     }
 }
 
-export function inviaChatCampagna(inputId, containerId, username, campName) {
+export function inviaChatCampagna(inputId, containerId, username, campName, targetId) {
     const input = $(inputId);
+    const targetSelect = $(targetId);
     if(!input) return;
+
     const text = input.value.trim();
+    const target = targetSelect ? targetSelect.value : 'Tutti';
+
     if (text && campName) {
-        appendChatMessage(username, text, 'me', containerId);
-        salvaMessaggioInMemoria(campName, username, text, 'me'); // <--- Salva il tuo messaggio
-        if (socket) socket.emit('invia_messaggio_campagna', { mittente: username, testo: text, campName: campName });
+        const isPrivate = target !== 'Tutti';
+        const type = isPrivate ? 'private' : 'me';
+        const privacyTag = isPrivate ? ` (a ${target})` : '';
+
+        // Append localmente per farti vedere cosa hai mandato
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-msg me`; 
+        msgDiv.innerHTML = `<span class="sender">${escHtml(username)}${privacyTag}</span>${escHtml(text)}`;
+        $(containerId).appendChild(msgDiv);
+        $(containerId).scrollTop = $(containerId).scrollHeight;
+
+        if (socket) {
+            if (isPrivate) {
+                socket.emit('invia_messaggio_privato', { campName, mittente: username, destinatario: target, testo: text });
+            } else {
+                socket.emit('invia_messaggio_campagna', { campName, mittente: username, testo: text });
+            }
+        }
         input.value = '';
     }
 }
 
-// --- LANCIO DEI DADI ---
+// Lancio Dadi
 export function tiraDado(faccie, username, campName, containerId) {
     // Calcola il risultato (es. da 1 a 20)
     const risultato = Math.floor(Math.random() * faccie) + 1;
@@ -70,7 +97,6 @@ export function tiraDado(faccie, username, campName, containerId) {
 
     // Mostra sùbito a te stesso
     appendChatMessage(username, text, type, containerId);
-    salvaMessaggioInMemoria(campName, username, text, type);
 
     // Invia al server per mostrarlo agli altri
     if (socket) {

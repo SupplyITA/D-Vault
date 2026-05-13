@@ -405,9 +405,14 @@
             <button class="btn-dice" data-dice="100">d100</button>
           </div>
           
+         <div id="dm-whisper-box" class="whisper-box"></div>
           <div class="chat-input-area" style="display: flex; gap: 10px; flex-shrink: 0;">
+            <select id="dm-chat-target" style="padding: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 4px; max-width: 120px;">
+              <option value="Tutti">Tutti</option>
+            </select>
             <input type="text" id="dm-chat-input" placeholder="Scrivi al gruppo..." style="flex: 1; padding: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 4px;">
             <button id="btn-send-dm-chat" class="btn-primary" style="padding: 0 20px; margin: 0;">Invia</button>
+          </div>
           </div>
         </div>
       </div>
@@ -506,7 +511,11 @@
             <button class="btn-dice" data-dice="100">d100</button>
           </div>
           
+          <div id="pc-whisper-box" class="whisper-box"></div>
           <div class="chat-input-area" style="display: flex; gap: 10px; flex-shrink: 0;">
+            <select id="pc-chat-target" style="padding: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 4px; max-width: 120px;">
+              <option value="Tutti">Tutti</option>
+            </select>
             <input type="text" id="pc-chat-input" placeholder="Scrivi al gruppo..." style="flex: 1; padding: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 4px;">
             <button id="btn-pc-send-chat" class="btn-primary" style="padding: 0 20px; margin: 0;">Invia</button>
           </div>
