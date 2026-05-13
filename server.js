@@ -437,8 +437,8 @@ io.on('connection', (socket) => {
     // Entra in una stanza specifica
     socket.on('entra_stanza_campagna', (dati) => {
         const { campName, username } = dati;
-        socket.join(campName); 
-        socket.io('${campName}_{username}');
+        socket.join(campName);
+        socket.join(`${campName}_${username}`);
         
         socket.username = username;
         socket.campName = campName;
