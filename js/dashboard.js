@@ -812,6 +812,43 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
     renderGrid(); 
 });
 
+// --- CREAZIONE NUOVA CAMPAGNA ---
+  $('form-add-campaign')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // Prendiamo i dati scritti nel form
+    const data = Object.fromEntries(new FormData($('form-add-campaign')));
+    data.owner = State.username;
+
+    try {
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      if (res.ok) {
+        // Se va a buon fine, ricarica tutto e aggiorna la grafica
+        await State.loadFromServer();
+        $('form-add-campaign').reset();
+        closeModal($('modal-campaign-backdrop'));
+        renderGrid();
+        renderDropdowns();
+        if (typeof applicaTilt3D === 'function') applicaTilt3D();
+        
+        Swal.fire({ 
+            toast: true, position: 'top-end', icon: 'success', 
+            title: 'Campagna creata!', showConfirmButton: false, timer: 1500, 
+            background: '#1a1108', color: '#e8c97e' 
+        });
+      } else {
+        const err = await res.json();
+        Swal.fire('Errore', err.message || 'Impossibile creare la campagna.', 'error');
+      }
+    } catch (err) {
+      console.error("Errore creazione campagna:", err);
+    }
+  });
+
   // --- INGRESSO IN UNA CAMPAGNA TRAMITE CODICE ---
   $('form-join-campaign')?.addEventListener('submit', async (e) => {
     e.preventDefault();
