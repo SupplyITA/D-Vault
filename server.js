@@ -410,6 +410,43 @@ app.get('/api/chat/:campName', (req, res) => {
     });
 });
 
+// --- RINOMINA CAMPAGNA ---
+app.post('/api/campaigns/rename', (req, res) => {
+    const { oldName, newName, owner } = req.body;
+    db.run(`UPDATE campagne SET campName = ? WHERE campName = ? AND owner = ?`, [newName, oldName, owner], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// --- RINOMINA EROE ---
+app.post('/api/sheets/rename', (req, res) => {
+    const { oldName, newName, owner } = req.body;
+    
+    // Cambia il nome nella tabella schede
+    db.run(`UPDATE schede SET charName = ? WHERE charName = ? AND owner = ?`, [newName, oldName, owner], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        // Vai a cercare in TUTTE le campagne se questo giocatore stava usando il vecchio nome
+        db.all(`SELECT id, activeCharacters FROM campagne`, [], (err, rows) => {
+            if (err || !rows) return res.json({ success: true }); 
+            
+            rows.forEach(row => {
+                try {
+                    let active = JSON.parse(row.activeCharacters || "{}");
+                    // Se l'owner aveva come eroe attivo "vecchio nome", metti "nuovo nome"
+                    if (active[owner] === oldName) {
+                        active[owner] = newName;
+                        db.run(`UPDATE campagne SET activeCharacters = ? WHERE id = ?`, [JSON.stringify(active), row.id]);
+                    }
+                } catch(e) {}
+            });
+            // Tutto sistemato senza fare casino!
+            res.json({ success: true });
+        });
+    });
+});
+
 // Socket Connessione alla Chat 
 io.on('connection', (socket) => {
     console.log('🟢 Un utente si è connesso al tavolo virtuale!');
