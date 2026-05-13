@@ -327,11 +327,11 @@ window.visualizzaSchedaParty = function(charName) {
             container.innerHTML = '<p style="color: red; text-align: center;">Errore nel caricamento eroe.</p>';
             return;
         }
-          //$('master-sheet-title').textContent = `Scheda di ${sheetData.charName} (Liv. ${sheetData.charLevel})`;
-          
-          // Costruisce la scheda IN SOLA LETTURA (true)
-          costruisciSchedaInterattiva('master-sheet-container', sheetData, true);
-          //openModal($('modal-master-sheet-backdrop'));
+          costruisciSchedaInterattiva('master-party-sheet-container', sheetData, true);
+      })
+      .catch (err=> {
+        console.error("Errore di recupero scheda:", err);
+        container.innerHTML = '<p style="color: red; text-align: center;">Errore di connessione al server </p>';
       });
 };
 
