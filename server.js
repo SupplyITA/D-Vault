@@ -72,6 +72,10 @@ db.serialize(() => {
     db.run(`ALTER TABLE schede ADD COLUMN pdfUrl TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN details TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN playerNotes TEXT`, (err) => {});
+
+    db.run(`ALTER TABLE utenti ADD COLUMN fullName TEXT`, (err) => {});
+    db.run(`ALTER TABLE utenti ADD COLUMN gender TEXT`, (err) => {});
+    db.run(`ALTER TABLE utenti ADD COLUMN avatar TEXT`, (err) => {});
 });
 
 // Rotta per legare la foto alla scheda dell'utente nel Database
@@ -98,6 +102,20 @@ const pdfStorage = multer.diskStorage({
         cb(null, 'scheda-' + nomeUnico + '.pdf');
     }
 });
+
+// Configurazione Multer per gli Avatar
+const storageAvatar = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = './uploads/avatars'; // Cartella corretta
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
 const uploadPdf = multer({ storage: pdfStorage });
 
 // Rotta per ricevere e salvare il file PDF
@@ -151,12 +169,18 @@ app.post('/api/upload-map', upload.single('mapImage'), (req, res) => {
 
 // Autenticazione degli utenti 
 app.post('/api/registrati', async (req, res) => {
-    const { username, email, password } = req.body; 
+    const { username, email, password, fullName, gender } = req.body; 
+    
+    // Assegna un avatar di default in base al sesso dell'utente
+    let defaultAvatar = '/img/avatars/other-1.jpg'; // Default per "n"
+    if (gender === 'm') defaultAvatar = '/img/avatars/male-1.jpg';
+    if (gender === 'f') defaultAvatar = '/img/avatars/female-1.jpg';
     try {
         const hash = await bcrypt.hash(password, 10);
-        db.run(`INSERT INTO utenti (username, email, password) VALUES (?, ?, ?)`, [username, email, hash], function(err) {
+        db.run(`INSERT INTO utenti (username, email, password, fullName, gender, avatar) VALUES (?, ?, ?, ?, ?, ?)`, 
+        [username, email, hash, fullName, gender, defaultAvatar], function(err) {
             if (err) return res.status(400).json({ message: "Username o Email già in uso!" });
-            res.json({ message: "Registrazione completata!" });
+            res.json({ message: "Registrazione completata! Benvenuto nel Vault." });
         });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -181,6 +205,93 @@ app.post('/api/reset-password', async (req, res) => {
     });
 });
 
+// Recupera le informazioni complete dell'utente per la sezione Account
+app.get('/api/user-info', (req, res) => {
+    const { username } = req.query;
+    db.get(`SELECT email, fullName, gender, avatar FROM utenti WHERE username = ?`, [username], (err, row) => {
+        if (err || !row) return res.status(404).json({ error: "Utente non trovato" });
+        res.json(row);
+    });
+});
+
+// ELIMINAZIONE TOTALE ACCOUNT
+app.delete('/api/delete-account', (req, res) => {
+    const { username } = req.query;
+    
+    db.serialize(() => {
+        // Cancella l'utente dal database
+        db.run(`DELETE FROM utenti WHERE username = ?`, [username]);
+        // Cancella tutte le schede che ha creato
+        db.run(`DELETE FROM schede WHERE owner = ?`, [username]);
+        // Cancella tutte le campagne in cui era Master
+        db.run(`DELETE FROM campagne WHERE owner = ?`, [username]);
+        
+        // Cerca in TUTTE le campagne rimaste e rimuovilo se era ospite
+        db.all(`SELECT id, joinedPlayers, activeCharacters FROM campagne`, [], (err, rows) => {
+            if (!err && rows) {
+                rows.forEach(row => {
+                    let needsUpdate = false;
+                    
+                    // Rimuove il giocatore dalla lista degli invitati
+                    let players = [];
+                    try { players = JSON.parse(row.joinedPlayers || "[]"); } catch(e){}
+                    if (players.includes(username)) {
+                        players = players.filter(p => p !== username);
+                        needsUpdate = true;
+                    }
+
+                    // Rimuove il suo eroe dai personaggi attivi al tavolo
+                    let active = {};
+                    try { active = JSON.parse(row.activeCharacters || "{}"); } catch(e){}
+                    if (active[username]) {
+                        delete active[username];
+                        needsUpdate = true;
+                    }
+
+                    // Se abbiamo trovato e rimosso l'utente, aggiorniamo quella campagna
+                    if (needsUpdate) {
+                        db.run(`UPDATE campagne SET joinedPlayers = ?, activeCharacters = ? WHERE id = ?`, 
+                            [JSON.stringify(players), JSON.stringify(active), row.id]);
+                    }
+                });
+            }
+            // Risponde al browser solo quando la pulizia globale è finita
+            res.json({ success: true, message: "Account epurato dal Vault e da tutte le taverne." });
+        });
+    });
+});
+
+// AGGIORNA EMAIL UTENTE
+app.post('/api/update-email', (req, res) => {
+    const { username, newEmail } = req.body;
+    db.run(`UPDATE utenti SET email = ? WHERE username = ?`, [newEmail, username], function(err) {
+        if (err) return res.status(400).json({ message: "Email già in uso o non valida." });
+        res.json({ success: true, message: "Email aggiornata!" });
+    });
+});
+
+// AGGIORNA AVATAR UTENTE 
+app.post('/api/user/avatar', (req, res) => {
+    const { username, avatarUrl } = req.body;
+    db.run(`UPDATE utenti SET avatar = ? WHERE username = ?`, [avatarUrl, username], (err) => {
+        if (err) return res.status(500).json({ error: "Errore salvataggio avatar" });
+        res.json({ success: true });
+    });
+});
+
+// ROTTA PER CARICARE L'AVATAR PERSONALE
+app.post('/api/user/upload-avatar', uploadAvatar.single('avatar'), (req, res) => {
+    const { username } = req.body;
+    if (!req.file) return res.status(400).json({ message: "Nessun file caricato" });
+
+    const avatarPath = `/uploads/avatars/${req.file.filename}`;
+
+    // Aggiorna il database con il nuovo percorso
+    db.run(`UPDATE utenti SET avatar = ? WHERE username = ?`, [avatarPath, username], (err) => {
+        if (err) return res.status(500).json({ message: "Errore database" });
+        res.json({ success: true, avatarUrl: avatarPath });
+    });
+});
 
 app.post('/api/sheets', (req, res) => {
     const { owner, charName, charClass, charRace, charGender, charLevel, avatar } = req.body;

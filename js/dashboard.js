@@ -379,84 +379,62 @@ function openSheetDetail(sheet) {
 function bindEvents() {
 
   $('dash-main')?.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('copy-code')) {
+    
+    // COPIA CODICE
+    const btnCopy = e.target.closest('.copy-code');
+    if (btnCopy) {
         e.stopPropagation(); 
-        await navigator.clipboard.writeText(e.target.dataset.code);
+        await navigator.clipboard.writeText(btnCopy.dataset.code);
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Codice copiato!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
         return;
     }
 
-    // PErmette al giocatore di abbandonare la campagna
-    if (e.target.classList.contains('btn-leave')) {
-        e.stopPropagation(); 
-        const index = parseInt(e.target.dataset.index);
-        const camp = State.campaigns[index]; // Prende l'intero oggetto campagna
-
-        const result = await Swal.fire({
-            title: 'Abbandonare il Party?',
-            text: `Sei sicuro di voler lasciare l'avventura "${camp.campName}"?`,
-            icon: 'warning', showCancelButton: true,
-            background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#8b1a1a', cancelButtonText: 'Resta'
-        });
-
-        if (result.isConfirmed) {
-            await fetch('/api/campaigns/leave', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                // Inviamo l'inviteCode che è il vero identificatore univoco!
-                body: JSON.stringify({ inviteCode: camp.inviteCode, username: State.username })
-            });
-            
-            // Rimuove la campagna dalla memoria locale ISTANTANEAMENTE
-            State.campaigns.splice(index, 1);
-            
-            // Sincronizza i dati e aggiorna la grafica
-            await State.loadFromServer();
-            if(typeof renderGrid === 'function') renderGrid();
-            if(typeof renderDropdowns === 'function') renderDropdowns(); 
-            
-            Swal.fire({ 
-                toast: true, position: 'top-end', icon: 'success', 
-                title: 'Campagna abbandonata.', showConfirmButton: false, timer: 1500, 
-                background: '#1a1108', color: '#e8c97e' 
-            });
-        }
-        return;
-    }
-    if (e.target.classList.contains('btn-delete')) {
+    // GESTIONE ELIMINAZIONE E USCITA 
+    const btnDel = e.target.closest('.btn-delete') || e.target.closest('.btn-leave');
+    if (btnDel) {
       e.stopPropagation(); 
-      const type = e.target.dataset.type;
-      const index = parseInt(e.target.dataset.index);
+      const type = btnDel.dataset.type; // 'sheet', 'campaign' o 'leave-campaign'
+      const index = parseInt(btnDel.dataset.index);
       
+      const isLeaving = (type === 'leave-campaign' || btnDel.classList.contains('btn-leave'));
+      const camp = (isLeaving || type === 'campaign') ? State.campaigns[index] : null;
+
+      // Testi dinamici in base a quello che stiamo facendo
+      const title = isLeaving ? 'Abbandonare il Party?' : 'Sei sicuro?';
+      const text = isLeaving ? `Vuoi lasciare l'avventura "${camp.campName}"?` : "Questa magia distruttiva non può essere annullata!";
+      const confirmText = isLeaving ? 'Sì, esci' : 'Sì, distruggi!';
+
       const result = await Swal.fire({
-        title: 'Sei sicuro?',
-        text: "Questa magia distruttiva non può essere annullata!",
-        icon: 'warning',
-        showCancelButton: true,
-        background: '#1a1a1a', 
-        color: '#e8c97e',      
-        confirmButtonColor: '#8b1a1a', 
-        cancelButtonColor: '#444',
-        confirmButtonText: 'Sì, distruggi!',
-        cancelButtonText: 'Annulla'
+        title: title, text: text, icon: 'warning', showCancelButton: true,
+        background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#8b1a1a', cancelButtonColor: '#444',
+        confirmButtonText: confirmText, cancelButtonText: 'Annulla'
       });
 
       if (result.isConfirmed) {
-        if (type == 'sheet') {
-          await fetch(`/api/sheets/${State.sheets[index].charName}?user=${State.username}`, { method: 'DELETE' });
-          State.sheets.splice(index, 1);
-        } else {
-          await fetch(`/api/campaigns/${State.campaigns[index].campName}?user=${State.username}`, { method: 'DELETE' });
-          State.campaigns.splice(index, 1);
+        // CHIAMATE AL DATABASE PER ELIMINARE DAVVERO
+        if (type === 'sheet') {
+          await fetch(`/api/sheets/${encodeURIComponent(State.sheets[index].charName)}?user=${encodeURIComponent(State.username)}`, { method: 'DELETE' });
+        } else if (type === 'campaign') {
+          await fetch(`/api/campaigns/${encodeURIComponent(camp.campName)}?user=${encodeURIComponent(State.username)}`, { method: 'DELETE' });
+        } else if (isLeaving) {
+          await fetch('/api/campaigns/leave', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inviteCode: camp.inviteCode, username: State.username })
+          });
         }
-        renderGrid(); 
-        applicaTilt3D();
-        renderDropdowns();
 
-        Swal.fire({ title: 'Incenerito!', text: 'L\'elemento è stato eliminato dal Vault.', icon: 'success', background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#4a90e2' });
+        // SINCRONIZZA TUTTO CON IL SERVER
+        await State.loadFromServer();
+        renderGrid(); 
+        if(typeof renderDropdowns === 'function') renderDropdowns();
+        if(typeof applicaTilt3D === 'function') applicaTilt3D();
+
+        Swal.fire({ icon: 'success', title: 'Vault Aggiornato', showConfirmButton: false, timer: 1500, background: '#1a1a1a', color: '#e8c97e' });
       }
       return; 
     }
 
+    // APERTURA CARD (Eroi/Campagne)
     const card = e.target.closest('.vault-card');
     if (card) {
       const type = card.dataset.type;

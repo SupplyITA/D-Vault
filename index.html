@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/sweetalert-theme.css" />
 
-  <!-- NOTA BENE: i temi sono in fase di sviluppo--> 
   <link rel="stylesheet" href="css/themes.css" /> 
 
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
@@ -26,7 +25,7 @@
   <div class="bg-overlay"></div>
   <div class="bg-vignette"></div>
 
-  <!-- Particelle animate molto belle (grazie bea) -->
+  <!-- Particelle animate molto belle -->
   <div class="particles" id="particles"></div>
 
   <!-- Header -->
@@ -76,25 +75,49 @@
 
         <!-- REGISTER -->
         <form class="auth-form" id="register-form" autocomplete="off">
+          
           <div class="form-group">
-            <label for="reg-username">Username</label>
-            <input type="text" id="reg-username" name="username" placeholder="NomeDellEroe" required />
+            <label for="reg-fullname">Nome e Cognome</label>
+            <input type="text" id="reg-fullname" name="fullName" placeholder="Il tuo vero nome" required />
           </div>
+
           <div class="form-group">
-            <label for="reg-email">Email</label>
-            <input type="email" id="reg-email" name="email" placeholder="eroe@regno.com" required />
+            <label for="reg-username">Username (Nome nel Vault)</label>
+            <input type="text" id="reg-username" name="username" placeholder="Es. DM_Morgana" required />
           </div>
+
+          <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+              <label for="reg-email">Email</label>
+              <input type="email" id="reg-email" name="email" placeholder="eroe@regno.com" required />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="reg-email-confirm">Conferma Email</label>
+              <input type="email" id="reg-email-confirm" name="confirmEmail" placeholder="Ripeti email" required />
+            </div>
+          </div>
+
           <div class="form-group">
-            <label for="reg-password">Password</label>
-            <input type="password" id="reg-password" name="password" placeholder="••••••••" required />
+            <label for="reg-gender">Identità (Per l'avatar base)</label>
+            <select id="reg-gender" name="gender" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.6); color: white; border: 1px solid var(--gold-dim); border-radius: 4px; font-family: 'Crimson Text', serif;" required>
+              <option value="m">Uomo</option>
+              <option value="f">Donna</option>
+              <option value="n">Non specificato</option>
+            </select>
           </div>
-          <div class="form-group">
-            <label for="reg-confirm">Conferma Password</label>
-            <input type="password" id="reg-confirm" name="confirm" placeholder="••••••••" required />
+
+          <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+              <label for="reg-password">Password</label>
+              <input type="password" id="reg-password" name="password" placeholder="••••••••" required />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="reg-confirm">Conferma</label>
+              <input type="password" id="reg-confirm" name="confirm" placeholder="••••••••" required />
+            </div>
           </div>
-          <button type="submit" class="btn-primary">
-            <span class="btn-icon">📜</span> Crea il tuo Account
-          </button>
+
+          <button type="submit" class="btn-primary" style="margin-top: 10px;"> Crea il tuo Account</button>
         </form>
 
         <!-- RECUPERO PASSWORD -->
@@ -112,9 +135,7 @@
             <label for="reset-new-password">Nuova Password</label>
             <input type="password" id="reset-new-password" name="newPassword" placeholder="••••••••" required />
           </div>
-          <button type="submit" class="btn-primary">
-            <span class="btn-icon">🔮</span> Reimposta Password
-          </button>
+          <button type="submit" class="btn-primary"> Reimposta Password </button>
           <p class="form-note"><a href="#" id="back-to-login">← Torna al Login</a></p>
         </form>
 
@@ -134,10 +155,6 @@
   
   <!-- Libreria per i popup carini (SweetAlert2) -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <script src="js/main.js"></script>
-
-  <!-- va aggiunta roba del login e registrazione seria -->
-  
 </body>
 </html>

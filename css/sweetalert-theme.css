@@ -367,3 +367,17 @@
     0 8px 18px -4px rgba(0,0,0,.85) !important;
   transform: translateY(-1px);
 }
+
+/* Forza la visibilità e la posizione della X di chiusura */
+.swal2-close {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 999 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.swal2-close:hover {
+    color: #f5d98e !important;
+}

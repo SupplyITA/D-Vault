@@ -79,27 +79,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Registrazione Collegata al Server Node.js
+  // ── Registrazione Collegata al Server Node.js
   const registerForm = document.getElementById('register-form');
   if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(registerForm));
 
-      // Il tuo controllo di sicurezza: perfetto!
-      if (data.password !== data.confirm) {
-        alert('Le password non coincidono.');
+      // 1. Controllo validazione Email
+      if (data.email !== data.confirmEmail) {
+        Swal.fire({
+            title: 'Errore Magico',
+            text: 'Le email non coincidono. Controlla la pergamena!',
+            icon: 'error',
+            customClass: { popup: 'vault-popup' },
+            confirmButtonColor: '#8b1a1a'
+        });
         return;
       }
 
-      // Controllo più elegante con SweetAlert2
+      // 2. Controllo validazione Password (elegante con SweetAlert2)
       if (data.password !== data.confirm) {
         Swal.fire({
             title: 'Errore Magico',
             text: 'Le password non coincidono. Riprova l\'incantesimo.',
             icon: 'error',
-            customClass: {
-                popup: 'vault-popup'
-            },
+            customClass: { popup: 'vault-popup' },
             confirmButtonColor: '#8b1a1a'
         });
         return;
@@ -109,7 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/registrati', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          // Spedisce fullName, gender e tutto il resto in automatico!
+          body: JSON.stringify(data) 
         });
 
         const result = await response.json();
@@ -119,9 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Evocazione Riuscita!',
             text: 'Il tuo account è stato creato. Ora puoi accedere.',
             icon: 'success',
-            customClass: {
-                popup: 'vault-popup'
-            }
+            customClass: { popup: 'vault-popup' }
           }).then(() => {
             registerForm.reset(); 
             document.querySelector('[data-tab="login"]')?.click();
@@ -132,9 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Nome Ghiacciato',
             text: result.message,
             icon: 'warning',
-            customClass: {
-                popup: 'vault-popup'
-            },
+            customClass: { popup: 'vault-popup' },
             confirmButtonColor: '#e8c97e'
           });
         }
@@ -144,9 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Server Irraggiungibile',
             text: 'La taverna è chiusa. Riprova più tardi.',
             icon: 'warning',
-            customClass: {
-                popup: 'vault-popup'
-            },
+            customClass: { popup: 'vault-popup' },
             confirmButtonColor: '#4a90e2'
         });
       }
