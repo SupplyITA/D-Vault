@@ -272,6 +272,33 @@ async function openAccount() {
     });
   }
 
+  // ---- POPUP: Statistiche ----
+  async function openStats() {
+    Swal.fire({
+      title: 'Statistiche dell\'Eroe',
+      html: '<p style="opacity:.7;font-style:italic">Consulto i toni del Vault…</p>',
+      didOpen: () => Swal.showLoading(),
+      customClass: { popup: 'vault-popup' }
+    });
+    const data = await fetchData();
+    const s = computeStats(data);
+    Swal.update({
+      html: `
+        <div class="vault-stats">
+          <div class="vault-stat"><div class="v-label">Schede</div><div class="v-value">${s.totalSheets}</div></div>
+          <div class="vault-stat"><div class="v-label">Livelli totali</div><div class="v-value">${s.totalLevel}</div></div>
+          <div class="vault-stat"><div class="v-label">Camp. da Master</div><div class="v-value">${s.masterCamps}</div></div>
+          <div class="vault-stat"><div class="v-label">Camp. da Player</div><div class="v-value">${s.playerCamps}</div></div>
+        </div>
+        ${s.topHero ? `<p style="margin-top:1rem;font-style:italic;opacity:.85">
+          Il tuo eroe più forte è <strong style="color:var(--gold)">${s.topHero.charName}</strong>${s.topHero.charClass ? ' — '+s.topHero.charClass : ''} (Liv. ${s.topHero.charLevel || 1}).
+        </p>` : '<p style="margin-top:1rem;opacity:.6">Nessun eroe ancora forgiato.</p>'}
+      `
+    });
+    Swal.hideLoading();
+    Swal.getConfirmButton().textContent = 'Chiudi';
+  }
+
   // ---- POPUP: Tema ----
   function openTheme() {
     const cur = window.DVaultTheme.current();
