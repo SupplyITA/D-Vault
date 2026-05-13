@@ -207,12 +207,14 @@ app.get('/api/campaigns', (req, res) => {
 
 // Rotta per CREARE una nuova campagna
 app.post('/api/campaigns', (req, res) => {
-    const { campName, campSetting, owner } = req.body;
+    // Aggiunto campPlayers che arriva dal form
+    const { campName, campSetting, campPlayers, owner } = req.body;
     const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     const defaultMap = '/maps/mappa_1.jpg'; // La tua mappa di default
 
-    db.run(`INSERT INTO campagne (owner, campName, campSetting, campPlayers, inviteCode, joinedPlayers, mapUrl) VALUES (?, ?, ?, 4, ?, '[]', ?)`, 
-    [owner, campName, campSetting, inviteCode, defaultMap], (err) => {
+    // Inseriamo campPlayers nella query (se è vuoto, usa 4 di default)
+    db.run(`INSERT INTO campagne (owner, campName, campSetting, campPlayers, inviteCode, joinedPlayers, mapUrl) VALUES (?, ?, ?, ?, ?, '[]', ?)`, 
+    [owner, campName, campSetting, campPlayers || 4, inviteCode, defaultMap], (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, message: "Campagna creata con successo!" });
     });
