@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100%;
   background: radial-gradient(ellipse at center, #1f140d 0%, #0d0805 100%);
-  color: #e8c97e;
+  color: var(--gold);
   font-family: 'Crimson Text', serif;
   overflow-x: auto; /* Aggiunto per schermi piccoli */
 }
@@ -24,10 +24,10 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   transition: 0.2s;
-  border-right: 1px solid rgba(180,130,40,0.2);
+  border-right: 1px solid rgba(var(--accent-1-dark), 0.2);
 }
 
-.dnd-subtab-btn:hover { color: var(--gold-bright); background: rgba(212,168,67,0.1); }
+.dnd-subtab-btn:hover { color: var(--gold-bright); background: rgba(var(--accent-1), 0.1); }
 .dnd-subtab-btn.active { color: #111; background: var(--gold-mid); font-weight: bold; }
 
 .dnd-subtab-content { display: none; flex: 1; padding: 20px; flex-direction: column; gap: 20px; overflow-y: auto; }
@@ -39,7 +39,7 @@
 
 .dnd-stat-box, .dnd-combat-box {
   background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(180,130,40,0.3);
+  border: 1px solid rgba(var(--accent-1-dark), 0.3);
   border-radius: 6px;
   padding: 10px;
   text-align: center;
@@ -68,7 +68,7 @@
   display: flex;
   flex-direction: column;
   background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(180,130,40,0.3);
+  border: 1px solid rgba(var(--accent-1-dark), 0.3);
   border-radius: 6px;
   padding: 10px;
 }
@@ -117,14 +117,14 @@ form.readonly-sheet input, form.readonly-sheet textarea {
 
 .dnd-skill-group {
   background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(180,130,40,0.3);
+  border: 1px solid rgba(var(--accent-1-dark), 0.3);
   border-radius: 6px;
   padding: 15px;
 }
 .group-title {
   display: block; font-family: var(--font-display);
   color: var(--gold-mid); margin-bottom: 10px;
-  border-bottom: 1px solid rgba(180,130,40,0.3); padding-bottom: 5px;
+  border-bottom: 1px solid rgba(var(--accent-1-dark), 0.3); padding-bottom: 5px;
 }
 .dnd-skill-row {
   display: flex; align-items: center; gap: 8px;
@@ -190,17 +190,17 @@ form.readonly-sheet .dnd-save-btn {
 
 
 /* ════════════════════════════════════════════════
-   GRIGLIA INCANTESIMI (STILE SCHEDA UFFICIALE)
+   GRIGLIA INCANTESIMI 
    ════════════════════════════════════════════════ */
 .dnd-spells-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 colonne perfette come nel manuale */
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
 .spell-level-box {
   background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(180,130,40,0.3);
+  border: 1px solid rgba(var(--accent-1-dark), 0.3);
   border-radius: 6px;
   overflow: hidden;
   display: flex;
@@ -210,7 +210,7 @@ form.readonly-sheet .dnd-save-btn {
 .spell-header {
   display: flex;
   align-items: center;
-  background: rgba(180,130,40,0.1);
+  background: rgba(var(--accent-1-dark), 0.1);
   border-bottom: 2px solid var(--gold-mid);
   padding: 5px 10px;
   gap: 15px;
@@ -267,7 +267,7 @@ form.readonly-sheet .dnd-save-btn {
 .spell-list { display: flex; flex-direction: column; padding: 10px; }
 .spell-row {
   display: flex; align-items: center; gap: 10px;
-  border-bottom: 1px solid rgba(180,130,40,0.2); padding: 4px 0;
+  border-bottom: 1px solid rgba(var(--accent-1-dark), 0.2); padding: 4px 0;
 }
 .spell-row:last-child { border-bottom: none; }
 
@@ -276,7 +276,7 @@ form.readonly-sheet .dnd-save-btn {
   border: 2px solid var(--gold-dim); border-radius: 50%;
   cursor: pointer; flex-shrink: 0; background: #111; transition: 0.2s;
 }
-.spell-prep-check:checked { background: var(--gold-mid); box-shadow: 0 0 8px rgba(212,168,67,0.8); }
+.spell-prep-check:checked { background: var(--gold-mid); box-shadow: 0 0 8px rgba(var(--accent-1), 0.8); }
 
 .spell-name-input {
   flex: 1; background: transparent; border: none;

@@ -1,7 +1,7 @@
 .right-panel-box {
   flex: 1;
   background: rgba(14, 5, 5, 0.92);
-  border: 1px solid rgba(180,130,40,0.18);
+  border: 1px solid rgba(var(--accent-1-dark), 0.18);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -15,7 +15,7 @@
   color: var(--gold-mid);
   background: rgba(10,4,4,0.9);
   padding: 10px 15px;
-  border-bottom: 1px solid rgba(180,130,40,0.14);
+  border-bottom: 1px solid rgba(var(--accent-1-dark), 0.14);
   margin: 0;
   text-transform: uppercase;
 }
@@ -39,10 +39,10 @@
   font-size: 0.8rem;
 }
 .chat-msg.me {
-  background: rgba(180,130,40,0.12);
+  background: rgba(var(--accent-1-dark), 0.12);
   color: #fff;
   align-self: flex-end;
-  border: 1px solid rgba(180,130,40,0.3);
+  border: 1px solid rgba(var(--accent-1-dark), 0.3);
   border-bottom-right-radius: 0;
 }
 .chat-msg.other {
@@ -65,18 +65,18 @@
   gap: 10px;
   padding: 10px;
   background: rgba(8,3,3,0.8);
-  border-top: 1px solid rgba(180,130,40,0.12);
+  border-top: 1px solid rgba(var(--accent-1-dark), 0.12);
 }
 .chat-input-area input {
   flex: 1;
   background: rgba(20,8,8,0.9);
   color: white;
-  border: 1px solid rgba(180,130,40,0.2);
+  border: 1px solid rgba(var(--accent-1-dark), 0.2);
   padding: 8px 12px;
   border-radius: 4px;
   font-family: 'Crimson Text', Georgia, serif;
 }
 .chat-input-area input:focus {
   outline: none;
-  border-color: rgba(212,168,67,0.4);
+  border-color: rgba(var(--accent-1), 0.4);
 }
