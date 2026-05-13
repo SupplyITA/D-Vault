@@ -353,7 +353,51 @@ function openSheetDetail(sheet) {
 }
 
 function bindEvents() {
+
   $('dash-main')?.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('copy-code')) {
+        e.stopPropagation(); 
+        await navigator.clipboard.writeText(e.target.dataset.code);
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Codice copiato!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
+        return;
+    }
+
+    // PErmette al giocatore di abbandonare la campagna
+    if (e.target.classList.contains('btn-leave')) {
+        e.stopPropagation(); 
+        const index = parseInt(e.target.dataset.index);
+        const camp = State.campaigns[index]; // Prende l'intero oggetto campagna
+
+        const result = await Swal.fire({
+            title: 'Abbandonare il Party?',
+            text: `Sei sicuro di voler lasciare l'avventura "${camp.campName}"?`,
+            icon: 'warning', showCancelButton: true,
+            background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#8b1a1a', cancelButtonText: 'Resta'
+        });
+
+        if (result.isConfirmed) {
+            await fetch('/api/campaigns/leave', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                // Inviamo l'inviteCode che è il vero identificatore univoco!
+                body: JSON.stringify({ inviteCode: camp.inviteCode, username: State.username })
+            });
+            
+            // Rimuove la campagna dalla memoria locale ISTANTANEAMENTE
+            State.campaigns.splice(index, 1);
+            
+            // Sincronizza i dati e aggiorna la grafica
+            await State.loadFromServer();
+            if(typeof renderGrid === 'function') renderGrid();
+            if(typeof renderDropdowns === 'function') renderDropdowns(); 
+            
+            Swal.fire({ 
+                toast: true, position: 'top-end', icon: 'success', 
+                title: 'Campagna abbandonata.', showConfirmButton: false, timer: 1500, 
+                background: '#1a1108', color: '#e8c97e' 
+            });
+        }
+        return;
+    }
     if (e.target.classList.contains('btn-delete')) {
       e.stopPropagation(); 
       const type = e.target.dataset.type;
@@ -1043,6 +1087,15 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
               setTimeout(() => { playerLeafletMap.invalidateSize(); playerLeafletMap.fitBounds([[0,0], [1000,1000]]); }, 100);
           }
       });
+  });
+
+  // Per far copiare il codice della campagna nella sezione del master
+  $('campaign-invite-code')?.addEventListener('click', async (e) => {
+      const text = e.target.textContent;
+      if (text && !text.includes('*')) {
+          await navigator.clipboard.writeText(text);
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Codice copiato!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
+      }
   });
 
   // Ricezione Eventi Socket

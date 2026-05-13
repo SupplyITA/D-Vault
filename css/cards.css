@@ -602,3 +602,16 @@
     calc(100% - 14px) calc(100% - 14px), calc(100% - 14px) calc(100% - 14px),
     0 0;
 }
+
+
+
+/* Effetto sfocato per i codici segreti */
+.blur-code {
+    filter: blur(5px);
+    transition: filter 0.3s ease;
+    cursor: pointer;
+    user-select: text !important; /* Permette la selezione del testo */
+}
+.blur-code:hover, .blur-code:active {
+    filter: blur(0);
+}

@@ -36,7 +36,6 @@ export function renderDropdowns() {
   const dropdownMasterList = $('dropdown-master-list'); 
   const dropdownPlayerList = $('dropdown-player-list');
 
-  // Render Schede
   if (dropdownSheetsList) {
     if (State.sheets.length === 0) {
       dropdownSheetsList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna scheda</li>';
@@ -45,36 +44,33 @@ export function renderDropdowns() {
     }
   }
 
-  // Filtra le campagne
   const masterCamps = [];
   const playerCamps = [];
   State.campaigns.forEach((c, i) => {
     if (c.owner === State.username) {
         masterCamps.push({ camp: c, index: i });
     } else {
-        playerCamps.push({ camp: c, index: i });
+        // FIX: joinedPlayers è già un array, non serve JSON.parse!
+        const players = c.joinedPlayers || [];
+        if (players.includes(State.username)) {
+            playerCamps.push({ camp: c, index: i });
+        }
     }
   });
 
-  // Render Campagne Master
   if (dropdownMasterList) {
     if (masterCamps.length === 0) {
       dropdownMasterList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna campagna</li>';
     } else {
-      dropdownMasterList.innerHTML = masterCamps.map(item => 
-        dropdownItemHtml(item.camp.campName, 'campaign', item.index)
-      ).join('');
+      dropdownMasterList.innerHTML = masterCamps.map(item => dropdownItemHtml(item.camp.campName, 'campaign', item.index)).join('');
     }
   }
 
-  // Render Campagne Giocatore
   if (dropdownPlayerList) {
     if (playerCamps.length === 0) {
       dropdownPlayerList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna avventura</li>';
     } else {
-      dropdownPlayerList.innerHTML = playerCamps.map(item => 
-        dropdownItemHtml(item.camp.campName, 'campaign', item.index)
-      ).join('');
+      dropdownPlayerList.innerHTML = playerCamps.map(item => dropdownItemHtml(item.camp.campName, 'campaign', item.index)).join('');
     }
   }
 }
@@ -95,8 +91,15 @@ export function renderGrid() {
   const masterCamps = [];
   const playerCamps = [];
   State.campaigns.forEach((c, i) => {
-    if (c.owner === State.username) masterCamps.push({ camp: c, index: i });
-    else playerCamps.push({ camp: c, index: i });
+    if (c.owner === State.username) {
+        masterCamps.push({ camp: c, index: i });
+    } else {
+        // FIX: joinedPlayers è già un array!
+        const players = c.joinedPlayers || [];
+        if (players.includes(State.username)) {
+            playerCamps.push({ camp: c, index: i });
+        }
+    }
   });
 
   if ($('grid-master')) {
@@ -124,13 +127,11 @@ export function renderGrid() {
   }
 }
 
-// Monogramma tipografico (prima lettera del nome) usato come "sigillo" nobile.
 function monogram(name) {
   const ch = (name || '?').trim().charAt(0).toUpperCase();
   return escHtml(ch || '?');
 }
 
-// Slug per nome file specie (es. "Mezzorco" → "mezzorco")
 function speciesSlug(name) {
   return (name || 'umano').toString().trim().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -139,7 +140,7 @@ function speciesSlug(name) {
 
 export function makeSheetCard(sheet, i) {
   const slug = speciesSlug(sheet.charRace);
-  const gender = sheet.charGender || 'm'; // Di default mette maschio se l'eroe è vecchio e non ha il sesso
+  const gender = sheet.charGender || 'm';
   const portraitSrc = sheet.avatar || `img/species/${slug}-${gender}.jpg`;
   const fallback = `this.onerror=null;this.src='img/species/_default.jpg';this.classList.add('is-fallback');`;
   return `
@@ -177,9 +178,12 @@ export function makeSheetCard(sheet, i) {
 export function makeCampaignCard(camp, i, isMaster) {
   const variant = isMaster ? 'luxury-master' : 'luxury-player';
   const tagText = isMaster ? 'Master' : 'Giocatore';
-  const btnDelete = isMaster ? `<button class="btn-delete" data-type="campaign" data-index="${i}" title="Elimina">×</button>` : '';
   
-  // --- Cerca l'eroe del giocatore ---
+  // Il Master può eliminare (tasto rosso con ×), il Giocatore può abbandonare (tasto rosso con ✕)
+  const btnDelete = isMaster 
+    ? `<button class="btn-delete" data-type="campaign" data-index="${i}" title="Elimina Campagna">×</button>` 
+    : `<button class="btn-delete btn-leave" data-index="${i}" title="Abbandona Campagna">✕</button>`;
+  
   let myCharInfo = '';
   if (!isMaster) {
       let active = {};
@@ -187,19 +191,16 @@ export function makeCampaignCard(camp, i, isMaster) {
       const charName = active[State.username];
 
       if (charName) {
-          // Se hai già scelto l'eroe, lo scrive in oro
           myCharInfo = `<div class="lux-meta" style="margin-top: 4px; color: #d4a843;">In gioco con · <strong style="color: #f5d98e;">${escHtml(charName)}</strong></div>`;
       } else {
-          // Se non lo hai ancora scelto, te lo ricorda
           myCharInfo = `<div class="lux-meta" style="margin-top: 4px; color: #888; font-style: italic;">Nessun eroe selezionato</div>`;
       }
   }
 
-  // Info eroe
+  // Aggiunto blur-code e copy-code per copiare il codice segreto con un tap
   const inviteInfo = isMaster
-      ? `<div class="lux-invite">Codice <strong>${escHtml(String(camp.inviteCode||''))}</strong></div>`
-      : `<div class="lux-meta">Master · <strong>${escHtml(camp.owner)}</strong></div>
-         ${myCharInfo}`;
+      ? `<div class="lux-invite">Codice <strong class="blur-code copy-code" data-code="${escHtml(String(camp.inviteCode||''))}" title="Clicca per copiare">${escHtml(String(camp.inviteCode||''))}</strong></div>`
+      : `<div class="lux-meta">Master · <strong>${escHtml(camp.owner)}</strong></div>${myCharInfo}`;
 
   const mapSrc = camp.mapUrl || camp.campMap || '/maps/mappa_1.jpg';
   const mapBlock = mapSrc
@@ -216,8 +217,8 @@ export function makeCampaignCard(camp, i, isMaster) {
          </svg>
        </div>`;
 
-  // --- CALCOLO DEI POSTI LIBERI ---
   const totali = camp.campPlayers || 4;
+  // FIX: joinedPlayers è già un array, leggiamo direttamente la lunghezza
   const occupati = camp.joinedPlayers ? camp.joinedPlayers.length : 0;
   const liberi = totali - occupati;
 
@@ -271,7 +272,6 @@ export async function renderizzaBestiario() {
   }
 }
 
-// Funzioni inline (richiamate direttamente dall'HTML) devono essere assegnate a window in un modulo ES6
 window.espandiMostro = function(riga) {
     const rigaDettagli = riga.nextElementSibling;
     rigaDettagli.style.display = rigaDettagli.style.display === 'none' ? 'table-row' : 'none';

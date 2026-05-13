@@ -204,7 +204,7 @@ app.get('/api/campaigns', (req, res) => {
     });
 });
 
-// 1. Rotta per CREARE una nuova campagna
+// Rotta per CREARE una nuova campagna
 app.post('/api/campaigns', (req, res) => {
     const { campName, campSetting, owner } = req.body;
     const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -217,7 +217,7 @@ app.post('/api/campaigns', (req, res) => {
     });
 });
 
-// 2. Rotta per AGGIORNARE la mappa esistente
+// Rotta per AGGIORNARE la mappa esistente
 app.post('/api/campaigns/map', (req, res) => {
     const { campName, owner, mapUrl } = req.body;
     db.run(`UPDATE campagne SET mapUrl = ? WHERE campName = ? AND owner = ?`, 
@@ -245,6 +245,30 @@ app.post('/api/campaigns/join', (req, res) => {
         players.push(username);
         db.run(`UPDATE campagne SET joinedPlayers = ? WHERE id = ?`, [JSON.stringify(players), row.id], (err) => {
             res.json({ message: "Ti sei unito alla campagna con successo!" });
+        });
+    });
+});
+
+app.post('/api/campaigns/leave', (req, res) => {
+    const { inviteCode, username } = req.body;
+    
+    db.get(`SELECT * FROM campagne WHERE inviteCode = ?`, [inviteCode], (err, row) => {
+        if (err || !row) return res.status(404).json({ error: "Campagna non trovata" });
+        
+        // Rimuove il giocatore dalla lista dei partecipanti
+        let players = JSON.parse(row.joinedPlayers || "[]");
+        players = players.filter(p => p !== username); 
+        
+        // Rimuove l'eroe eventualmente selezionato per evitare "fantasmi" al tavolo
+        let active = {};
+        try { active = JSON.parse(row.activeCharacters || "{}"); } catch(e){}
+        delete active[username];
+        
+        // Salva tutto in modo pulito
+        db.run(`UPDATE campagne SET joinedPlayers = ?, activeCharacters = ? WHERE id = ?`, 
+        [JSON.stringify(players), JSON.stringify(active), row.id], (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true, message: "Hai abbandonato la campagna." });
         });
     });
 });
