@@ -172,6 +172,7 @@
     linear-gradient(180deg, rgba(var(--accent-1-light), .04) 0%, transparent 30%, transparent 70%, rgba(var(--accent-1-light), .025) 100%);
   z-index: 0;
 }
+
 /* Riflesso diagonale */
 .vault-card.luxury::after {
   content: '';
@@ -450,7 +451,7 @@
 }
 
 /* ════════════════════════════════════════════════
-   LUXURY UPGRADE — override
+   Luxury Card e modali che condividono la pallette (ma vengono usati in parti diverse del codice quindi sono separati)
    ════════════════════════════════════════════════ */
 
 :root {
@@ -474,7 +475,7 @@
   );
 }
 
-/* — Header sezione ricostruito — */
+/* Header sezione ricostruito — */
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -519,7 +520,7 @@
   text-transform: uppercase;
 }
 
-/* — Pannelli centrali: vetro dorato traslucido — */
+/* Pannelli centrali: vetro dorato traslucido — */
 .dashboard-section {
   position: relative;
   border-radius: 6px;
@@ -610,7 +611,7 @@
     filter: blur(5px);
     transition: filter 0.3s ease;
     cursor: pointer;
-    user-select: text !important; /* Permette la selezione del testo */
+    user-select: text !important;
 }
 .blur-code:hover, .blur-code:active {
     filter: blur(0);

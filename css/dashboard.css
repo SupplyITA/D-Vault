@@ -1,5 +1,3 @@
-/* gold-bright / gold-mid / gold-dim / bronze are defined globally in style.css */
-
 /* ════════════════════════════════════════════════
    SFONDO DINAMICO
    ════════════════════════════════════════════════ */
@@ -168,7 +166,7 @@
 }
 .empty-state .btn-primary { width: auto; padding: 0.9rem 2.5rem; font-size: 0.85rem; }
 
-/* ── VAULT HERO BANNER ── */
+/* Hero Banner */
 .vault-hero-banner {
   width: 100%;
   max-width: 1140px;
@@ -312,7 +310,7 @@
 
 .section-cta { margin: 0 !important; }
 
-/* — Rune decorative angolari (riempiono i vuoti) — */
+/* Rune decorative angolari (riempiono i vuoti)  */
 .section-rune {
   position: absolute;
   width: 90px; height: 90px;
@@ -332,7 +330,7 @@
   opacity: .1;
 }
 
-/* — Empty state ricco con sigillo grande in filigrana — */
+/* Empty state ricco con sigillo  */
 .lux-empty {
   position: relative;
   text-align: center;
@@ -392,7 +390,7 @@
   font-style: italic;
 }
 
-/* — Container responsive — */
+/* Container responsive */
 @media (max-width: 680px) {
   .section-header { flex-wrap: wrap; }
   .section-flourish { display: none; }

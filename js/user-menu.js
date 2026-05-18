@@ -13,7 +13,7 @@
   applyTheme(localStorage.getItem(THEME_KEY) || 'vault');
   window.DVaultTheme = { apply: applyTheme, current: () => localStorage.getItem(THEME_KEY) || 'vault' };
 
-  // ---- Helpers ----
+  // Helpers 
   const username = () => localStorage.getItem('dvault_username') || 'Avventuriero';
 
   async function fetchData() {
@@ -39,7 +39,7 @@
     return { totalSheets, totalLevel, topHero, masterCamps, playerCamps };
   }
 
-  // ---- POPUP: Account ----
+  // Parte per l'Account 
 async function openAccount() {
     const me = username();
     
@@ -112,7 +112,7 @@ async function openAccount() {
         <input type="file" id="acc-avatar-file" style="display:none;" accept="image/*">
       `,
       didOpen: () => {
-        // --- CARICAMENTO FILE FISICO ---
+        // Carico file avatar
         const avatarInput = document.getElementById('acc-avatar-file');
         avatarInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -123,7 +123,7 @@ async function openAccount() {
             formData.append('username', me);
 
             try {
-                Swal.showLoading(); // Mostra caricamento
+                Swal.showLoading();
                 const resp = await fetch('/api/user/upload-avatar', { method: 'POST', body: formData });
                 const data = await resp.json();
                 if (data.success) {
@@ -133,7 +133,7 @@ async function openAccount() {
             } catch (err) { console.error("Errore upload:", err); }
         });
 
-        // --- GESTIONE EMAIL ---
+        // Parte per salvare mail
         document.getElementById('btn-save-email').addEventListener('click', async () => {
            const newEmail = document.getElementById('acc-email-input').value;
            const res = await fetch('/api/update-email', {
@@ -143,7 +143,7 @@ async function openAccount() {
            if(res.ok) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Email aggiornata!', showConfirmButton: false, timer: 1500 });
         });
 
-        // --- GESTIONE AVATAR ---
+        // Avatar - parte di gestione
         document.getElementById('trigger-avatar-options').addEventListener('click', () => {
           Swal.fire({
             title: 'Gestisci Avatar',
@@ -155,9 +155,10 @@ async function openAccount() {
             if (result.isConfirmed) {
               Swal.fire({ imageUrl: userData.avatar, imageWidth: 400, background: 'rgba(0,0,0,0.9)', showConfirmButton: false });
             } else if (result.isDenied) {
-              avatarInput.click(); // Usa la variabile definita sopra
+              avatarInput.click(); 
             } else if (result.dismiss === Swal.DismissReason.cancel) {
-              // --- GALLERIA DEFAULT ---
+
+              // Immagini pre scelte
               const galleryImages = [
                 { url: '/img/avatars/male-1.jpg', label: 'Guerriero' },
                 { url: '/img/avatars/male-2.jpg', label: 'Mago' },
@@ -180,7 +181,7 @@ async function openAccount() {
           });
         });
 
-        // Funzione globale per la selezione gallery
+        // Funzione scelta galleria
         window.selectGalleryAvatar = async (url) => {
             await fetch('/api/user/avatar', { 
                 method: 'POST', headers: {'Content-Type':'application/json'}, 
@@ -189,7 +190,7 @@ async function openAccount() {
             location.reload();
         };
 
-        // --- ALTRE GESTIONI (Suono, Pwd, Delete) ---
+        // Altre funzioni (cancella  account)
         document.getElementById('acc-toggle-sound').addEventListener('change', (e) => {
             localStorage.setItem('dvault_sound', e.target.checked);
         });

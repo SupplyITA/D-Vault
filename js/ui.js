@@ -218,7 +218,6 @@ export function makeCampaignCard(camp, i, isMaster) {
        </div>`;
 
   const totali = camp.campPlayers || 4;
-  // FIX: joinedPlayers è già un array, leggiamo direttamente la lunghezza
   const occupati = camp.joinedPlayers ? camp.joinedPlayers.length : 0;
   const liberi = totali - occupati;
 

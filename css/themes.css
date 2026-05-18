@@ -31,7 +31,6 @@ html:not([data-theme="verdant"]):not([data-theme="azure"]) {
   --glass-light:   rgba(30, 14, 14, 0.65);
 }
 
-/* --- VAULT accent remap esplicito --- */
 html:not([data-theme="verdant"]):not([data-theme="azure"]) {
   --accent-1: 212,168,67;
   --accent-2: 192,57,43;

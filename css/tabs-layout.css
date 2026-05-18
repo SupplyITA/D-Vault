@@ -16,22 +16,22 @@
 
 .sheet-layout {
   display: flex;
-  flex-direction: row; /* Forza l'affiancamento */
-  flex-wrap: nowrap;   /* Impedisce di andare a capo */
+  flex-direction: row; 
+  flex-wrap: nowrap;   
   gap: 20px;
   height: calc(100vh - 200px);
   min-height: 600px;
 }
 
 .sheet-left {
-  flex: 2.5; /* La scheda prende molto più spazio */
+  flex: 2.5; 
   display: flex;
   flex-direction: column;
-  min-width: 0; /* Previene overflow strani */
+  min-width: 0; 
 }
 
 .sheet-right {
-  flex: 1; /* L'avatar e la chat prendono il resto */
+  flex: 1; 
   display: flex;
   flex-direction: column;
   min-width: 300px;
@@ -139,7 +139,7 @@
 }
 .party-hero-sub { font-size: 0.8rem; color: #aaa; margin-top: 5px; }
 
-/*  NOME EROE — oro chiaro luminoso + alone scuro per leggibilità */
+/*  Nome Eroe — oro chiaro luminoso + alone scuro per leggibilità */
 .vault-card.luxury .card-title {
   background: linear-gradient(180deg,
     var(--gold-bright) 0%,
@@ -156,22 +156,21 @@
   letter-spacing: .08em !important;
 }
 
-/* CORNICE INTERNA */
+/* Cornisce Interna */
 .dashboard-section {
   outline: 1px solid rgba(var(--accent-1), .22);
   outline-offset: -11px;
 }
 
-/* ANGOLI ORNATI SVG */
+/* Angoli */
 .dashboard-section {
   background-image:
-    /* TL */
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23fff1c2'/><stop offset='.35' stop-color='%23e8c068'/><stop offset='.55' stop-color='%23a07020'/><stop offset='.8' stop-color='%23f1cf78'/><stop offset='1' stop-color='%23704818'/></linearGradient></defs><g fill='none' stroke='url(%23g)' stroke-width='1.5' stroke-linecap='round'><path d='M2 30 L2 6 Q2 2 6 2 L30 2'/><path d='M2 22 L2 10 Q2 6 6 6 L22 6'/><path d='M2 40 Q10 40 10 32 Q10 24 18 24 Q26 24 26 16 Q26 10 32 10'/><path d='M40 2 Q40 10 32 10'/><circle cx='10' cy='10' r='2.2' fill='url(%23g)'/><path d='M14 14 q4 0 4 4 q0 4 4 4' /><path d='M22 22 q4 0 4 4' /></g></svg>"),
-    /* TR */
+
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><defs><linearGradient id='g' x1='1' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff1c2'/><stop offset='.35' stop-color='%23e8c068'/><stop offset='.55' stop-color='%23a07020'/><stop offset='.8' stop-color='%23f1cf78'/><stop offset='1' stop-color='%23704818'/></linearGradient></defs><g fill='none' stroke='url(%23g)' stroke-width='1.5' stroke-linecap='round'><path d='M68 30 L68 6 Q68 2 64 2 L40 2'/><path d='M68 22 L68 10 Q68 6 64 6 L48 6'/><path d='M68 40 Q60 40 60 32 Q60 24 52 24 Q44 24 44 16 Q44 10 38 10'/><path d='M30 2 Q30 10 38 10'/><circle cx='60' cy='10' r='2.2' fill='url(%23g)'/><path d='M56 14 q-4 0 -4 4 q0 4 -4 4' /><path d='M48 22 q-4 0 -4 4' /></g></svg>"),
-    /* BL */
+
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><defs><linearGradient id='g' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='%23fff1c2'/><stop offset='.35' stop-color='%23e8c068'/><stop offset='.55' stop-color='%23a07020'/><stop offset='.8' stop-color='%23f1cf78'/><stop offset='1' stop-color='%23704818'/></linearGradient></defs><g fill='none' stroke='url(%23g)' stroke-width='1.5' stroke-linecap='round'><path d='M2 40 L2 64 Q2 68 6 68 L30 68'/><path d='M2 48 L2 60 Q2 64 6 64 L22 64'/><path d='M2 30 Q10 30 10 38 Q10 46 18 46 Q26 46 26 54 Q26 60 32 60'/><path d='M40 68 Q40 60 32 60'/><circle cx='10' cy='60' r='2.2' fill='url(%23g)'/><path d='M14 56 q4 0 4 -4 q0 -4 4 -4' /><path d='M22 48 q4 0 4 -4' /></g></svg>"),
-    /* BR */
+
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><defs><linearGradient id='g' x1='1' y1='1' x2='0' y2='0'><stop offset='0' stop-color='%23fff1c2'/><stop offset='.35' stop-color='%23e8c068'/><stop offset='.55' stop-color='%23a07020'/><stop offset='.8' stop-color='%23f1cf78'/><stop offset='1' stop-color='%23704818'/></linearGradient></defs><g fill='none' stroke='url(%23g)' stroke-width='1.5' stroke-linecap='round'><path d='M68 40 L68 64 Q68 68 64 68 L40 68'/><path d='M68 48 L68 60 Q68 64 64 64 L48 64'/><path d='M68 30 Q60 30 60 38 Q60 46 52 46 Q44 46 44 54 Q44 60 38 60'/><path d='M30 68 Q30 60 38 60'/><circle cx='60' cy='60' r='2.2' fill='url(%23g)'/><path d='M56 56 q-4 0 -4 -4 q0 -4 -4 -4' /><path d='M48 48 q-4 0 -4 -4' /></g></svg>"),
     linear-gradient(160deg,
       rgba(var(--accent-1-dark), 0.32) 0%,
@@ -187,7 +186,6 @@
     0 0 !important;
 }
 
-/*  SIGILLO IN CERALACCA */
 .lux-sigil {
   background:
     radial-gradient(circle at 35% 30%, rgba(var(--accent-1-light), .55) 0%, transparent 35%),
@@ -359,7 +357,7 @@
 }
 
 /* ════════════════════════════════════════════════
-   VISIONE DA TELEFONO / TABLET QUALSIASI DISPOSITIVO NO PC 
+   Parte per vedere da telefono / tablet 
    ════════════════════════════════════════════════ */
 
   @media (max-width: 900px){

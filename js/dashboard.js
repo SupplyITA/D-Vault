@@ -245,8 +245,8 @@ function openCampaignDetail(camp) {
   const primoTab = document.querySelector('.tab-btn[data-tab="storia"]');
   if(primoTab) primoTab.click();
 
-  // --- CREAZIONE E GESTIONE MAPPA MASTER ---
-  const mapUrl = camp.mapUrl || '/maps/mappa_1.jpg'; // Prende la mappa della campagna o quella base
+  // Creazione e Mappa 
+  const mapUrl = camp.mapUrl || '/maps/mappa_1.jpg'; 
 
   // Inizializza la mappa Leaflet solo la prima volta
   if (!leafletMap && $('map')) {
@@ -281,13 +281,13 @@ function openCampaignDetail(camp) {
 // Funzione che aggiunge e permette la rimozione dei segnalini con Proprietà
 function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username) {
     const marker = L.marker(latlng).addTo(mappa);
-    marker.proprietario = owner; // Salviamo chi ha creato il segnalino
+    marker.proprietario = owner; 
     
     marker.on('contextmenu', () => {
         // Controllo se sei nella schermata del Master
         const isMaster = $('campaign-detail') && $('campaign-detail').style.display === 'block';
         
-        // Se non sei il Master e non sei il proprietario, BLOCCO
+        // Se non sei il Master e non sei il proprietario, blocco l'azione
         if (!isMaster && marker.proprietario !== State.username) {
             Swal.fire({
                 toast: true, position: 'bottom-end', icon: 'warning', 
@@ -297,7 +297,7 @@ function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username
             return;
         }
 
-        // Se sei autorizzato, RIMUOVI
+        // Se sei autorizzato, rimuovo il segnalino
         mappa.removeLayer(marker);
         if (socket) socket.emit('rimuovi_segnalino', latlng);
     });
@@ -361,10 +361,10 @@ function openSheetDetail(sheet) {
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
   if($('sheet-detail-title')) $('sheet-detail-title').textContent = sheet.charName;
 
-  // CARICA APPUNTI DALLA COLONNA DEDICATA
+  // Carica le note del giocatore
   const notesArea = $('player-notes');
   if(notesArea) {
-      // Usa sheet.playerNotes
+      // Richiamo sheet.playerNotes
       notesArea.value = sheet.playerNotes || (sheet.sheetDataDetails && sheet.sheetDataDetails.playerNotes) || '';
   }
 
@@ -380,7 +380,6 @@ function bindEvents() {
 
   $('dash-main')?.addEventListener('click', async (e) => {
     
-    // COPIA CODICE
     const btnCopy = e.target.closest('.copy-code');
     if (btnCopy) {
         e.stopPropagation(); 
@@ -389,11 +388,11 @@ function bindEvents() {
         return;
     }
 
-    // GESTIONE ELIMINAZIONE E USCITA 
+    // Eliminazione ed uscita
     const btnDel = e.target.closest('.btn-delete') || e.target.closest('.btn-leave');
     if (btnDel) {
       e.stopPropagation(); 
-      const type = btnDel.dataset.type; // 'sheet', 'campaign' o 'leave-campaign'
+      const type = btnDel.dataset.type; 
       const index = parseInt(btnDel.dataset.index);
       
       const isLeaving = (type === 'leave-campaign' || btnDel.classList.contains('btn-leave'));
@@ -411,7 +410,7 @@ function bindEvents() {
       });
 
       if (result.isConfirmed) {
-        // CHIAMATE AL DATABASE PER ELIMINARE DAVVERO
+        // Chiamata al database 
         if (type === 'sheet') {
           await fetch(`/api/sheets/${encodeURIComponent(State.sheets[index].charName)}?user=${encodeURIComponent(State.username)}`, { method: 'DELETE' });
         } else if (type === 'campaign') {
@@ -423,7 +422,7 @@ function bindEvents() {
           });
         }
 
-        // SINCRONIZZA TUTTO CON IL SERVER
+        // Sincronizzazione server
         await State.loadFromServer();
         renderGrid(); 
         if(typeof renderDropdowns === 'function') renderDropdowns();
@@ -434,7 +433,7 @@ function bindEvents() {
       return; 
     }
 
-    // APERTURA CARD (Eroi/Campagne)
+    // Apertura Card campagna o scheda
     const card = e.target.closest('.vault-card');
     if (card) {
       const type = card.dataset.type;
@@ -448,7 +447,7 @@ function bindEvents() {
     }
   });
 
-  // --- RINOMINA CAMPAGNA ---
+  // Rinomina Campagna
   $('btn-rename-camp')?.addEventListener('click', async () => {
     const titleEl = $('campaign-detail-title');
     const oldName = titleEl.textContent.trim();
@@ -469,14 +468,14 @@ function bindEvents() {
       });
       if (res.ok) {
         titleEl.textContent = newName;
-        await State.loadFromServer(); // Sincronizza lo State
+        await State.loadFromServer(); 
         renderGrid(); renderDropdowns();
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Rinominata!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
       }
     }
   });
 
-  // --- RINOMINA EROE ---
+  // Rinomina Scheda
   $('btn-rename-sheet')?.addEventListener('click', async () => {
     const titleEl = $('sheet-detail-title');
     const oldName = titleEl.textContent.trim();
@@ -497,7 +496,7 @@ function bindEvents() {
       });
       if (res.ok) {
         titleEl.textContent = newName;
-        await State.loadFromServer(); // Sincronizza lo State
+        await State.loadFromServer();
         renderGrid(); renderDropdowns();
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Nuova identità forgiata!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
       }
@@ -547,7 +546,7 @@ function bindEvents() {
           if (socket) socket.emit('cambia_sfondo_mappa', url);
           $('map-url-input').value = '';
 
-          // SALVATAGGIO BLINDATO NEL DATABASE
+          // Per salvare nel database, viene chiamato post e mandato nell'sql 
           try {
               await fetch('/api/campaigns/map', {
                   method: 'POST',
@@ -555,7 +554,7 @@ function bindEvents() {
                   body: JSON.stringify({ campName: campName, owner: State.username, mapUrl: url })
               });
               
-              //  Forza il ricaricamento dal server per essere sicuri al 100%
+              // Forza il ricaricamento dal server per essere sicuri al 100%
               await State.loadFromServer();
               renderGrid(); 
           } catch (err) {
@@ -587,7 +586,7 @@ function bindEvents() {
               if (socket) socket.emit('cambia_sfondo_mappa', data.url);
               fileInput.value = '';
 
-              // SALVATAGGIO BLINDATO NEL DATABASE
+              // Salva nel database l'URL della mappa appena caricata
               await fetch('/api/campaigns/map', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -728,7 +727,7 @@ function bindEvents() {
             };
 
             // Estrazione dati base
-            const fullClassLevel = getT('ClassLevel'); // Es: "Guerriero 5"
+            const fullClassLevel = getT('ClassLevel'); 
             const classParts = fullClassLevel.split(' ');
             const charLevel = parseInt(classParts.pop()) || 1;
             const charClass = classParts.join(' ') || 'Guerriero';
@@ -781,7 +780,7 @@ function bindEvents() {
             console.error(err);
             Swal.fire('Errore', 'Impossibile leggere questo file PDF.', 'error');
         }
-        e.target.value = ''; // Reset input
+        e.target.value = ''; 
     });
   // Invio del form
 $('form-add-sheet')?.addEventListener('submit', async (e) => {
@@ -846,10 +845,10 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
     renderGrid(); 
 });
 
-// --- CREAZIONE NUOVA CAMPAGNA ---
+// Creazione Nuova Campagna 
   $('form-add-campaign')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    // Prendiamo i dati scritti nel form
+    // Per prendere i dati dai form
     const data = Object.fromEntries(new FormData($('form-add-campaign')));
     data.owner = State.username;
 
@@ -883,11 +882,11 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
     }
   });
 
-  // --- INGRESSO IN UNA CAMPAGNA TRAMITE CODICE ---
+  // Permette di usare il codice per entrare nella campagna
   $('form-join-campaign')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData($('form-join-campaign')));
-    data.username = State.username; // Aggiungiamo chi sta provando a entrare
+    data.username = State.username; //questa parte si basa sull'username della persona loggata per capire chi sta entrando e con quale personaggio
 
     try {
       const res = await fetch('/api/campaigns/join', {
@@ -905,7 +904,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
             icon: 'success', 
             background: '#1a1108', color: '#d4a843', confirmButtonColor: '#4a90e2' 
         });
-        await State.loadFromServer(); // Ricarica le campagne
+        await State.loadFromServer();
         $('form-join-campaign').reset();
         closeModal($('modal-join-backdrop'));
         renderDropdowns(); 
@@ -944,7 +943,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
     } catch (e) { console.error(e); }
   });
 
-// --- SALVATAGGIO APPUNTI MANUALE ---
+// Salva gli appunti del giocatore in manuale
   $('btn-save-notes')?.addEventListener('click', async () => {
     const notes = $('player-notes').value;
     const charName = $('sheet-detail-title').textContent.trim();
@@ -983,7 +982,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
   $('btn-pc-send-chat')?.addEventListener('click', () => inviaChatCampagna('pc-chat-input', 'pc-chat-messages', State.username, $('player-camp-title').textContent));
   $('pc-chat-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') $('btn-pc-send-chat').click(); });
 
-// --- CLICK SUI BOTTONI DEI DADI ---
+// Per i dadi (Bottoni)
   document.querySelectorAll('.btn-dice').forEach(btn => {
       btn.addEventListener('click', (e) => {
           const faccie = parseInt(e.target.dataset.dice);
@@ -1024,27 +1023,24 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
               menu.style.display = 'none';
           };
 
-          // --- RIPRISTINA DEFAULT ---
+          // reset Default
           $('menu-reset-avatar').onclick = async (e) => {
               e.stopPropagation();
               menu.style.display = 'none';
 
-              const charName = getCharName(); // Recuperiamo il nome dell'eroe
+              const charName = getCharName(); 
               if (!charName) return;
 
-              // Troviamo la scheda nei dati locali
               const sheet = State.sheets.find(s => s.charName === charName);
               if (!sheet) return;
 
-              // Ricostruiamo il percorso di default esatto
               const slug = sheet.charRace.toLowerCase().replace(/\s+/g, '-');
               const gender = sheet.charGender || 'm';
               const defaultAvatarUrl = `/img/species/${slug}-${gender}.jpg`; 
 
-              // Aggiorniamo l'immagine a schermo
               imgEl.src = defaultAvatarUrl;
 
-              // Salviamo la modifica nel database usando la rotta esistente
+              // Salva su database
               try {
                   await fetch('/api/sheets/avatar', { 
                       method: 'POST', 
@@ -1055,8 +1051,6 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
                           avatarUrl: defaultAvatarUrl 
                       }) 
                   });
-
-                  // Aggiorniamo lo stato locale
                   sheet.avatar = defaultAvatarUrl;
 
                   Swal.fire({ 
@@ -1195,7 +1189,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
       } catch (err) { Swal.fire({ title: 'Errore', text: "Impossibile salvare la scheda.", icon: 'error', background: '#1a1a1a', color: '#e8c97e' }); }
   });
 
-  // TABS GIOCATORE IN PARTITA
+  // TTab per giocatori in partita
   document.querySelectorAll('.player-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
           const clickedBtn = e.currentTarget;

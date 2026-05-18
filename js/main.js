@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabs  = document.querySelectorAll('.auth-tab');
   const forms = document.querySelectorAll('.auth-form');
 
-  // ── Gestione Tab (Intatta)
+  //  Gestione Tab (Intatta)
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const target = tab.dataset.tab;
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Bentornato, Eroe!',
             text: 'I cancelli del Vault si aprono per te.',
             icon: 'success',
-            timer: 1500, // Il popup si chiude da solo dopo 1.5 secondi
+            timer: 1500, 
             showConfirmButton: false,
             customClass: {
                 popup: 'vault-popup'
@@ -77,16 +77,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-
-  // ── Registrazione Collegata al Server Node.js
-  // ── Registrazione Collegata al Server Node.js
+  // Registrazione Collegata al Server Node.js
   const registerForm = document.getElementById('register-form');
   if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(registerForm));
 
-      // 1. Controllo validazione Email
+      //  Controllo validazione Email
       if (data.email !== data.confirmEmail) {
         Swal.fire({
             title: 'Errore Magico',
@@ -98,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // 2. Controllo validazione Password (elegante con SweetAlert2)
+      // Controllo validazione Password (elegante con SweetAlert2)
       if (data.password !== data.confirm) {
         Swal.fire({
             title: 'Errore Magico',
@@ -114,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/registrati', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // Spedisce fullName, gender e tutto il resto in automatico!
           body: JSON.stringify(data) 
         });
 
@@ -131,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('[data-tab="login"]')?.click();
           });
         } else {
-          // Email o Username già in uso
+          // per controllare se email è già in uso (o altri errori)
           Swal.fire({
             title: 'Nome Ghiacciato',
             text: result.message,
@@ -153,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ── Gestione "Password Dimenticata"
+  // Gestione "Password Dimenticata"
   const forgotLink = document.getElementById('forgot-link');
   const backToLogin = document.getElementById('back-to-login');
   const resetForm = document.getElementById('reset-form');
@@ -234,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// che figo è venuto benissimo bea brava
+// Funzione per particelle random 
 function spawnParticles(container, count) {
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');

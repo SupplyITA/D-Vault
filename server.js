@@ -19,7 +19,7 @@ app.use(express.static(__dirname));
 // --- SETUP DATABASE SQLITE ---
 const db = new sqlite3.Database('./dvault.sqlite', (err) => {
     if (err) console.error("Errore DB:", err.message);
-    else console.log('🗄️ Database SQLite connesso con successo.');
+    else console.log(' Database SQLite connesso con successo.');
 });
 
 // Creazione Tabelle Relazionali
@@ -560,7 +560,7 @@ app.post('/api/sheets/rename', (req, res) => {
 
 // Socket Connessione alla Chat 
 io.on('connection', (socket) => {
-    console.log('🟢 Un utente si è connesso al tavolo virtuale!');
+    console.log('Un utente si è connesso al tavolo virtuale!');
 
     // Comunicazione real time
     socket.on('invia_messaggio', (dati) => {
@@ -615,7 +615,7 @@ io.on('connection', (socket) => {
 
     // Quando l'utente chiude brutalmente la scheda
     socket.on('disconnect', () => {
-        console.log('🔴 Un utente ha lasciato il tavolo.');
+        console.log('Un utente ha lasciato il tavolo.');
         if (socket.username && socket.campName) {
             socket.to(socket.campName).emit('ricevi_messaggio_campagna', {
                 mittente: 'Taverniere',

@@ -5,7 +5,7 @@
   background: radial-gradient(ellipse at center, #1f140d 0%, #0d0805 100%);
   color: var(--gold);
   font-family: 'Crimson Text', serif;
-  overflow-x: auto; /* Aggiunto per schermi piccoli */
+  overflow-x: auto;
 }
 
 .dnd-sheet-nav {
@@ -170,7 +170,7 @@ form.readonly-sheet .dnd-save-btn {
   display: none;
 }
 
-/*  Costringe l'avatar a stare a destra */
+/* Costringe l'avatar a stare a destra */
 .sheet-layout {
   display: flex !important;
   flex-direction: row !important;
