@@ -109,7 +109,7 @@ node server.js
 ```
 
 Se tutto è andato a buon fine, il terminale ti risponderà con i tuoi messaggi:
-🗄️ Database SQLite connesso con successo.
+ Database SQLite connesso con successo.
 Server avviato e in ascolto!  
 
 A questo punto, apri il browser del computer e vai su http://localhost:3000/index.html e la tua piattaforma prenderà vita! Se vuoi fermare il server in qualsiasi momento, ti basterà premere CTRL + C nel terminale.
