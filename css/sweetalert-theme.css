@@ -13,7 +13,7 @@
 
 /* Popup: vetro dorato con cornice metallica */
 .swal2-popup {
-  font-family: 'Crimson Text', Georgia, serif !important;
+  font-family: 'Berthold Baskerville', Georgia, serif !important;
   background:
     linear-gradient(160deg,
       rgba(var(--accent-1-dark), 0.30) 0%,
@@ -197,7 +197,7 @@
   height: 2px !important;
 }
 
-/* — Tipografia incisa sui nomi delle card — */
+/* Tipografia incisa sui nomi delle card */
 .vault-card.luxury .card-title {
   letter-spacing: .12em !important;
   text-shadow:
@@ -212,7 +212,7 @@
     0 0 1px rgba(var(--accent-1), 0.991) !important;
 }
 
-/* — Texture pergamena/marmo (overlay sottile) — */
+/* Texture pergamena/marmo (overlay sottile)  */
 .vault-card.luxury > .lux-paper {
   position: absolute;
   inset: 0;
@@ -224,7 +224,7 @@
   background-size: 300px 300px;
 }
 
-/* — Filetto doppio: sottile parallelo al bordo principale — */
+/* Filetto doppio sottile parallelo al bordo principale  */
 .vault-card.luxury {
   outline: 1px solid rgba(var(--accent-1), .18);
   outline-offset: 3px;
@@ -238,7 +238,7 @@
     inset 0 0 0 3px rgba(var(--accent-1), .18);
 }
 
-/* — Badge "LIV." a forma di scudo araldico — */
+/* Badge "LIV." a forma di scudo araldico */
 .vault-card.luxury .card-level {
   border-radius: 0 !important;
   padding: .35rem .8rem .55rem !important;
@@ -252,7 +252,7 @@
   font-weight: 700;
 }
 
-/* — Tilt 3D + riflesso sweep al passaggio — */
+/* Tilt 3D + riflesso sweep al passaggio  */
 .content-grid { perspective: 1200px; }
 .vault-card.luxury {
   transform-style: preserve-3d;
@@ -282,7 +282,7 @@
   to   { transform: translateX(60%); }
 }
 
-/* — Sfondo: vignettatura ai bordi + glifo runico tenue — */
+/* Sfondo vignettatura ai bordi e glifo runico tenue */
 .dash-bg-overlay {
   background-image:
     radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55) 100%),
@@ -294,7 +294,7 @@
   background-repeat: no-repeat, repeat, repeat, repeat;
 }
 
-/* — Divisore a fregio (•◆•) sulla section-header — */
+/* Divisore a fregio sulla section-header */
 .section-header::after {
   background: linear-gradient(90deg,
     transparent 0%,

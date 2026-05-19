@@ -16,7 +16,7 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// --- SETUP DATABASE SQLITE ---
+// Database SQLite
 const db = new sqlite3.Database('./dvault.sqlite', (err) => {
     if (err) console.error("Errore DB:", err.message);
     else console.log(' Database SQLite connesso con successo.');
@@ -38,9 +38,15 @@ db.serialize(() => {
     )`);
     db.run(`ALTER TABLE schede ADD COLUMN avatar TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN charGender TEXT`, (err) => {}); 
-
+    
+    //per poter caricare le mappe da url
     db.run(`ALTER TABLE campagne ADD COLUMN mapUrl TEXT`, (err) => {}); 
+
+    // per visualizzare i player in campagna
     db.run('ALTER TABLE campagne ADD COLUMN activeCharacters TEXT', (err) => {});
+
+    //per salvare le mappe caricate in precedenza
+    db.run(`ALTER TABLE campagne ADD COLUMN mapHistory TEXT DEFAULT '[]'`, (err) => {});
 });
 
 // QUesto è per uploadare l'avatar del personaggio.
@@ -521,7 +527,7 @@ app.get('/api/chat/:campName', (req, res) => {
     });
 });
 
-// --- RINOMINA CAMPAGNA ---
+// Per rinominare la campagna
 app.post('/api/campaigns/rename', (req, res) => {
     const { oldName, newName, owner } = req.body;
     db.run(`UPDATE campagne SET campName = ? WHERE campName = ? AND owner = ?`, [newName, oldName, owner], function(err) {
@@ -530,7 +536,18 @@ app.post('/api/campaigns/rename', (req, res) => {
     });
 });
 
-// --- RINOMINA EROE ---
+//Per mettere una storia delle mappe
+
+app.post('/api/campaigns/map-history', (req, res) => {
+    const { campName, owner, mapHistory } = req.body;
+    db.run(`UPDATE campagne SET mapHistory = ? WHERE campName = ? AND owner = ?`, 
+    [mapHistory, campName, owner], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, message: "Storico mappe aggiornato nel DB!" });
+    });
+});
+
+// Pere rinomnare la scheda
 app.post('/api/sheets/rename', (req, res) => {
     const { oldName, newName, owner } = req.body;
     
@@ -545,14 +562,12 @@ app.post('/api/sheets/rename', (req, res) => {
             rows.forEach(row => {
                 try {
                     let active = JSON.parse(row.activeCharacters || "{}");
-                    // Se l'owner aveva come eroe attivo "vecchio nome", metti "nuovo nome"
                     if (active[owner] === oldName) {
                         active[owner] = newName;
                         db.run(`UPDATE campagne SET activeCharacters = ? WHERE id = ?`, [JSON.stringify(active), row.id]);
                     }
                 } catch(e) {}
             });
-            // Tutto sistemato senza fare casino!
             res.json({ success: true });
         });
     });
@@ -560,7 +575,7 @@ app.post('/api/sheets/rename', (req, res) => {
 
 // Socket Connessione alla Chat 
 io.on('connection', (socket) => {
-    console.log('Un utente si è connesso al tavolo virtuale!');
+    console.log('Un utente si è connesso al tavolo virtuale! ✔✔✔  ');
 
     // Comunicazione real time
     socket.on('invia_messaggio', (dati) => {
@@ -615,7 +630,7 @@ io.on('connection', (socket) => {
 
     // Quando l'utente chiude brutalmente la scheda
     socket.on('disconnect', () => {
-        console.log('Un utente ha lasciato il tavolo.');
+        console.log('Un utente ha lasciato il tavolo. XXX');
         if (socket.username && socket.campName) {
             socket.to(socket.campName).emit('ricevi_messaggio_campagna', {
                 mittente: 'Taverniere',

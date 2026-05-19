@@ -338,18 +338,26 @@
           <br><br><button id="btn-save-story" class="btn-primary">✦ Salva Storia</button>
         </div>
 
-        <div id="tab-mappa" class="tab-content" style="flex: 1;">
-          <p style="margin-bottom: 10px; color: #aaa;">Usa un URL dal web o carica un file dal PC per cambiare mappa.</p>
+        <div id="tab-mappa" class="tab-content" style="flex: 1; display: flex; flex-direction: column;">
+          <p style="margin-bottom: 10px; color: #aaa;">Usa un URL o carica un file dal PC per aggiungere una mappa all'archivio.</p>
           <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
             <input type="text" id="map-url-input" placeholder="Incolla qui l'URL (es. https://...)" style="flex: 1; padding: 8px; background: #111; color: white; border: 1px solid #444; border-radius: 4px;">
-            <button id="btn-change-map" class="btn-primary" style="padding: 8px 15px; margin: 0; min-width: 130px;">Usa URL</button>
+            <button id="btn-change-map" class="btn-primary" style="padding: 8px 15px; margin: 0; min-width: 130px;">Salva in Archivio</button>
           </div>
           <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
             <input type="file" id="map-file-input" accept="image/*" style="flex: 1; padding: 8px; background: #111; color: white; border: 1px solid #444; border-radius: 4px;">
             <button id="btn-upload-map" class="btn-primary" style="padding: 8px 15px; margin: 0; min-width: 130px;">Carica File</button>
           </div>
-          <div class="map-hover-effect" style="height: calc(100% - 130px);">
-            <div id="map" style="height: 100%; width: 100%; background: #111;"></div>
+          
+          <div style="display: flex; gap: 15px; height: calc(100% - 130px); min-height: 500px;">
+            <div id="map-history-sidebar" style="width: 160px; background: rgba(0,0,0,0.5); border: 1px solid #444; border-radius: 8px; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+              <p style="color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.8rem; text-align: center; margin: 0 0 5px 0; border-bottom: 1px solid #444; padding-bottom: 5px;">Archivio Mappe</p>
+              <div id="map-history-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+            
+            <div class="map-hover-effect" style="flex: 1; height: 100%;">
+              <div id="map" style="height: 100%; width: 100%; background: #111;"></div>
+            </div>
           </div>
         </div>
 

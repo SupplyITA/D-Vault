@@ -203,6 +203,9 @@ function openCampaignDetail(camp) {
   // Carica gli eroi nella tab party
   caricaEroiParty(camp.campName);
 
+  // Per caricare le mappe salvate
+  renderizzaStoricoMappe(camp.campName);
+
   if (inviteContainer && inviteCodeEl && toggleBtn) {
       if (camp.owner === State.username) {
           inviteContainer.style.display = 'flex';
@@ -307,6 +310,165 @@ function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username
     }
 }
 
+// Funzione per barra delle mappe laterale con history
+function renderizzaStoricoMappe(campName) {
+    const list = $('map-history-list');
+    if(!list) return;
+    
+    const camp = State.campaigns.find(c => c.campName === campName);
+    if(!camp) return;
+
+    let history = [];
+    try { history = JSON.parse(camp.mapHistory || "[]"); } catch(e) {}
+    
+    // Se lo storico è ancora vuoto sul DB ma c'è una mappa iniziale attiva (es. quella di default),
+    // la mostriamo dinamicamente nella barra laterale
+    if(history.length === 0 && camp.mapUrl) {
+        history.push(camp.mapUrl);
+    }
+    
+    list.innerHTML = '';
+    history.forEach(url => {
+        const isActive = (url === camp.mapUrl);
+        
+        const container = document.createElement('div');
+        container.style.cssText = `
+            position: relative; width: 100%; height: 90px; border-radius: 4px;
+            flex-shrink: 0; border: 2px solid ${isActive ? '#e8c97e' : '#333'};
+            box-shadow: ${isActive ? '0 0 10px rgba(232,201,126,0.6)' : 'none'};
+            transition: 0.2s; background-image: url('${url}');
+            background-size: cover; background-position: center; cursor: pointer;
+        `;
+        
+        // Al click sulla miniatura si cambia la mappa attiva
+        container.onclick = (e) => {
+            if (e.target.closest('.btn-delete-map-hist')) return;
+            impostaMappaAttiva(url, camp.campName);
+        };
+        
+        container.onmouseover = () => { if(!isActive) container.style.borderColor = '#aaa'; };
+        container.onmouseout = () => { if(!isActive) container.style.borderColor = '#333'; };
+        
+        // Pulsante di cancellazione mappa (X)
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-delete-map-hist';
+        deleteBtn.innerHTML = '✕';
+        deleteBtn.title = "Rimuovi questa mappa dall'archivio";
+        deleteBtn.style.cssText = `
+            position: absolute; top: 4px; right: 4px; width: 18px; height: 18px;
+            border-radius: 50%; background: rgba(139, 26, 26, 0.85); color: white;
+            border: 1px solid #8b1a1a; font-size: 10px; display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+            transition: 0.2s; z-index: 10; font-family: sans-serif; line-height: 1;
+        `;
+        
+        deleteBtn.onmouseover = () => { deleteBtn.style.background = '#cc2a2a'; };
+        deleteBtn.onmouseout = () => { deleteBtn.style.background = 'rgba(139, 26, 26, 0.85)'; };
+        
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation(); // Impedisce al click di propagarsi al container della mappa
+            rimuoviMappaDaStorico(url, camp.campName);
+        };
+        
+        container.appendChild(deleteBtn);
+        list.appendChild(container);
+    });
+}
+
+// Cambia la mappa a schermo e notifica il Server e i giocatori via Socket.io
+window.impostaMappaAttiva = async function(url, campName) {
+    if(leafletMap) {
+        if(currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
+        const bounds = [[0,0], [1000,1000]];
+        currentImageOverlay = L.imageOverlay(url, bounds).addTo(leafletMap);
+        leafletMap.fitBounds(bounds);
+    }
+    
+    if (socket) socket.emit('cambia_sfondo_mappa', url);
+    
+    const camp = State.campaigns.find(c => c.campName === campName);
+    if(camp) {
+        camp.mapUrl = url;
+        renderizzaStoricoMappe(campName); 
+    }
+
+    try {
+        await fetch('/api/campaigns/map', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ campName: campName, owner: State.username, mapUrl: url })
+        });
+    } catch (err) { console.error("Errore salvataggio mappa:", err); }
+};
+
+// Aggiunge un URL allo storico e lo salva nel Database
+async function aggiungiMappaAStorico(url, campName) {
+    const camp = State.campaigns.find(c => c.campName === campName);
+    if(!camp) return;
+
+    let history = [];
+    try { history = JSON.parse(camp.mapHistory || "[]"); } catch(e) {}
+
+    if (history.length === 0 && camp.mapUrl) {
+        history.push(camp.mapUrl);
+    }
+
+    if (!history.includes(url)) {
+        history.push(url);
+        camp.mapHistory = JSON.stringify(history);
+
+        try {
+            await fetch('/api/campaigns/map-history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ campName: campName, owner: State.username, mapHistory: camp.mapHistory })
+            });
+        } catch(e) { console.error("Errore salvataggio storico:", e); }
+    }
+    
+    impostaMappaAttiva(url, campName);
+}
+
+
+window.rimuoviMappaDaStorico = async function(urlDaRimuovere, campName) {
+    const camp = State.campaigns.find(c => c.campName === campName);
+    if(!camp) return;
+
+    let history = [];
+    try { history = JSON.parse(camp.mapHistory || "[]"); } catch(e) {}
+    
+    if (history.length === 0 && camp.mapUrl) {
+        history.push(camp.mapUrl);
+    }
+
+    history = history.filter(url => url !== urlDaRimuovere);
+    camp.mapHistory = JSON.stringify(history);
+
+    // Se stiamo cancellando proprio la mappa correntemente mostrata sullo schermo, 
+    // carichiamo la prima disponibile rimasta o torniamo a quella di base
+    if (camp.mapUrl === urlDaRimuovere) {
+        const prossimaMappa = history.length > 0 ? history[0] : '/maps/mappa_1.jpg';
+        await impostaMappaAttiva(prossimaMappa, campName);
+    }
+
+    // Aggiorna la tabella delle campagne nel database SQLite
+    try {
+        await fetch('/api/campaigns/map-history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ campName: campName, owner: State.username, mapHistory: camp.mapHistory })
+        });
+        
+        renderizzaStoricoMappe(campName);
+        
+        Swal.fire({
+            toast: true, position: 'bottom-end', icon: 'success',
+            title: 'Mappa rimossa dall\'archivio', showConfirmButton: false, timer: 1500,
+            background: '#1a1108', color: '#e8c97e'
+        });
+    } catch(e) { console.error("Errore durante la rimozione della mappa:", e); }
+};
+
 async function caricaEroiParty(campName) {
     const listContainer = $('party-list-container');
     const iframe = $('party-pdf-iframe');
@@ -364,7 +526,6 @@ function openSheetDetail(sheet) {
   // Carica le note del giocatore
   const notesArea = $('player-notes');
   if(notesArea) {
-      // Richiamo sheet.playerNotes
       notesArea.value = sheet.playerNotes || (sheet.sheetDataDetails && sheet.sheetDataDetails.playerNotes) || '';
   }
 
@@ -533,33 +694,14 @@ function bindEvents() {
     });
   });
 
-  // Mappa Master: Cambio URL
+  // Mappa Master Cambio URL
   $('btn-change-map')?.addEventListener('click', async () => {
       const url = $('map-url-input').value.trim();
       const campName = $('campaign-detail-title').textContent.trim();
 
       if (url && leafletMap) {
-          if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
-          const bounds = [[0,0], [1000,1000]];
-          currentImageOverlay = L.imageOverlay(url, bounds).addTo(leafletMap);
-          leafletMap.fitBounds(bounds);
-          if (socket) socket.emit('cambia_sfondo_mappa', url);
-          $('map-url-input').value = '';
-
-          // Per salvare nel database, viene chiamato post e mandato nell'sql 
-          try {
-              await fetch('/api/campaigns/map', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ campName: campName, owner: State.username, mapUrl: url })
-              });
-              
-              // Forza il ricaricamento dal server per essere sicuri al 100%
-              await State.loadFromServer();
-              renderGrid(); 
-          } catch (err) {
-              console.error("Errore salvataggio mappa:", err);
-          }
+          $('map-url-input').value = ''; // svuota l'input
+          await aggiungiMappaAStorico(url, campName); // Salva nell'archivio e la imposta attiva
       }
   });
 
@@ -578,24 +720,10 @@ function bindEvents() {
       try {
           const response = await fetch('/api/upload-map', { method: 'POST', body: formData });
           const data = await response.json();
+          
           if (data.url && leafletMap) {
-              if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
-              const bounds = [[0,0], [1000,1000]];
-              currentImageOverlay = L.imageOverlay(data.url, bounds).addTo(leafletMap);
-              leafletMap.fitBounds(bounds);
-              if (socket) socket.emit('cambia_sfondo_mappa', data.url);
-              fileInput.value = '';
-
-              // Salva nel database l'URL della mappa appena caricata
-              await fetch('/api/campaigns/map', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ campName: campName, owner: State.username, mapUrl: data.url })
-              });
-              
-              // Forza il ricaricamento dal server
-              await State.loadFromServer();
-              renderGrid();
+              fileInput.value = ''; // svuota l'input
+              await aggiungiMappaAStorico(data.url, campName); // Salva l'URL ritornato dal server
           }
       } catch (err) { 
           console.error("Errore upload mappa:", err); 
