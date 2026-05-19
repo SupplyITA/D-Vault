@@ -5,6 +5,7 @@ import { renderDropdowns, renderGrid, renderizzaBestiario } from './ui.js';
 import { costruisciSchedaInterattiva } from './interactive-sheet.js';
 import { dndData } from './dnd-data.js';
 import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm';
+import { AudioManager } from './audio.js';
 
 // Variabili globali per Map e Vue
 let leafletMap = null;
@@ -136,10 +137,13 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
           camp.activeCharacters = JSON.stringify(active);
       }
   } catch(e) { console.error("Errore salvataggio eroe in background:", e); }
+
+  AudioManager.updateBackgroundMusic(true);
 };
 
 // Inizializza la pagina
 document.addEventListener('DOMContentLoaded', async () => {
+  AudioManager.init();
   if ($('nav-username')) $('nav-username').textContent = State.username;
   await State.loadFromServer();
   
@@ -279,6 +283,8 @@ function openCampaignDetail(camp) {
   }
 
   if (socket) socket.emit('entra_stanza_campagna', { campName: camp.campName, username: State.username });
+
+  AudioManager.updateBackgroundMusic(true);
 }
 
 // Funzione che aggiunge e permette la rimozione dei segnalini con Proprietà
@@ -526,6 +532,7 @@ function openSheetDetail(sheet) {
   // Carica le note del giocatore
   const notesArea = $('player-notes');
   if(notesArea) {
+      // Richiamo sheet.playerNotes
       notesArea.value = sheet.playerNotes || (sheet.sheetDataDetails && sheet.sheetDataDetails.playerNotes) || '';
   }
 
@@ -734,6 +741,7 @@ function bindEvents() {
   // Pulsanti indietro (Modificati per avvisare l'uscita dalla chat)
   const esciDalTavolo = () => {
       if (socket) socket.emit('esci_stanza_campagna');
+      AudioManager.updateBackgroundMusic(false);
       renderGrid(); applicaTilt3D(); closeDetails();
   };
   
