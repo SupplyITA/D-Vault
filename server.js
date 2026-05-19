@@ -172,6 +172,23 @@ app.post('/api/upload-map', upload.single('mapImage'), (req, res) => {
     res.json({ url: fileUrl, message: 'Mappa caricata con successo!' });
 });
 
+// Upload delle canzoni per il master
+const audioDir = path.join(__dirname, 'uploads', 'audio');
+if (!fs.existsSync(audioDir)) { fs.mkdirSync(audioDir, { recursive: true }); }
+
+const audioStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, audioDir),
+    filename: (req, file, cb) => {
+        const nomeUnico = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'bardo-' + nomeUnico + path.extname(file.originalname));
+    }
+});
+const uploadAudio = multer({ storage: audioStorage });
+
+app.post('/api/upload-audio', uploadAudio.single('audioFile'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'Nessun file ricevuto' });
+    res.json({ url: `/uploads/audio/${req.file.filename}`, message: 'Brano caricato!' });
+});
 
 // Autenticazione degli utenti 
 app.post('/api/registrati', async (req, res) => {
@@ -663,6 +680,11 @@ io.on('connection', (socket) => {
         
         // Invia indicatore a tutta la stanza
         socket.to(campName).emit('indicatore_sussurro', { mittente, destinatario });
+    });
+
+    // Cambio musica per tutti i giocatori della campagna
+    socket.on('cambia_musica_campagna', (dati) => {
+        socket.to(dati.campName).emit('nuova_musica_ricevuta', dati.url);
     });
 });
 
