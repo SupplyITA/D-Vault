@@ -50,7 +50,8 @@ async function openAccount() {
         userData = await resp.json();
     } catch (e) { console.error("Errore caricamento dati utente"); }
 
-    const soundEnabled = localStorage.getItem('dvault_sound') === 'true';
+    const sfxEnabled = localStorage.getItem('dvault_sfx') !== 'false';
+    const bgmEnabled = localStorage.getItem('dvault_bgm') !== 'false';
 
     Swal.fire({
       title: 'Archivio Personale',
@@ -89,9 +90,14 @@ async function openAccount() {
             </button>
           </div>
 
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+            <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Suoni Interfaccia</span>
+            <input type="checkbox" id="acc-toggle-sfx" ${sfxEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
+          </div>
+
           <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-            <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Effetti Sonori</span>
-            <input type="checkbox" id="acc-toggle-sound" ${soundEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
+            <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Musica Sottofondo</span>
+            <input type="checkbox" id="acc-toggle-bgm" ${bgmEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
           </div>
 
           <div class="vault-divider" style="height: 1px; background: rgba(212,168,67,0.1); margin: 5px 0;"></div>
@@ -190,9 +196,14 @@ async function openAccount() {
             location.reload();
         };
 
-        // Altre funzioni (cancella  account)
-        document.getElementById('acc-toggle-sound').addEventListener('change', (e) => {
-            localStorage.setItem('dvault_sound', e.target.checked);
+        document.getElementById('acc-toggle-sfx').addEventListener('change', (e) => {
+            if (window.DVaultAudio) window.DVaultAudio.toggleSfx(e.target.checked);
+            else localStorage.setItem('dvault_sfx', e.target.checked);
+        });
+
+        document.getElementById('acc-toggle-bgm').addEventListener('change', (e) => {
+            if (window.DVaultAudio) window.DVaultAudio.toggleBgm(e.target.checked);
+            else localStorage.setItem('dvault_bgm', e.target.checked);
         });
         
         document.getElementById('btn-change-pwd-acc').onclick = () => { Swal.close(); openChangePassword(); };

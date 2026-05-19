@@ -1,5 +1,9 @@
+import { AudioManager } from './audio.js';
+
 document.addEventListener('DOMContentLoaded', () => {
-   
+
+  AudioManager.init();
+
   const tabs  = document.querySelectorAll('.auth-tab');
   const forms = document.querySelectorAll('.auth-form');
 
