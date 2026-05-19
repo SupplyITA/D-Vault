@@ -107,9 +107,9 @@
   pointer-events: none;
 }
 
-/* Override intestazioni h2 — rimuove colori giocattolo */
+/* Override intestazioni h2 */
 .dashboard-section h2 {
-  font-family: 'Cinzel', serif !important;
+  font-family: 'Mrs Eaves small caps', serif !important;
   font-size: 1.25rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.08em !important;
@@ -198,20 +198,20 @@
   pointer-events: none;
 }
 .vault-hero-left  { flex: 1; position: relative; z-index: 1; }
-.vault-hero-greeting { font-family: 'Crimson Text', Georgia, serif; font-style: italic; font-size: 1rem; color: rgba(var(--accent-1-light), 0.55); letter-spacing: 0.08em; margin: 0 0 0.15rem; }
+.vault-hero-greeting { font-family: 'Berthold Baskerville', Georgia, serif; font-style: italic; font-size: 1rem; color: rgba(var(--accent-1-light), 0.55); letter-spacing: 0.08em; margin: 0 0 0.15rem; }
 .vault-hero-name {
-  font-family: 'Cinzel', serif;
+  font-family: 'Berthold Baskerville', serif;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   font-weight: 900; letter-spacing: 0.08em; line-height: 1.1; margin: 0 0 0.2rem;
   background: linear-gradient(150deg, var(--gold-light) 0%, var(--gold-bright) 35%, var(--gold-mid) 70%, var(--bronze) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.vault-hero-sub { font-family: 'Crimson Text', Georgia, serif; font-style: italic; font-size: 0.95rem; color: rgba(var(--accent-1), 0.5); margin: 0; }
+.vault-hero-sub { font-family: 'Berthold Baskerville', Georgia, serif; font-style: italic; font-size: 0.95rem; color: rgba(var(--accent-1), 0.5); margin: 0; }
 .vault-hero-divider { width: 1px; height: 70px; margin: 0 2.5rem; flex-shrink: 0; background: linear-gradient(180deg, transparent, rgba(var(--accent-1), 0.35), rgba(var(--accent-1), 0.35), transparent); position: relative; z-index: 1; }
 .vault-hero-right  { flex: 1; position: relative; z-index: 1; padding-left: 0.5rem; }
 .vault-quote-mark { display: block; font-family: 'Cinzel', serif; font-size: 3rem; line-height: 0.8; color: rgba(var(--accent-1), 0.12); margin-bottom: -0.5rem; user-select: none; }
-.vault-quote-text { font-family: 'Crimson Text', Georgia, serif; font-style: italic; font-size: 1.05rem; line-height: 1.55; color: rgba(var(--accent-1-light), 0.7); margin: 0 0 0.3rem; transition: opacity 0.5s ease; }
-.vault-quote-attr { font-family: 'Cinzel', serif; font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-deep); transition: opacity 0.5s ease; }
+.vault-quote-text { font-family: 'Bookmania', Georgia, serif; font-style: italic; font-size: 1.05rem; line-height: 1.55; color: rgba(var(--accent-1-light), 0.7); margin: 0 0 0.3rem; transition: opacity 0.5s ease; }
+.vault-quote-attr { font-family: 'Bookman Headline', serif; font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-deep); transition: opacity 0.5s ease; }
 
 @media (max-width: 680px) {
   .vault-hero-inner { flex-direction: column; padding: 1.6rem 1.5rem; gap: 1.2rem; text-align: center; }
@@ -224,7 +224,7 @@
    SECTION HEADER, RUNE, TEXTURE, EMPTY STATE
    ═══════════════════════════════════════════════════════════ */
 
-/* — Texture pergamena invecchiata sopra ogni sezione — */
+/* Texture pergamena invecchiata sopra ogni sezione */
 .dashboard-section { isolation: isolate; }
 .dashboard-section > .section-header,
 .dashboard-section > .content-grid { position: relative; z-index: 2; }
@@ -240,7 +240,7 @@
   opacity: .9;
 }
 
-/* — Header sezione: icona blasonata + flourish + cta — */
+/* Header sezione: icona blasonata + flourish + cta */
 .section-header {
   display: flex !important;
   align-items: center;
@@ -368,7 +368,7 @@
   z-index: 2;
 }
 .lux-empty-title {
-  font-family: 'Cinzel', serif;
+  font-family: 'Berthold Baskerville', serif;
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: .12em;
@@ -377,7 +377,7 @@
   margin: 0;
 }
 .lux-empty-sub {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Berthold Baskerville', Georgia, serif;
   font-style: italic;
   font-size: .98rem;
   line-height: 1.55;
