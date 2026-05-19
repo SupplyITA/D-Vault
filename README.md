@@ -117,8 +117,11 @@ A questo punto, apri il browser del computer e vai su http://localhost:3000/inde
 
 To DO:
 
--Aggiungere possibilità di tirare i dadi e mostrare i risultati sulla chat con "Nome del personaggio ha ha fatto 16 !" ad esempio, usando i dadi d4, d6, d8, d10, d12, d20, d100
-
 -Aggiungere segnalini personaggi sulla mappa interattiva
 
 -Aggiungere possibilità di selezionare vecchie mappe e scorrere in caso siano tante con scroll, già uploadate nella barra a sinistra vicino alla mappa solo per il master nella sua campagna, caricandole dinamicamente e salvandole per l'account. 
+
+- I font da usare per le varie scritte devono essere:
+  1) Berthold Baskerville per i titoli principali / nomi dei personaggi e campagne
+  2) Bookmania per i vari testi di selezione (tabs etc)
+  3) Mrs Eaves Small Caps per dashboard e sezioni della scheda
