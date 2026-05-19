@@ -42,7 +42,7 @@ export async function costruisciSchedaInterattiva(containerId, sheetData, isRead
 
     const form = container.querySelector('.dnd-sheet-form');
 
-    // --- INIZIO GENERATORE DELLA GRIGLIA INCANTESIMI (STILE UFFICIALE) ---
+    // Funzione per poter generare dinamicamente i campi degli incantesimi
     // Viene eseguito prima di caricare i dati per far sì che i campi esistano già
     const spellsContainer = form.querySelector('.dnd-spells-grid');
     if (spellsContainer && !spellsContainer.dataset.generated) {
@@ -88,7 +88,6 @@ export async function costruisciSchedaInterattiva(containerId, sheetData, isRead
         spellsContainer.innerHTML = spellsHTML;
         spellsContainer.dataset.generated = "true";
     }
-    // --- FINE GENERATORE ---
 
 const aggiornaTuttiICalcoli = () => {
         const livelloInput = document.querySelector('#vue-scheda-personaggio input[type="number"]');

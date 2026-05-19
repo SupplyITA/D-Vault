@@ -3,7 +3,7 @@ import { State } from './state.js';
 
 export const socket = typeof io !== 'undefined' ? io() : null;
 
-// --- MEMORIA CHAT ---
+// Per salvare la history della chat (solo per la sessione) 
 const chatMemoria = {}; // Salva i messaggi: { "Nome Campagna": [ {sender, text, type}, ... ] }
 
 export async function caricaMemoriaChat(campName, containerId) {

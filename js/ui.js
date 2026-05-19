@@ -50,7 +50,6 @@ export function renderDropdowns() {
     if (c.owner === State.username) {
         masterCamps.push({ camp: c, index: i });
     } else {
-        // FIX: joinedPlayers è già un array, non serve JSON.parse!
         const players = c.joinedPlayers || [];
         if (players.includes(State.username)) {
             playerCamps.push({ camp: c, index: i });

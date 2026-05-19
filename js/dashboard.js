@@ -12,7 +12,7 @@ let playerLeafletMap = null;
 let vueData = null; 
 let currentImageOverlay = null;
 
-// ---  FUNZIONE SPAZZINA ---  
+// Funzione per nascondere tutto e mostrare solo ciò che si vuole vedere
 function hideAllSections() {
   const sections = ['dash-main', 'campaign-detail', 'sheet-detail', 'player-campaign-detail'];
   sections.forEach(id => {
@@ -21,7 +21,7 @@ function hideAllSections() {
   });
 }
 
-// --- GESTIONE INGRESSO CAMPAGNA GIOCATORE ---
+// Gestione ingresso del giocatore 
 function handlePlayerCampaignClick(camp) {
   let activeChars = {};
   try { activeChars = JSON.parse(camp.activeCharacters || "{}"); } catch(e){}
@@ -612,6 +612,7 @@ function bindEvents() {
   $('btn-back-campaign')?.addEventListener('click', esciDalTavolo);
   $('btn-back-sheet')?.addEventListener('click', esciDalTavolo);
   $('btn-back-player-camp')?.addEventListener('click', esciDalTavolo);
+  
   // Gestione click sulle voci dei Dropdown 
   document.addEventListener('click', (e) => {
     const item = e.target.closest('.nav-dd .dropdown-item');
@@ -1274,14 +1275,13 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
         if (playerLeafletMap) aggiungiSegnalino(latlng, playerLeafletMap, false, dati.owner);
       });
 
-      // RIMOZIONE
+      // Per rimuovere i segnalini
       socket.on('segnalino_rimosso', (latlng) => {
           const rimuoviDaMappa = (mappa) => {
               if(!mappa) return;
               mappa.eachLayer(layer => {
                   if (layer instanceof L.Marker) {
                       const pos = layer.getLatLng();
-                      // TOLLERANZA: Se la posizione differisce per millesimi (errore di rete JSON), eliminalo
                       if (Math.abs(pos.lat - latlng.lat) < 0.001 && Math.abs(pos.lng - latlng.lng) < 0.001) {
                           mappa.removeLayer(layer);
                       }

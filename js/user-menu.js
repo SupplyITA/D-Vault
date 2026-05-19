@@ -2,7 +2,7 @@
    USER MENU — Account / Statistiche / Impostazioni / Tema
    ════════════════════════════════════════════════ */
 (function () {
-  // ---- Tema: applica subito (anche prima che parta la dashboard) ----
+  //  Carica il theme per primac cosa, così siamo sicuri che si carichi subito
   const THEME_KEY = 'dvault_theme';
   const VALID = ['vault', 'verdant', 'azure'];
   function applyTheme(name) {
@@ -143,7 +143,7 @@ async function openAccount() {
            if(res.ok) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Email aggiornata!', showConfirmButton: false, timer: 1500 });
         });
 
-        // Avatar - parte di gestione
+        // Avatar parte di gestione
         document.getElementById('trigger-avatar-options').addEventListener('click', () => {
           Swal.fire({
             title: 'Gestisci Avatar',
@@ -273,7 +273,7 @@ async function openAccount() {
     });
   }
 
-  // ---- POPUP: Statistiche ----
+  // Statistiche 
   async function openStats() {
     Swal.fire({
       title: 'Statistiche dell\'Eroe',
@@ -300,7 +300,7 @@ async function openAccount() {
     Swal.getConfirmButton().textContent = 'Chiudi';
   }
 
-  // ---- POPUP: Tema ----
+  // Temi (usando popup)
   function openTheme() {
     const cur = window.DVaultTheme.current();
     const themes = [
@@ -343,7 +343,7 @@ async function openAccount() {
     });
   }
 
-  // ---- POPUP: Impostazioni ----
+  // Impostazioni 
   function openSettings() {
     Swal.fire({
       title: 'Impostazioni',
@@ -373,7 +373,7 @@ async function openAccount() {
       didOpen: () => {
         document.getElementById('set-theme').addEventListener('click', () => { Swal.close(); openTheme(); });
         document.getElementById('set-clear-notes').addEventListener('click', async () => {
-          // CHIEDIAMO CONFERMA
+          
           const result = await Swal.fire({
             title: 'Sei sicuro?',
             text: "Tutti gli appunti di tutti i tuoi eroi verranno cancellati per sempre. Confermi l'azione?",
@@ -387,11 +387,10 @@ async function openAccount() {
             customClass: { popup: 'vault-popup' }
           });
 
-          // Se l'utente clicca annulla, ci fermiamo qui
+          // Se l'utente clicca annulla
           if (!result.isConfirmed) return;
 
           try {
-            //CHIAMIAMO IL SERVER
             const resp = await fetch('/api/sheets/reset-all-notes', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -399,7 +398,7 @@ async function openAccount() {
             });
 
             if (resp.ok) {
-              //PULIAMO LA UI IMMEDIATAMENTE
+              
               const ta = document.getElementById('player-notes');
               if (ta) ta.value = '';
 
@@ -459,13 +458,13 @@ async function openAccount() {
     }
   }
 
-  // ---- Wire-up: aggancia ai data-action delle voci aggiunte in dashboard.html ----
+  // Unisce i dati da dashboard e server 
   document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-user-action]');
     if (!el) return;
     e.preventDefault();
     const action = el.dataset.userAction;
-    // chiudi il dropdown se presente
+
     document.querySelectorAll('.nav-dd.open, [data-dd-target].open').forEach(n => n.classList.remove('open'));
     if (action === 'account')  return openAccount();
     if (action === 'stats')    return openStats();
