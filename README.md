@@ -123,5 +123,6 @@ To DO:
 
 - I font da usare per le varie scritte devono essere:
   1) Berthold Baskerville per i titoli principali / nomi dei personaggi e campagne
-  2) Bookmania per i vari testi di selezione (tabs etc)
+  2) Bookmania per i vari testi di selezione 
   3) Mrs Eaves Small Caps per dashboard e sezioni della scheda
+  4) Cinzel per cards e tabs
