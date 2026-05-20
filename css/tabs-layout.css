@@ -61,8 +61,15 @@
   padding-bottom: 5px;
 }
 .tab-btn:hover { color: var(--gold-bright); }
-.tab-content { padding: 20px 0; display: none; }
-.tab-content.active { display: block; }
+.tab-content {
+    display: none; 
+    flex-direction: column;
+    height: 100% !important;
+    width: 100% !important;
+}
+.tab-content.active {
+    display: flex !important;
+}
 
 .story-textarea {
   width: 100%;

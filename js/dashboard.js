@@ -13,6 +13,20 @@ let playerLeafletMap = null;
 let vueData = null; 
 let currentImageOverlay = null;
 
+let activeTokenType = 'color'; // Può essere 'color' o 'image'
+let activeTokenUrl = null;
+
+// FUnzione per generare un colore univoco n base al nome utente (peak content)
+function getColorForUser(username) {
+    if(!username) return '#aaa';
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+        hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
+}
+
 // Funzione per nascondere tutto e mostrare solo ciò che si vuole vedere
 function hideAllSections() {
   const sections = ['dash-main', 'campaign-detail', 'sheet-detail', 'player-campaign-detail'];
@@ -20,6 +34,33 @@ function hideAllSections() {
     const el = $(id);
     if (el) el.style.display = 'none';
   });
+}
+
+// Funzione per caricare i vari segnalini dei mostri dal bestiario 
+async function caricaTokenMostri() {
+    try {
+        const res = await fetch('/bestiario.xml');
+        const text = await res.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, "text/xml");
+        const mostri = xml.querySelectorAll('mostro');
+        const container = $('master-monster-tokens');
+        if(!container) return;
+        
+        container.innerHTML = '';
+        mostri.forEach(m => {
+            const nome = m.querySelector('nome').textContent;
+            const avatar = m.querySelector('avatar').textContent;
+            
+            const img = document.createElement('img');
+            img.src = avatar;
+            img.title = nome;
+            img.className = 'token-option';
+            img.style.cssText = 'width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; object-fit: cover; background: #000;';
+            img.onclick = function() { selezionaToken('image', avatar, this); };
+            container.appendChild(img);
+        });
+    } catch(e) { console.error("Errore nel caricamento dei token mostri:", e); }
 }
 
 // Gestione ingresso del giocatore 
@@ -38,6 +79,16 @@ function handlePlayerCampaignClick(camp) {
   }
   window.openCharacterSelectorForCampaign(camp);
 }
+
+// Funzione per selezionare il token da piazzare nella mappa 
+window.selezionaToken = function(type, url, element) {
+    activeTokenType = type;
+    activeTokenUrl = url;
+    
+    // Resetta i bordi di tutti i bottoni e accende quello cliccato
+    document.querySelectorAll('.token-option').forEach(el => el.style.borderColor = 'transparent');
+    if (element) element.style.borderColor = '#e8c97e';
+};
 
 window.openCharacterSelectorForCampaign = function(camp) {
     const listContainer = $('char-selection-list');
@@ -107,6 +158,29 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
       $('pc-map').addEventListener('contextmenu', e => e.preventDefault());
   }
 
+  //sezione per poter mettere segnalini personalizzati con immagine personaggio e colore
+  const myColor = getColorForUser(State.username);
+  if($('player-color-marker')) $('player-color-marker').style.backgroundColor = myColor;
+  
+  const avatarUrl = sheet.avatar || '/img/species/_default.jpg';
+  if($('pc-avatar-img')) $('pc-avatar-img').src = avatarUrl;
+  if($('player-token-avatar')) $('player-token-avatar').src = avatarUrl;
+
+  $('player-camp-char').innerHTML = `Eroe: ${sheet.charName} <span style="display:inline-block;width:15px;height:15px;border-radius:50%;background-color:${myColor};vertical-align:middle;margin-left:10px;border:1px solid #fff;box-shadow:0 0 5px #000;" title="Il tuo colore identificativo"></span>`;
+
+  selezionaToken('color', null, document.querySelector('#player-token-sidebar .token-option'));
+
+  if (playerLeafletMap) {
+      playerLeafletMap.off('click');
+      playerLeafletMap.on('click', function(e) {
+          let urlToUse = activeTokenUrl;
+          if (activeTokenType === 'image') urlToUse = $('pc-avatar-img').src; 
+
+          const info = { type: activeTokenType, url: urlToUse };
+          aggiungiSegnalino(e.latlng, playerLeafletMap, true, State.username, info);
+      });
+  }
+
   // Aggiorna l'immagine 
   if (playerLeafletMap) {
       playerLeafletMap.eachLayer(layer => {
@@ -114,9 +188,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
       });
       const bounds = [[0,0], [1000,1000]]; 
       L.imageOverlay(mapUrl, bounds).addTo(playerLeafletMap);
-      playerLeafletMap.fitBounds(bounds);
-      setTimeout(() => playerLeafletMap.invalidateSize(), 100);
-  }
+    }
 
   document.querySelector('.player-tab-btn[data-tab="pc-scheda"]')?.click();
   
@@ -222,6 +294,7 @@ function openCampaignDetail(camp) {
       }
   }
 
+
   // Chat privata del master con altra gente 
   const dmTarget = $('dm-chat-target');
   if (dmTarget) {
@@ -229,6 +302,14 @@ function openCampaignDetail(camp) {
       const players = camp.joinedPlayers || [];
       players.forEach(p => dmTarget.innerHTML += `<option value="${p}">${p}</option>`);
   }
+
+  // Per associare il colore del master alla campagna ed ai segnalini
+  const myColor = getColorForUser(State.username);
+  if($('master-color-marker')) $('master-color-marker').style.backgroundColor = myColor;
+  $('campaign-detail-title').innerHTML = `${camp.campName} <span style="display:inline-block;width:15px;height:15px;border-radius:50%;background-color:${myColor};vertical-align:middle;margin-left:10px;border:1px solid #fff;box-shadow:0 0 5px #000;" title="Il tuo colore identificativo"></span>`;
+  
+  selezionaToken('color', null, document.querySelector('#master-token-sidebar .token-option'));
+  caricaTokenMostri();
 
   const btnToggleInvite = $('btn-toggle-invite');
   if (btnToggleInvite) {
@@ -270,16 +351,17 @@ function openCampaignDetail(camp) {
 
   // Aggiorna SEMPRE l'immagine
   if (leafletMap) {
-      // Togliamo l'immagine vecchia
       if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
-      
-      // Mettiamo l'immagine della campagna in cui siamo appena entrati
-      const bounds = [[0,0], [1000,1000]]; 
+      const bounds = [[0,0], [1000,1000]];
       currentImageOverlay = L.imageOverlay(mapUrl, bounds).addTo(leafletMap);
       leafletMap.fitBounds(bounds);
-      
-      // Assicura che le dimensioni si calcolino correttamente senza ricaricare la pagina
       setTimeout(() => leafletMap.invalidateSize(), 100);
+
+      leafletMap.off('click');
+      leafletMap.on('click', function(e) {
+          const info = { type: activeTokenType, url: activeTokenUrl };
+          aggiungiSegnalino(e.latlng, leafletMap, true, State.username, info);
+      });
   }
 
   if (socket) socket.emit('entra_stanza_campagna', { campName: camp.campName, username: State.username });
@@ -287,16 +369,40 @@ function openCampaignDetail(camp) {
   AudioManager.updateBackgroundMusic(true);
 }
 
-// Funzione che aggiunge e permette la rimozione dei segnalini con Proprietà
-function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username) {
-    const marker = L.marker(latlng).addTo(mappa);
+// Funzione che aggiunge e permette la rimozione dei segnalini con Proprietà, selezionare token personalizzati e bestiario 
+function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username, tokenInfo = null) {
+    
+    if (!tokenInfo) {
+        tokenInfo = { type: 'color', url: null };
+    }
+
+    const userColor = getColorForUser(owner);
+    let customIcon;
+
+    // Se è un'immagine usiamo il DivIcon di Leaflet per iniettare HTML personalizzato
+    if (tokenInfo.type === 'image' && tokenInfo.url) {
+        customIcon = L.divIcon({
+            html: `<img src="${tokenInfo.url}" style="width:40px;height:40px;border-radius:50%;border:3px solid ${userColor};box-shadow: 0 4px 10px rgba(0,0,0,0.8);object-fit:cover;background:#111;">`,
+            className: 'custom-leaflet-token',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        });
+    } else {
+        // Altrimenti usiamo il semplice pallino colorato
+        customIcon = L.divIcon({
+            html: `<div style="width:24px;height:24px;background-color:${userColor};border:2px solid #fff;border-radius:50%;box-shadow:0 0 5px #000;"></div>`,
+            className: 'custom-leaflet-token',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+    }
+
+    const marker = L.marker(latlng, { icon: customIcon }).addTo(mappa);
     marker.proprietario = owner; 
     
     marker.on('contextmenu', () => {
-        // Controllo se sei nella schermata del Master
+        // Controllo autorizzazioni
         const isMaster = $('campaign-detail') && $('campaign-detail').style.display === 'block';
-        
-        // Se non sei il Master e non sei il proprietario, blocco l'azione
         if (!isMaster && marker.proprietario !== State.username) {
             Swal.fire({
                 toast: true, position: 'bottom-end', icon: 'warning', 
@@ -305,14 +411,13 @@ function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username
             });
             return;
         }
-
-        // Se sei autorizzato, rimuovo il segnalino
         mappa.removeLayer(marker);
         if (socket) socket.emit('rimuovi_segnalino', latlng);
     });
 
+    // Invia al socket includendo il tipo di token
     if (socket && isLocal) {
-        socket.emit('invia_segnalino', { lat: latlng.lat, lng: latlng.lng, owner: State.username });
+        socket.emit('invia_segnalino', { lat: latlng.lat, lng: latlng.lng, owner: State.username, tokenInfo: tokenInfo });
     }
 }
 
@@ -383,12 +488,19 @@ function renderizzaStoricoMappe(campName) {
 
 // Cambia la mappa a schermo e notifica il Server e i giocatori via Socket.io
 window.impostaMappaAttiva = async function(url, campName) {
-    if(leafletMap) {
-        if(currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
-        const bounds = [[0,0], [1000,1000]];
-        currentImageOverlay = L.imageOverlay(url, bounds).addTo(leafletMap);
-        leafletMap.fitBounds(bounds);
-    }
+    if (leafletMap) {
+      if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
+      const bounds = [[0,0], [1000,1000]];
+      currentImageOverlay = L.imageOverlay(url, bounds).addTo(leafletMap);
+      leafletMap.eachLayer(layer => {
+          if (layer instanceof L.Marker) leafletMap.removeLayer(layer);
+      })
+      leafletMap.off('click');
+      leafletMap.on('click', function(e) {
+          const info = { type: activeTokenType, url: activeTokenUrl };
+          aggiungiSegnalino(e.latlng, leafletMap, true, State.username, info);
+      });
+  }
     
     if (socket) socket.emit('cambia_sfondo_mappa', url);
     
@@ -479,6 +591,9 @@ async function caricaEroiParty(campName) {
     const listContainer = $('party-list-container');
     const iframe = $('party-pdf-iframe');
     if(iframe) iframe.src = ''; 
+
+    const camp = State.campaigns.find(c => c.campName === campName);
+    const isMaster = camp && camp.owner === State.username;
     
     try {
         const response = await fetch(`/api/campaigns/${campName}/party`);
@@ -490,15 +605,52 @@ async function caricaEroiParty(campName) {
         }
         
         listContainer.innerHTML = eroi.map(eroe => `
-            <div class="party-hero-card" onclick="visualizzaSchedaParty('${eroe.charName}')">
-                <div class="party-hero-name">🛡️ ${escHtml(eroe.charName)}</div>
-                <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
+            <div class="party-hero-card" style="position: relative;">
+                <div onclick="visualizzaSchedaParty('${eroe.charName}')" style="cursor: pointer; padding-right: 25px;">
+                    <div class="party-hero-name">🛡️ ${escHtml(eroe.charName)}</div>
+                    <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
+                </div>
+                ${isMaster && eroe.owner !== State.username ? 
+                    `<button onclick="cacciaGiocatore('${escHtml(eroe.owner)}', '${escHtml(campName)}')" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #8b1a1a; cursor: pointer; font-size: 1.1rem;" title="Caccia dal tavolo"><i class="fa-solid fa-user-slash"></i></button>` 
+                : ''}
             </div>
         `).join('');
     } catch (e) {
         listContainer.innerHTML = '<p style="color: #8b1a1a;">Errore: Impossibile caricare il party. (L\'API server esiste?)</p>';
     }
 }
+ // Per cacciare un giocatore dalla campagna 
+window.cacciaGiocatore = async function(giocatore, campName) {
+    const camp = State.campaigns.find(c => c.campName === campName);
+    if (!camp) return;
+
+    const result = await Swal.fire({
+        title: 'Esiliare dal tavolo?',
+        text: `Vuoi davvero cacciare ${giocatore} dalla campagna? L'azione è irreversibile.`,
+        icon: 'warning',
+        showCancelButton: true,
+        background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#8b1a1a',
+        confirmButtonText: 'Esilia', cancelButtonText: 'Annulla'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const res = await fetch('/api/campaigns/leave', {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inviteCode: camp.inviteCode, username: giocatore })
+            });
+            
+            if (res.ok) {
+                if (socket) socket.emit('invia_messaggio_campagna', {
+                    mittente: 'Taverniere', testo: `${giocatore} è stato esiliato dal Master.`, type: 'system', campName: campName
+                });
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Giocatore esiliato!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
+                caricaEroiParty(campName); 
+            }
+        } catch(e) { console.error("Errore durante l'esilio:", e); }
+    }
+};
 
 // Funzione globale chiamata dal click HTML
 window.visualizzaSchedaParty = function(charName) {
@@ -544,7 +696,42 @@ function openSheetDetail(sheet) {
   if (vueData) vueData.livello.value = parseInt(sheet.charLevel) || 1;
 }
 
+function refreshMap(map) {
+    if (map) {
+        requestAnimationFrame(() => {
+            map.invalidateSize();
+            // Forza il fitBounds per resettare la vista
+            if(currentImageOverlay) map.fitBounds(currentImageOverlay.getBounds());
+        });
+    }
+}
+
 function bindEvents() {
+
+// tasto pulisci mappa
+    $('btn-clear-tokens')?.addEventListener('click', () => {
+      if (!leafletMap) return;
+      Swal.fire({
+          title: 'Pulisci Mappa?',
+          text: 'Vuoi davvero rimuovere tutti i segnalini?',
+          icon: 'warning',
+          showCancelButton: true,
+          background: '#1a1a1a', color: '#e8c97e', confirmButtonColor: '#8b1a1a',
+          confirmButtonText: 'Sì, pulisci'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              // Iteriamo su tutti i marker e li rimuoviamo, avvisando anche il socket per aggiornare i giocatori
+              leafletMap.eachLayer(layer => {
+                  if (layer instanceof L.Marker) {
+                      const pos = layer.getLatLng();
+                      leafletMap.removeLayer(layer);
+                      if (socket) socket.emit('rimuovi_segnalino', pos);
+                  }
+              });
+              Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: 'Mappa immacolata!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
+          }
+      });
+  });
 
   $('dash-main')?.addEventListener('click', async (e) => {
     
@@ -682,14 +869,21 @@ function bindEvents() {
           c.style.display = 'none';
       });
 
+      
       e.target.classList.add('active');
       const targetTab = 'tab-' + e.target.dataset.tab;
       const targetElement = $(targetTab);
 
-      if (targetElement) {
-          targetElement.classList.add('active');
-          targetElement.style.display = 'block';
-      }
+        if (targetElement) {
+              targetElement.classList.add('active');
+              if (targetTab === 'tab-mappa') {
+                targetElement.classList.add('active');
+                targetElement.style.display = 'flex';
+                refreshMap(leafletMap);
+              } else {
+                  targetElement.style.display = 'block';
+              }
+          }
 
       if (targetTab === 'tab-mappa' && leafletMap) {
           setTimeout(() => {
@@ -1337,14 +1531,18 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
           const targetTabId = 'tab-' + clickedBtn.dataset.tab;
           const targetTabElement = $(targetTabId);
           
-          if (targetTabElement) {
-              targetTabElement.classList.add('active');
-              if (targetTabId === 'tab-pc-mappa') {
-                  targetTabElement.style.display = 'block'; targetTabElement.style.height = '100%'; targetTabElement.style.width = '100%';
-              } else {
-                  targetTabElement.style.display = 'flex';
-              }
-          }
+            if (targetTabElement) {
+                  targetTabElement.classList.add('active');
+                  
+                 if (targetTabId === 'tab-pc-mappa') {
+                    targetTabElement.classList.add('active');
+                    targetTabElement.style.display = 'flex';
+                    refreshMap(playerLeafletMap);
+
+                  } else {
+                      targetTabElement.style.display = 'flex';
+                  }
+            }
           if (clickedBtn.dataset.tab === 'pc-mappa' && playerLeafletMap) {
               setTimeout(() => { playerLeafletMap.invalidateSize(); playerLeafletMap.fitBounds([[0,0], [1000,1000]]); }, 100);
           }
@@ -1404,11 +1602,11 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
           }
       });
 
+      //Per inserire i segnalini sulla mappa
       socket.on('ricevi_segnalino', (dati) => {
-        // Ricostruiamo le coordinate e passiamo il proprietario
         const latlng = { lat: dati.lat, lng: dati.lng };
-        if (leafletMap) aggiungiSegnalino(latlng, leafletMap, false, dati.owner);
-        if (playerLeafletMap) aggiungiSegnalino(latlng, playerLeafletMap, false, dati.owner);
+        if (leafletMap) aggiungiSegnalino(latlng, leafletMap, false, dati.owner, dati.tokenInfo);
+        if (playerLeafletMap) aggiungiSegnalino(latlng, playerLeafletMap, false, dati.owner, dati.tokenInfo);
       });
 
       // Per rimuovere i segnalini
@@ -1433,12 +1631,22 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
           if (leafletMap) {
               if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
               currentImageOverlay = L.imageOverlay(url, bounds).addTo(leafletMap);
+              leafletMap.eachLayer(layer => {
+                  if (layer instanceof L.Marker) leafletMap.removeLayer(layer);
+              });
               leafletMap.fitBounds(bounds);
+              setTimeout(() => leafletMap.invalidateSize(), 100);
           }
-          if (playerLeafletMap) { 
-              playerLeafletMap.eachLayer(layer => playerLeafletMap.removeLayer(layer));
+          if (playerLeafletMap) {           
+              playerLeafletMap.eachLayer(layer => {
+                  if (layer instanceof L.ImageOverlay || layer instanceof L.Marker) {
+                      playerLeafletMap.removeLayer(layer);
+                  }
+              });
+    
               L.imageOverlay(url, bounds).addTo(playerLeafletMap);
               playerLeafletMap.fitBounds(bounds);
+              setTimeout(() => playerLeafletMap.invalidateSize(), 100); 
           }
       });
   }
