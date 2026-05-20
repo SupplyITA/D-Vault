@@ -1,9 +1,14 @@
 export const AudioManager = {
-
+    // Sottofondi
     bgmFire: new Audio('/audio/fire.mp3'),
     bgmCampaign: new Audio('/audio/campaign.mp3'),
+    
     sfxClick: new Audio('/audio/click.mp3'),
     sfxHover: new Audio('/audio/hover.mp3'),
+    
+    sfxCardHover: new Audio('/audio/card-hover.mp3'),
+    sfxDelete: new Audio('/audio/delete.mp3'),
+    sfxEnter: new Audio('/audio/enter.mp3'),
 
     init() {
         this.bgmFire.loop = true;
@@ -13,26 +18,47 @@ export const AudioManager = {
         this.bgmFire.volume = 0.4;
         this.bgmCampaign.volume = 0.3;
         this.sfxClick.volume = 0.4;
-        this.sfxHover.volume = 0.1;
+        this.sfxHover.volume = 0.6;
+        this.sfxCardHover.volume = 0.15; 
+        this.sfxDelete.volume = 0.5;
+        this.sfxEnter.volume = 0.5;
 
         window.DVaultAudio = this;
 
-        // Imposta i valori di default se l'utente entra per la prima volta
         if (localStorage.getItem('dvault_sfx') === null) localStorage.setItem('dvault_sfx', 'true');
         if (localStorage.getItem('dvault_bgm') === null) localStorage.setItem('dvault_bgm', 'true');
 
-        // Suoni dei bottoni e delle interazioni
+        //Gestion hover
         document.addEventListener('mouseover', (e) => {
-            if (e.target.closest('button, .dropdown-item, .vault-card, .tab-btn')) {
+            const btn = e.target.closest('button, .dropdown-item, .tab-btn');
+            const card = e.target.closest('.vault-card');
+            
+            //If per evitare hover multipli
+            if (btn) {
+                if (e.relatedTarget && btn.contains(e.relatedTarget)) return;
                 this.playSound(this.sfxHover);
+            } 
+            else if (card) {
+                if (e.relatedTarget && card.contains(e.relatedTarget)) return;
+                this.playSound(this.sfxCardHover);
             }
         });
         
+        //Gestione click bottoni differenziati
         document.addEventListener('click', (e) => {
-            if (e.target.closest('button, .dropdown-item, .vault-card, .tab-btn')) {
+            const t = e.target;
+
+            if (t.closest('.btn-delete') || t.closest('.btn-leave')) {
+                this.playSound(this.sfxDelete);
+            } 
+            else if (t.closest('.lux-btn')) {
+                this.playSound(this.sfxEnter);
+            } 
+            else if (t.closest('button, .dropdown-item, .tab-btn')) {
                 this.playSound(this.sfxClick);
             }
-            // Sblocca l'audio di background al primo click dell'utente
+
+            //Attiva l'audio dopo il primo click
             if (this.isBgmEnabled() && this.bgmFire.paused && this.bgmCampaign.paused) {
                 this.updateBackgroundMusic(this.isInCampaign());
             }
@@ -79,12 +105,22 @@ export const AudioManager = {
         }
     },
 
-    toggleSfx(enabled) {
-        localStorage.setItem('dvault_sfx', enabled);
-    },
-
+    toggleSfx(enabled) { localStorage.setItem('dvault_sfx', enabled); },
     toggleBgm(enabled) {
         localStorage.setItem('dvault_bgm', enabled);
         this.updateBackgroundMusic(this.isInCampaign());
+    },
+
+    changeCampaignTrack(sourceUrl) {
+        const wasPlaying = !this.bgmCampaign.paused;
+        this.bgmCampaign.pause();
+        
+        this.bgmCampaign.src = sourceUrl;
+        this.bgmCampaign.load();
+        
+        // Se la musica era accesa o le impostazioni lo permettono, falla partire
+        if (this.isBgmEnabled()) {
+            this.bgmCampaign.play().catch(() => {});
+        }
     }
 };

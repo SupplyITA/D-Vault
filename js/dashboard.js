@@ -1558,6 +1558,73 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
       }
   });
 
+  //Funzione per il Jukebox Musicale
+function openJukebox() {
+    const campName = $('campaign-detail-title').textContent;
+
+    Swal.fire({
+        title: 'Jukeboard della Taverna',
+        html: `
+            <div style="text-align: left; display: flex; flex-direction: column; gap: 10px;">
+                <p style="color: var(--gold-dim); font-size: 0.9rem; margin-bottom: 5px;">Ordina al Bardo una melodia:</p>
+                <button class="btn-ghost btn-track" data-src="/audio/campaign.mp3" style="text-align: left;"> Tema Principale (Default)</button>
+                <button class="btn-ghost btn-track" data-src="/audio/taverna.mp3" style="text-align: left;"> Locanda Affollata</button>
+                <button class="btn-ghost btn-track" data-src="/audio/avventura.mp3" style="text-align: left;"> Viaggio Epico</button>
+                <button class="btn-ghost btn-track" data-src="/audio/attacco.mp3" style="text-align: left;"> Combattimento</button>
+                
+                <div class="vault-divider" style="margin: 15px 0; background: rgba(212,168,67,0.2);"></div>
+                
+                <p style="color: var(--gold-dim); font-size: 0.9rem; margin-bottom: 5px;">O fornisci tu uno spartito magico (File MP3):</p>
+                <input type="file" id="jukebox-upload" accept="audio/*" style="background: rgba(0,0,0,0.5); color: white; padding: 10px; border: 1px solid #444; border-radius: 4px; width: 100%;">
+            </div>
+        `,
+        showConfirmButton: false,
+        showCloseButton: true,
+        background: '#1a1108',
+        color: '#e8c97e',
+        customClass: { popup: 'vault-popup' },
+        didOpen: () => {
+            // Gestisce i bottoni della libreria
+            document.querySelectorAll('.btn-track').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const url = e.target.dataset.src;
+                    if (AudioManager) AudioManager.changeCampaignTrack(url);
+                    if (socket) socket.emit('cambia_musica_campagna', { campName, url });
+                    
+                    Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: 'Melodia inviata al party!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
+                });
+            });
+
+            // Gestisce l'upload del file al server
+            document.getElementById('jukebox-upload').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                Swal.fire({ title: 'Addestrando il Bardo...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                const formData = new FormData();
+                formData.append('audioFile', file);
+
+                try {
+                    const res = await fetch('/api/upload-audio', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    
+                    if (data.url) {
+                        if (AudioManager) AudioManager.changeCampaignTrack(data.url);
+                        if (socket) socket.emit('cambia_musica_campagna', { campName, url: data.url });
+                        
+                        Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: 'Nuova traccia diffusa!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
+                    }
+                } catch (err) {
+                    Swal.fire('Errore', 'Impossibile caricare il file audio.', 'error');
+                }
+            });
+        }
+    });
+  }
+
+  $('btn-master-jukebox')?.addEventListener('click', openJukebox);
+
   // Ricezione Eventi Socket
   if (socket) {
       socket.on('ricevi_messaggio_campagna', (dati) => {
@@ -1647,6 +1714,24 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
               L.imageOverlay(url, bounds).addTo(playerLeafletMap);
               playerLeafletMap.fitBounds(bounds);
               setTimeout(() => playerLeafletMap.invalidateSize(), 100); 
+          }
+      });
+
+      // Ricezione della nuova musica dal Master
+      socket.on('nuova_musica_ricevuta', (url) => {
+          if (AudioManager) {
+              AudioManager.changeCampaignTrack(url);
+              
+              // Mostra un piccolo avviso al giocatore
+              const isPlayer = $('player-campaign-detail').style.display === 'block';
+              if (isPlayer) {
+                  Swal.fire({ 
+                      toast: true, position: 'top-end', icon: 'info', 
+                      title: 'Il Master ha cambiato la musica!', 
+                      showConfirmButton: false, timer: 2000, 
+                      background: '#1a1108', color: '#e8c97e' 
+                  });
+              }
           }
       });
   }
