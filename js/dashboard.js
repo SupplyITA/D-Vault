@@ -306,8 +306,7 @@ function openCampaignDetail(camp) {
   // Per associare il colore del master alla campagna ed ai segnalini
   const myColor = getColorForUser(State.username);
   if($('master-color-marker')) $('master-color-marker').style.backgroundColor = myColor;
-  $('campaign-detail-title').innerHTML = `${camp.campName} <span style="display:inline-block;width:15px;height:15px;border-radius:50%;background-color:${myColor};vertical-align:middle;margin-left:10px;border:1px solid #fff;box-shadow:0 0 5px #000;" title="Il tuo colore identificativo"></span>`;
-  
+  $('campaign-detail-title').innerHTML = `${camp.campName}<span style="display:inline-block;width:15px;height:15px;border-radius:50%;background-color:${myColor};vertical-align:middle;margin-left:10px;border:1px solid #fff;box-shadow:0 0 5px #000;" title="Il tuo colore identificativo"></span>`;  
   selezionaToken('color', null, document.querySelector('#master-token-sidebar .token-option'));
   caricaTokenMostri();
 
@@ -684,7 +683,6 @@ function openSheetDetail(sheet) {
   // Carica le note del giocatore
   const notesArea = $('player-notes');
   if(notesArea) {
-      // Richiamo sheet.playerNotes
       notesArea.value = sheet.playerNotes || (sheet.sheetDataDetails && sheet.sheetDataDetails.playerNotes) || '';
   }
 
@@ -700,7 +698,6 @@ function refreshMap(map) {
     if (map) {
         requestAnimationFrame(() => {
             map.invalidateSize();
-            // Forza il fitBounds per resettare la vista
             if(currentImageOverlay) map.fitBounds(currentImageOverlay.getBounds());
         });
     }
@@ -720,7 +717,6 @@ function bindEvents() {
           confirmButtonText: 'Sì, pulisci'
       }).then((result) => {
           if (result.isConfirmed) {
-              // Iteriamo su tutti i marker e li rimuoviamo, avvisando anche il socket per aggiornare i giocatori
               leafletMap.eachLayer(layer => {
                   if (layer instanceof L.Marker) {
                       const pos = layer.getLatLng();
@@ -765,7 +761,6 @@ function bindEvents() {
       });
 
       if (result.isConfirmed) {
-        // Chiamata al database 
         if (type === 'sheet') {
           await fetch(`/api/sheets/${encodeURIComponent(State.sheets[index].charName)}?user=${encodeURIComponent(State.username)}`, { method: 'DELETE' });
         } else if (type === 'campaign') {
@@ -901,8 +896,8 @@ function bindEvents() {
       const campName = $('campaign-detail-title').textContent.trim();
 
       if (url && leafletMap) {
-          $('map-url-input').value = ''; // svuota l'input
-          await aggiungiMappaAStorico(url, campName); // Salva nell'archivio e la imposta attiva
+          $('map-url-input').value = ''; 
+          await aggiungiMappaAStorico(url, campName);
       }
   });
 
@@ -923,8 +918,8 @@ function bindEvents() {
           const data = await response.json();
           
           if (data.url && leafletMap) {
-              fileInput.value = ''; // svuota l'input
-              await aggiungiMappaAStorico(data.url, campName); // Salva l'URL ritornato dal server
+              fileInput.value = ''; 
+              await aggiungiMappaAStorico(data.url, campName); 
           }
       } catch (err) { 
           console.error("Errore upload mappa:", err); 
@@ -951,7 +946,6 @@ function bindEvents() {
     const index = parseInt(item.dataset.index); 
     
     if (type === 'sheet') {
-      // Invece di usare l'indice, peschiamo il nome esatto e lo cerchiamo nello State.
       const charName = item.querySelector('.dd-item-label').textContent.trim();
       const sheet = State.sheets.find(s => s.charName === charName);
       if (sheet) openSheetDetail(sheet);
@@ -1217,8 +1211,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
   $('form-join-campaign')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData($('form-join-campaign')));
-    data.username = State.username; //questa parte si basa sull'username della persona loggata per capire chi sta entrando e con quale personaggio
-
+    data.username = State.username; 
     try {
       const res = await fetch('/api/campaigns/join', {
         method: 'POST',
@@ -1320,7 +1313,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
           const isMaster = $('campaign-detail').style.display === 'block';
           
           // Capisce se sei Master o Giocatore per usare i dati corretti
-          const campName = isMaster ? $('campaign-detail-title').textContent : $('player-camp-title').textContent;
+          const campName = isMaster ? $('campaign-detail-title').textContent.trim() : $('player-camp-title').textContent.trim(); //bea ho aggiunto .trim perché sennò c'erano un sacco di spazi inutili
           const containerId = isMaster ? 'dm-chat-messages' : 'pc-chat-messages';
 
           tiraDado(faccie, State.username, campName, containerId);
@@ -1632,9 +1625,9 @@ function openJukebox() {
           const tipoMessaggio = dati.type || 'other';
 
           // Stampalo a video SOLO SE hai aperta esattamente quella campagna
-          if ($('campaign-detail').style.display === 'block' && $('campaign-detail-title').textContent === dati.campName) {
+         if ($('campaign-detail').style.display === 'block' && $('campaign-detail-title').textContent.trim() === dati.campName) { // anche qui ho aggiunto trim per lo stesso motivo di prima, evito spazi inutili
               appendChatMessage(dati.mittente, dati.testo, tipoMessaggio, 'dm-chat-messages');
-          } else if ($('player-campaign-detail').style.display === 'block' && $('player-camp-title').textContent === dati.campName) {
+          } else if ($('player-campaign-detail').style.display === 'block' && $('player-camp-title').textContent.trim() === dati.campName) { // e qui, anche perché da problemi con i nomi sennò
               appendChatMessage(dati.mittente, dati.testo, tipoMessaggio, 'pc-chat-messages');
           }
       });
