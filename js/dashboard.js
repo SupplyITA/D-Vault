@@ -90,10 +90,23 @@ window.selezionaToken = function(type, url, element) {
     if (element) element.style.borderColor = '#e8c97e';
 };
 
+// Funzione richiamata sotto per aprire la forgiatura del primo eroe
+window.apriForgiaEroeDaVuoto = function() {
+    closeModal($('modal-select-char-backdrop')); 
+    openModal($('modal-sheet-backdrop'));
+};
+
 window.openCharacterSelectorForCampaign = function(camp) {
     const listContainer = $('char-selection-list');
     if (State.sheets.length === 0) {
-        listContainer.innerHTML = '<p style="color:#aaa;">Non hai nessun eroe. Forgiane uno prima di unirti al tavolo!</p>';
+        // Se non ci sono eroi, il messaggio reindirizza alla forgiatura del primo eroe
+        listContainer.innerHTML = `
+            <p style="color:#aaa;">Non hai nessun eroe. 
+                <a href="#" style="color:#e8c97e; text-decoration:underline; font-weight:bold;" 
+                   onclick="window.apriForgiaEroeDaVuoto(); return false;">
+                   Forgiane uno
+                </a> prima di unirti al tavolo!
+            </p>`;
     } else {
         listContainer.innerHTML = State.sheets.map((sheet, i) => `
             <button class="btn-ghost" style="text-align: left; padding: 10px; display: flex; justify-content: space-between;" onclick="enterPlayerCampaign(${i}, '${escHtml(camp.campName)}')">
@@ -176,6 +189,19 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
           let urlToUse = activeTokenUrl;
           if (activeTokenType === 'image') urlToUse = $('pc-avatar-img').src; 
 
+          // Rimuove il vecchio token del giocatore (pedina) prima di metterne uno nuovo
+          if (activeTokenType === 'image') {
+              playerLeafletMap.eachLayer(layer => {
+                  // Controlla che contenga un'immagine (<img)
+                  if (layer instanceof L.Marker && 
+                      layer.proprietario === State.username && 
+                      layer.options?.icon?.options?.html?.includes('<img')) {
+                      
+                      playerLeafletMap.removeLayer(layer);
+                      if (socket) socket.emit('rimuovi_segnalino', layer.getLatLng());
+                  }
+              });
+          }
           const info = { type: activeTokenType, url: urlToUse };
           aggiungiSegnalino(e.latlng, playerLeafletMap, true, State.username, info);
       });
@@ -399,7 +425,7 @@ function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username
     const marker = L.marker(latlng, { icon: customIcon }).addTo(mappa);
     marker.proprietario = owner; 
     
-    marker.on('contextmenu', () => {
+    const gestisciRimozione = () => {
         // Controllo autorizzazioni
         const isMaster = $('campaign-detail') && $('campaign-detail').style.display === 'block';
         if (!isMaster && marker.proprietario !== State.username) {
@@ -412,7 +438,10 @@ function aggiungiSegnalino(latlng, mappa, isLocal = true, owner = State.username
         }
         mappa.removeLayer(marker);
         if (socket) socket.emit('rimuovi_segnalino', latlng);
-    });
+    };
+    // Elimina segnalino con:
+    marker.on('contextmenu', gestisciRimozione); // Tasto destro per pc
+    marker.on('click', gestisciRimozione); // Click per mobile
 
     // Invia al socket includendo il tipo di token
     if (socket && isLocal) {
