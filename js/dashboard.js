@@ -19,12 +19,17 @@ let activeTokenUrl = null;
 // FUnzione per generare un colore univoco n base al nome utente (peak content)
 function getColorForUser(username) {
     if(!username) return '#aaa';
-    let hash = 0;
+    // Tavolozza di 15 colori
+    const palette = [
+        '#ff4444', '#032c13', '#33b5e5', '#aa66cc', '#ffbb33', 
+        '#ff6699', '#00FFFF', '#ff8800', '#ccff00', '#dc143c', 
+        '#ffd700', '#950d51', '#00ff00', '#205f9e', '#ff1493'
+    ];
+    let sum = 0;
     for (let i = 0; i < username.length; i++) {
-        hash = username.charCodeAt(i) + ((hash << 5) - hash);
+        sum += username.charCodeAt(i) * (i + 1); 
     }
-    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-    return '#' + '00000'.substring(0, 6 - c.length) + c;
+    return palette[sum % palette.length];
 }
 
 // Funzione per nascondere tutto e mostrare solo ciò che si vuole vedere
@@ -233,6 +238,10 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
           try { active = JSON.parse(camp.activeCharacters || "{}"); } catch(e){}
           active[State.username] = sheet.charName;
           camp.activeCharacters = JSON.stringify(active);
+      }
+      //Aggiorna lista eroi subito
+      if (socket) {
+          socket.emit('player_scelto_eroe', { campName: campName });
       }
   } catch(e) { console.error("Errore salvataggio eroe in background:", e); }
 
@@ -670,9 +679,12 @@ window.cacciaGiocatore = async function(giocatore, campName) {
             });
             
             if (res.ok) {
-                if (socket) socket.emit('invia_messaggio_campagna', {
-                    mittente: 'Taverniere', testo: `${giocatore} è stato esiliato dal Master.`, type: 'system', campName: campName
-                });
+                if (socket) {
+                    socket.emit('invia_messaggio_campagna', {
+                        mittente: 'Taverniere', testo: `${giocatore} è stato esiliato dal Master.`, type: 'system', campName: campName
+                    });
+                    socket.emit('esilia_giocatore', { campName: campName, username: giocatore });
+                }
                 Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Giocatore esiliato!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
                 caricaEroiParty(campName); 
             }
@@ -806,6 +818,8 @@ function bindEvents() {
         renderGrid(); 
         if(typeof renderDropdowns === 'function') renderDropdowns();
         if(typeof applicaTilt3D === 'function') applicaTilt3D();
+        // Notifica gli altri giocatori
+        if (socket) socket.emit('forza_aggiornamento_globale');
 
         Swal.fire({ icon: 'success', title: 'Vault Aggiornato', showConfirmButton: false, timer: 1500, background: '#1a1a1a', color: '#e8c97e' });
       }
@@ -1739,6 +1753,65 @@ function openJukebox() {
           }
       });
 
+      // Eliminazione campagna dal master
+      socket.on('ricarica_dati', async () => {
+          // Ricarica i dati in background
+          await State.loadFromServer();
+          
+          // Caso in cui il giocatore stava sulla dashboard
+          if ($('dash-main').style.display !== 'none') {
+              renderGrid();
+              if (typeof renderDropdowns === 'function') renderDropdowns();
+              if (typeof applicaTilt3D === 'function') applicaTilt3D();
+          }
+
+          // Caso in cui il giocatore stava nella scheda della campagna eliminata
+          const isPlayerInCamp = $('player-campaign-detail').style.display === 'block';
+          if (isPlayerInCamp) {
+              const currentCamp = $('player-camp-title').textContent.trim();
+              // Controlla se la campagna in cui si trova esiste ancora
+              const campExists = State.campaigns.some(c => c.campName === currentCamp);
+              if (!campExists) {
+                  esciDalTavolo(); //Fa uscire il giocatore
+                  Swal.fire({
+                      title: 'Mondo Dissolto',
+                      text: 'Il Master ha cancellato questa campagna.',
+                      icon: 'info',
+                      background: '#1a1108', color: '#e8c97e'
+                  });
+              }
+          }
+      });
+
+      // Gestione esilio dal Master
+      socket.on('ricevi_esilio', async (dati) => {
+          // Controlla se sono io l'utente esiliato
+          if (State.username === dati.username) {
+              const isPlayerInCamp = $('player-campaign-detail').style.display === 'block';
+              
+              if (isPlayerInCamp && $('player-camp-title').textContent.trim() === dati.campName) {
+                  await State.loadFromServer();
+                  
+                  // Toglie la campagna dal menù a tendina
+                  if (typeof renderDropdowns === 'function') renderDropdowns();
+                  
+                  esciDalTavolo(); 
+                  
+                  Swal.fire({
+                      title: 'Sei stato esiliato',
+                      text: 'Il Master ti ha rimosso permanentemente da questa campagna.',
+                      icon: 'error',
+                      background: '#1a1108', color: '#e8c97e'
+                  });
+              } else {
+                  await State.loadFromServer();
+                  renderGrid();
+                  if (typeof renderDropdowns === 'function') renderDropdowns();
+                  if (typeof applicaTilt3D === 'function') applicaTilt3D();
+              }
+          }
+      });
+
       // Ricezione della nuova musica dal Master
       socket.on('nuova_musica_ricevuta', (url) => {
           if (AudioManager) {
@@ -1754,6 +1827,17 @@ function openJukebox() {
                       background: '#1a1108', color: '#e8c97e' 
                   });
               }
+          }
+      });
+
+      //Aggiorna lista eroi (Master)
+      socket.on('aggiorna_lista_party', async (dati) => {
+          const isMasterCamp = $('campaign-detail') && $('campaign-detail').style.display === 'block';
+          if (isMasterCamp && $('campaign-detail-title').textContent.trim() === dati.campName) {
+              // Scarica i dati dell'eroe
+              await State.loadFromServer();
+              // Modifica la lista
+              caricaEroiParty(dati.campName);
           }
       });
   }
