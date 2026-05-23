@@ -1,6 +1,10 @@
-const express = require('express');
+const express = require('express'); // Express è il framework che ci permette di creare un server in Node.js in modo semplice, gestisce le rotte, 
+// le richieste e le risposte HTTP, così da poter comunicare con il nostro frontend facilmente e senza dover scrivere troppo codice per gestire tutto a mano.
 const path = require('path');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt'); // Bcrypt è una libreria fighissima, permette di hashare le password in modo sicuro, così che vengano immediatamente trasformate in codice
+// incomprensibile prima di essere salvate nel database, così da renderlo sicuro ed evitare che vengano viste le password da coloro che possono leggere il database
+// Nel codice, bcrypt semplicemente legge la password già hashata e la confronta , così permette di loggarsi senza problemi
+
 const sqlite3 = require('sqlite3').verbose();
 const http = require('http'); 
 const { Server } = require('socket.io'); 
@@ -13,7 +17,7 @@ const server = http.createServer(app); // Questo è per express in un server HTT
 const io = new Server(server); // Questo è per Socket.io
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json()); // Questo serve ad Express per capire se i dati sono in formato json, prima di passarli alle varie funzioni (login/register etc)
 app.use(express.static(__dirname));
 
 // Database SQLite
@@ -124,26 +128,6 @@ const storageAvatar = multer.diskStorage({
 
 const uploadPdf = multer({ storage: pdfStorage });
 
-// Rotta per ricevere e salvare il file PDF
-/*
-app.post('/api/upload-pdf', uploadPdf.single('pdfFile'), (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'Nessun file ricevuto' });
-    res.json({ url: `/uploads/pdfs/${req.file.filename}`, message: 'Scheda PDF caricata!' });
-});
-*/
-
-
-
-// Rotta per legare il link del PDF alla scheda nel Database
-/*app.post('/api/sheets/pdf', (req, res) => {
-    const { owner, charName, pdfUrl } = req.body;
-    db.run(`UPDATE schede SET pdfUrl = ? WHERE owner = ? AND charName = ?`, [pdfUrl, owner, charName], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true });
-    });
-});*/
-
-
 const uploadDir = path.join(__dirname, 'uploads', 'maps');
 // Crea la cartella in maniera dinamica (figata)
 if (!fs.existsSync(uploadDir)) {
@@ -190,7 +174,7 @@ app.post('/api/upload-audio', uploadAudio.single('audioFile'), (req, res) => {
     res.json({ url: `/uploads/audio/${req.file.filename}`, message: 'Brano caricato!' });
 });
 
-// Autenticazione degli utenti 
+// Registrazione degli utenti 
 app.post('/api/registrati', async (req, res) => {
     const { username, email, password, fullName, gender } = req.body; 
     
@@ -199,7 +183,9 @@ app.post('/api/registrati', async (req, res) => {
     if (gender === 'm') defaultAvatar = '/img/avatars/male-1.jpg';
     if (gender === 'f') defaultAvatar = '/img/avatars/female-1.jpg';
     try {
-        const hash = await bcrypt.hash(password, 10);
+        const hash = await bcrypt.hash(password, 10); // bcrypt è la libreria più figa, permette di eseguire 
+        // un hashing delle password per evitare che vengano viste
+
         db.run(`INSERT INTO utenti (username, email, password, fullName, gender, avatar) VALUES (?, ?, ?, ?, ?, ?)`, 
         [username, email, hash, fullName, gender, defaultAvatar], function(err) {
             if (err) return res.status(400).json({ message: "Username o Email già in uso!" });
@@ -208,12 +194,15 @@ app.post('/api/registrati', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Login degli utenti
 app.post('/api/login', (req, res) => {
     const { identifier, password } = req.body;
     db.get(`SELECT * FROM utenti WHERE username = ? OR email = ?`, [identifier, identifier], async (err, row) => {
         if (err || !row) return res.status(401).json({ message: "Credenziali errate!" });
         
-        const match = await bcrypt.compare(password, row.password);
+        const match = await bcrypt.compare(password, row.password); // Confronta la password inserita con l'hash salvato in sqlite, 
+        // così da non riscoprire la password originale nemmeno nel database. E' molto più sicuro (il corso di cybesecurity è servito a qualcosa)
+
         if (match) res.json({ message: "Bentornato!", username: row.username });
         else res.status(401).json({ message: "Credenziali errate!" });
     });
@@ -221,7 +210,8 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/reset-password', async (req, res) => {
     const { username, email, newPassword } = req.body;
-    const hash = await bcrypt.hash(newPassword, 10);
+    const hash = await bcrypt.hash(newPassword, 10); // Esegue un Hash della password appena scritta prima di salvarla, verrà poi salvata nel database per il login, 
+    // identico a come funziona per la registrazione
     db.run(`UPDATE utenti SET password = ? WHERE username = ? AND email = ?`, [hash, username, email], function(err) {
         if (this.changes > 0) res.json({ message: "Password aggiornata con successo! La magia ha funzionato." });
         else res.status(404).json({ message: "Username o Email non corrispondenti." });

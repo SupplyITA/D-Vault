@@ -9,7 +9,7 @@
   },
   "name": "d-vault",
   "version": "1.0.0",
-  "description": "Sito costruito per simulare un ambiente di gioco per il gioco di ruolo D&D per la versione 5e",
+  "description": "Sito costruito per aiutare i giocatori di ruolo D&D per la versione 5e (non comprensivo di manuali oltre quello base",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
