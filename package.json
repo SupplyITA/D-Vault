@@ -6,5 +6,16 @@
     "socket.io": "^4.8.3",
     "sqlite3": "^5.1.7",
     "ws": "^8.20.0"
-  }
+  },
+  "name": "d-vault",
+  "version": "1.0.0",
+  "description": "Sito costruito per simulare un ambiente di gioco per il gioco di ruolo D&D per la versione 5e",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

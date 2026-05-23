@@ -91,6 +91,7 @@ export function inviaChatCampagna(inputId, containerId, username, campName, targ
     }
 }
 
+
 // Lancio Dadi
 export function tiraDado(faccie, username, campName, containerId) {
     // Calcola il risultato (es. da 1 a 20)
