@@ -682,6 +682,21 @@ io.on('connection', (socket) => {
         socket.to(campName).emit('indicatore_sussurro', { mittente, destinatario });
     });
 
+    // Invia un messaggio quando il master aggiorna/elimina la campagna
+    socket.on('forza_aggiornamento_globale', () => {
+        socket.broadcast.emit('ricarica_dati');
+    });
+
+    // Messaggio al giocatore esiliato dal Master
+    socket.on('esilia_giocatore', (dati) => {
+        socket.to(dati.campName).emit('ricevi_esilio', dati);
+    });
+
+    // Aggiorna la lista degli eroi (Master)
+    socket.on('player_scelto_eroe', (dati) => {
+        socket.to(dati.campName).emit('aggiorna_lista_party', dati);
+    });
+
     // Cambio musica per tutti i giocatori della campagna
     socket.on('cambia_musica_campagna', (dati) => {
         socket.to(dati.campName).emit('nuova_musica_ricevuta', dati.url);
