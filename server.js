@@ -626,7 +626,7 @@ io.on('connection', (socket) => {
         if (socket.username && socket.campName) {
             socket.to(socket.campName).emit('ricevi_messaggio_campagna', {
                 mittente: 'Taverniere',
-                testo: `${socket.username} è tornato all'Archivio.`, // <-- Modificato qui
+                testo: `${socket.username} è tornato all'Archivio.`,
                 type: 'system',
                 campName: socket.campName
             });
@@ -641,7 +641,7 @@ io.on('connection', (socket) => {
         if (socket.username && socket.campName) {
             socket.to(socket.campName).emit('ricevi_messaggio_campagna', {
                 mittente: 'Taverniere',
-                testo: `${socket.username} è svanito nel nulla (disconnesso).`, // <-- Modificato qui
+                testo: `${socket.username} è svanito nel nulla (disconnesso).`,
                 type: 'system',
                 campName: socket.campName
             });
