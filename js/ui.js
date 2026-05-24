@@ -93,7 +93,6 @@ export function renderGrid() {
     if (c.owner === State.username) {
         masterCamps.push({ camp: c, index: i });
     } else {
-        // FIX: joinedPlayers è già un array!
         const players = c.joinedPlayers || [];
         if (players.includes(State.username)) {
             playerCamps.push({ camp: c, index: i });
