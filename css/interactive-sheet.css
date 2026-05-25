@@ -1,324 +1,144 @@
+/* ------- Scheda dei personaggi */
+/* COlori descritti in themes.css */
+
 .dnd-interactive-sheet {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: radial-gradient(ellipse at center, #1f140d 0%, #0d0805 100%);
-  color: var(--gold);
-  font-family: 'Crimson Text', serif;
-  overflow-x: auto;
+  display: flex; flex-direction: column; height: 100%; overflow-x: auto;
+  background: radial-gradient(ellipse at center, #1f140d 0%, #0d0805 100%); /* Sfumatura effetto drago (più o meno) */
+  color: var(--gold); font-family: 'Crimson Text', serif;
 }
 
-.dnd-sheet-nav {
-  display: flex;
-  background: rgba(0,0,0,0.6);
-  border-bottom: 2px solid var(--gold-mid);
+/* ------- Barra di navigazione - i main 3, statistiche, incantesimi e biografia */
+.dnd-sheet-nav { 
+  display: flex; background: rgba(0,0,0,0.6); 
+  border-bottom: 2px solid var(--gold-mid); /* Linea sotto dorata */
 }
 
-.dnd-subtab-btn {
-  flex: 1;
-  padding: 12px;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: 0.2s;
-  border-right: 1px solid rgba(var(--accent-1-dark), 0.2);
+/* Pulsanti singoli dei sottomenu */
+.dnd-subtab-btn { 
+  flex: 1; padding: 12px; background: transparent; border-right: 1px solid rgba(var(--accent-1-dark), 0.2); 
+  color: var(--text-muted); font-family: var(--font-display); font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; transition: 0.2s; 
 }
-
 .dnd-subtab-btn:hover { color: var(--gold-bright); background: rgba(var(--accent-1), 0.1); }
+
+/* Nota: i bottoni attivi (se sto incantesimi tipo) ha colore opporto rispetto al resto (oro/rosso non rosso/oro)*/
 .dnd-subtab-btn.active { color: #111; background: var(--gold-mid); font-weight: bold; }
 
-.dnd-subtab-content { display: none; flex: 1; padding: 20px; flex-direction: column; gap: 20px; overflow-y: auto; }
-.dnd-subtab-content.active { display: flex; animation: fadeIn 0.3s ease; }
+/* --------- Contenuto delle sottotabs */
+.dnd-subtab-content { 
+  display: none;               /* Di base sono tutti nascosti */
+  flex: 1; flex-direction: column; gap: 20px; padding: 20px; overflow-y: auto; 
+}
+/* Classe attivata dinamicamente via implementazione js per ogni pannello selezionato */
+.dnd-subtab-content.active { 
+  display: flex; animation: fadeIn 0.3s ease; 
+}
 
-.dnd-stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; }
-.dnd-combat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
+/* -------- Struttura del contenuto: multicolonna */
+.dnd-header-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; } /* I 4 blocchi alti in Statistiche */
+.dnd-main-grid { display: grid; grid-template-columns: 100px 1fr 1.5fr; gap: 20px; }               /* Griglia a tre colonne asimmetriche */
+.dnd-stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; }        /* I sei blocchi di statistiche base */
 .dnd-bio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.dnd-combat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; } /* Layout auto-controllante per i parametri di combattimento */
 
-.dnd-stat-box, .dnd-combat-box {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(var(--accent-1-dark), 0.3);
-  border-radius: 6px;
-  padding: 10px;
-  text-align: center;
-}
-
-.dnd-stat-box label, .dnd-combat-box label {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  color: var(--gold-dim);
-  margin-bottom: 5px;
-}
-
-.dnd-stat-box input, .dnd-combat-box input {
-  width: 100%;
-  text-align: center;
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: bold;
-  outline: none;
-}
-
-.dnd-textarea-box {
-  display: flex;
-  flex-direction: column;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(var(--accent-1-dark), 0.3);
-  border-radius: 6px;
-  padding: 10px;
-}
-
-.dnd-textarea-box textarea {
-  min-height: 100px;
-  background: transparent;
-  border: none;
-  color: #eee;
-  font-size: 1.05rem;
-  resize: vertical;
-  outline: none;
-}
-
-/* Sola lettura per il Master */
-form.readonly-sheet input, form.readonly-sheet textarea {
-  pointer-events: none;
-  opacity: 0.8;
-}
-
-.dnd-header-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-}
-.dnd-main-grid {
-  display: grid;
-  grid-template-columns: 100px 1fr 1.5fr;
-  gap: 20px;
-}
 .dnd-col-stats { display: flex; flex-direction: column; gap: 10px; }
 .dnd-col-skills, .dnd-col-combat { display: flex; flex-direction: column; gap: 15px; }
 
+/* -------- Stile delle box di input */
+.dnd-stat-box, .dnd-combat-box { 
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--accent-1-dark), 0.3); border-radius: 6px; padding: 10px; text-align: center; 
+}
+.dnd-stat-box label, .dnd-combat-box label { 
+  display: block; font-family: var(--font-display); font-size: 0.75rem; color: var(--gold-dim); margin-bottom: 5px; 
+}
+/* Input numerici grandi e con alto contrasto per la forza, destrezza, ecc... */
+.dnd-stat-box input, .dnd-combat-box input { 
+  width: 100%; text-align: center; background: transparent; border: none; color: #fff; font-size: 1.5rem; font-weight: bold; outline: none; 
+}
+
+/* Modulo per i testi lunghi (biografia, tratti caratteriali) */
+.dnd-textarea-box { display: flex; flex-direction: column; background: rgba(0,0,0,0.3); border: 1px solid rgba(var(--accent-1-dark), 0.3); border-radius: 6px; padding: 10px; }
+.dnd-textarea-box textarea { min-height: 100px; background: transparent; border: none; color: #eee; font-size: 1.05rem; resize: vertical; outline: none; }
+
+/* --------- Stili specifici per le statistiche e le competenze 
+  - Il cerchietto col bordo oro sotto il box del punteggio della statistica */
 .main-stat { position: relative; padding-bottom: 25px; }
 .main-stat .stat-mod {
-  position: absolute;
-  bottom: -10px; left: 50%;
-  transform: translateX(-50%);
-  width: 50px; height: 25px;
-  background: #111;
-  border: 1px solid var(--gold-mid);
-  border-radius: 20px;
-  font-size: 0.9rem;
+  position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); 
+  width: 50px; height: 25px; background: #111; border: 1px solid var(--gold-mid); border-radius: 20px; 
+  text-align: center; font-size: 0.9rem; 
 }
 
-.dnd-skill-group {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(var(--accent-1-dark), 0.3);
-  border-radius: 6px;
-  padding: 15px;
-}
-.group-title {
-  display: block; font-family: var(--font-display);
-  color: var(--gold-mid); margin-bottom: 10px;
-  border-bottom: 1px solid rgba(var(--accent-1-dark), 0.3); padding-bottom: 5px;
-}
-.dnd-skill-row {
-  display: flex; align-items: center; gap: 8px;
-  font-family: 'Crimson Text', serif; color: #eee;
-  margin-bottom: 6px; cursor: pointer;
-}
-.short-input {
-  width: 35px; background: transparent; border: none;
-  border-bottom: 1px solid var(--gold-dim);
-  color: #fff; text-align: center; outline: none;
-}
-.dnd-skill-row input[type="checkbox"] {
-  appearance: none; width: 14px; height: 14px;
-  border: 1px solid var(--gold-dim); border-radius: 50%;
-  cursor: pointer; position: relative;
-}
-.dnd-skill-row input[type="checkbox"]:checked { background: var(--gold-mid); }
+/* Blocco competenza e abilità */
+.dnd-skill-group { background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--accent-1-dark), 0.3); border-radius: 6px; padding: 15px; }
+.group-title { display: block; font-family: var(--font-display); color: var(--gold-mid); margin-bottom: 10px; border-bottom: 1px solid rgba(var(--accent-1-dark), 0.3); padding-bottom: 5px; }
+.dnd-skill-row { display: flex; align-items: center; gap: 8px; font-family: 'Crimson Text', serif; color: #eee; margin-bottom: 6px; cursor: pointer; }
+.short-input { width: 35px; background: transparent; border: none; border-bottom: 1px solid var(--gold-dim); color: #fff; text-align: center; outline: none; }
 
-
-
-
-/* Stile del Pulsante di Salvataggio Manuale */
-.dnd-save-btn {
-  padding: 12px 25px;
-  background: #27ae60;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-display);
-  font-weight: bold;
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: 0.2s;
+/* Checkbox rimodificate per farle apparire come cerchi oro cliccabili (come se lo abbiamo formattato) */
+.dnd-skill-row input[type="checkbox"] { 
+  appearance: none; -webkit-appearance: none; /* Rimuove il quadratino azzurro standard del sistema operativo */
+  width: 14px; height: 14px; border: 1px solid var(--gold-dim); border-radius: 50%; cursor: pointer; position: relative; 
 }
-.dnd-save-btn:hover {
-  background: #2ecc71;
-  box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+/* Se checko il pallino diventa full oro */
+.dnd-skill-row input[type="checkbox"]:checked { 
+  background: var(--gold-mid); 
 }
 
-/* Nasconde il pulsante salva se la scheda è in sola lettura (Master) */
-form.readonly-sheet .dnd-save-btn {
-  display: none;
-}
-
-/* Costringe l'avatar a stare a destra */
-.sheet-layout {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: stretch;
-  width: 100%;
-}
-.sheet-left {
-  flex: 1 1 auto;
-  min-width: 0; 
-  overflow-x: hidden;
-}
-.sheet-right {
-  flex: 0 0 320px; 
-  min-width: 320px;
-}
-
-
-/* ════════════════════════════════════════════════
-   GRIGLIA INCANTESIMI 
-   ════════════════════════════════════════════════ */
-.dnd-spells-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.spell-level-box {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(var(--accent-1-dark), 0.3);
-  border-radius: 6px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.spell-header {
-  display: flex;
-  align-items: center;
-  background: rgba(var(--accent-1-dark), 0.1);
-  border-bottom: 2px solid var(--gold-mid);
-  padding: 5px 10px;
-  gap: 15px;
-}
-
-.spell-level-num {
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: var(--gold-bright);
-  background: #111;
-  padding: 5px 15px;
-  border: 1px solid var(--gold-dim);
-  border-radius: 4px;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
-}
-
-.spell-title {
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  color: var(--gold-mid);
-  letter-spacing: 0.1em;
-}
-
-.spell-slots {
-  display: flex;
-  gap: 15px;
-  flex: 1;
-  justify-content: flex-end;
-}
-
-.spell-slots label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.65rem;
-  color: #aaa;
-  align-items: center;
-  font-family: sans-serif;
-  letter-spacing: 0.05em;
-}
-
-.spell-slots input {
-  width: 45px;
-  background: rgba(0,0,0,0.6);
-  border: 1px solid var(--gold-dim);
-  color: white;
-  text-align: center;
-  border-radius: 4px;
-  font-size: 1.1rem;
-  padding: 2px;
-  margin-top: 3px;
-}
+/* -------- Gestione sezione Incantesimi */
+.dnd-spells-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; } /* Diviso in 3 colonne asimmetriche (0 1 2...9)*/
+.spell-level-box { display: flex; flex-direction: column; background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--accent-1-dark), 0.3); border-radius: 6px; overflow: hidden; }
+.spell-header { display: flex; align-items: center; background: rgba(var(--accent-1-dark), 0.1); border-bottom: 2px solid var(--gold-mid); padding: 5px 10px; gap: 15px; }
+.spell-level-num { font-family: var(--font-display); font-size: 1.8rem; font-weight: bold; color: var(--gold-bright); background: #111; padding: 5px 15px; border: 1px solid var(--gold-dim); border-radius: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+.spell-title { font-family: var(--font-display); font-size: 1.2rem; color: var(--gold-mid); letter-spacing: 0.1em; }
+.spell-slots { display: flex; gap: 15px; flex: 1; justify-content: flex-end; }
+.spell-slots label { display: flex; flex-direction: column; font-size: 0.65rem; color: #aaa; align-items: center; font-family: sans-serif; letter-spacing: 0.05em; }
+.spell-slots input { width: 45px; padding: 2px; margin-top: 3px; background: rgba(0,0,0,0.6); border: 1px solid var(--gold-dim); border-radius: 4px; color: white; text-align: center; font-size: 1.1rem; }
 
 .spell-list { display: flex; flex-direction: column; padding: 10px; }
-.spell-row {
-  display: flex; align-items: center; gap: 10px;
-  border-bottom: 1px solid rgba(var(--accent-1-dark), 0.2); padding: 4px 0;
-}
+.spell-row { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(var(--accent-1-dark), 0.2); padding: 4px 0; }
 .spell-row:last-child { border-bottom: none; }
+.spell-prep-check { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; flex-shrink: 0; background: #111; border: 2px solid var(--gold-dim); border-radius: 50%; cursor: pointer; transition: 0.2s; }
 
-.spell-prep-check {
-  appearance: none; width: 14px; height: 14px;
-  border: 2px solid var(--gold-dim); border-radius: 50%;
-  cursor: pointer; flex-shrink: 0; background: #111; transition: 0.2s;
-}
+/* Quando l'incantesimo è selezionato sembra illuminarsi (lucciolina) */
 .spell-prep-check:checked { background: var(--gold-mid); box-shadow: 0 0 8px rgba(var(--accent-1), 0.8); }
+.spell-name-input { flex: 1; background: transparent; border: none; color: #eee; outline: none; font-family: 'Crimson Text', serif; font-size: 1.05rem; }
 
-.spell-name-input {
-  flex: 1; background: transparent; border: none;
-  color: #eee; outline: none; font-family: 'Crimson Text', serif; font-size: 1.05rem;
+/* --------- Pulsanti di salvataggio */
+.dnd-save-btn { padding: 12px 25px; background: #27ae60; color: white; border: none; cursor: pointer; font-family: var(--font-display); font-weight: bold; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; transition: 0.2s; }
+.dnd-save-btn:hover { background: #2ecc71; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); }
+
+/* Se la scheda viene selezionata dal Master (solo lettura) con la classe .readonly-sheet
+    si disattivano i click su tutti gli input e disattiva il bottone salva */
+form.readonly-sheet input, form.readonly-sheet textarea { pointer-events: none; opacity: 0.8; }
+form.readonly-sheet .dnd-save-btn { display: none; }
+
+/* La griglia della scheda (layout molto tigido sì ma troppa roba, meglio così) */
+.sheet-layout { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: stretch; width: 100%; }
+.sheet-left { flex: 1 1 auto; min-width: 0; overflow-x: hidden; }
+.sheet-right { flex: 0 0 320px; min-width: 320px; }
+
+/* --------- Responsive design*/
+
+/* Desktop piccoli o tablet in rizzontale */
+@media (max-width: 1100px) { 
+  .dnd-spells-grid { grid-template-columns: repeat(2, 1fr); } /* La griglia magie diventa a 2 colonne */
 }
 
-@media (max-width: 1100px) { .dnd-spells-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) { .dnd-spells-grid { grid-template-columns: 1fr; } }
+/* Tablet in verticale o schermi mobile grandi */
+@media (max-width: 900px) {
+  /* La barra di navigazione diventa un menu a scorrimento laterale (col dito) */
+  .dnd-sheet-nav { flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .dnd-subtab-btn, .dnd-save-btn { white-space: nowrap; flex-shrink: 0; }
+  
+  /* La struttura a multi-colonna diventa a una sola colonna */
+  .dnd-main-grid, #subtab-spells .dnd-header-row { grid-template-columns: 1fr !important; }
+  .dnd-header-row { grid-template-columns: 1fr 1fr !important; }
+  
+  .dnd-col-stats { flex-direction: row !important; flex-wrap: wrap !important; justify-content: space-between; }
+  .main-stat { width: calc(33% - 10px); margin-bottom: 20px; } /* Le 6 statistiche si dispongono in 2 righe da 3 elementi ciascuna */
+}
 
-/* ════════════════════════════════════════════════
-   Visualizzazione da telefono / tablet / altri dispositivi
-   ════════════════════════════════════════════════ */
-
-   @media (max-width: 900px){
-    .dnd-sheet-nav{
-      flex-wrap: nowrap !important;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .dnd-subtab-btn, .dnd-save-btn{
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .dnd-main-grid{
-      grid-template-columns: 1fr !important;
-    }
-
-    .dnd-header-row{
-      grid-template-columns: 1fr 1fr !important;
-    }
-
-    #subtab-spells .dnd-header-row{
-      grid-template-columns: 1fr !important;
-    }
-    .dnd-col-stats{
-      flex-direction: row !important;
-      flex-wrap: wrap !important;
-      justify-content: space-between;
-    }
-    .main-stat{
-      width: calc(33%- 10px);
-      margin-bottom: 20px;
-    }
-   }
+/* Schermi mobile stretti */
+@media (max-width: 768px) { 
+  .dnd-spells-grid { grid-template-columns: 1fr; } /* Le magie passano addirittura a 1 sola colonna */
+}

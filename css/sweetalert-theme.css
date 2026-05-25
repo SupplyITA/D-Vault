@@ -1,19 +1,23 @@
-/* Backdrop più scuro, leggermente blurrato */
+/* ----- Override libreria per i messaggi a comparsa */
+
+/* Sfondo della pagina intera quando il popup è aperto */
 .swal2-container.swal2-backdrop-show {
   background: radial-gradient(ellipse at center, rgba(20, 8, 4, 0.75) 0%, rgba(4, 2, 2, 0.92) 100%) !important;
-  -webkit-backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); /* Oscura e applica l'effetto vetro (glassmorphism) per far risaltare il box del popup */
   backdrop-filter: blur(6px);
 }
 
-/* Popup: vetro dorato con cornice metallica */
+/* --------- Popup - design fatto a effetto vetro*/
 .swal2-popup {
-  font-family: 'Berthold Baskerville', Georgia, serif !important;
+  font-family: 'Berthold Baskerville', Georgia, serif !important; /* Font classico*/
   background: linear-gradient(160deg, rgba(var(--accent-1-dark), 0.30) 0%, rgba(40, 25, 12, 0.40) 100%), rgba(14, 8, 5, 0.85) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.25);
   backdrop-filter: blur(18px) saturate(1.25);
   color: var(--text-primary) !important;
   border-radius: 6px !important;
   border: 1px solid rgba(var(--accent-1), 0.55) !important;
+  
+  /* Sistema di ombreggiatura per creare la profondita (stesso effetto messo per i modali) */
   box-shadow:
     inset 0 1px 0 rgba(var(--accent-1-light), 0.20), inset 0 0 0 1px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(var(--accent-1-dark), 0.35),
@@ -21,7 +25,7 @@
   padding: 2.2rem 1.8rem 1.6rem !important; position: relative; overflow: hidden;
 }
 
-/* Linea oro superiore */
+/* Linea oro superiore (prettamente decorativa) */
 .swal2-popup::before {
   content: ''; position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
   background: linear-gradient(90deg, transparent 0%, rgba(var(--accent-1), 0.7) 25%, rgba(var(--accent-1-light), 0.95) 50%, rgba(var(--accent-1), 0.7) 75%, transparent 100%); pointer-events: none;
@@ -33,12 +37,12 @@
 }
 .swal2-popup > * { position: relative; z-index: 1; }
 
-/* Titolo in oro Cinzel */
+/* ------- Tipografia del messaggio */
 .swal2-title {
   font-family: 'Cinzel', serif !important; font-weight: 700 !important; font-size: 1.45rem !important;
   letter-spacing: 0.08em !important; text-transform: uppercase;
   background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold-pale) 55%, var(--bronze) 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; /* Maschera di gradiente oro */
   padding: 0.4rem 0 0.6rem !important; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 .swal2-html-container, .swal2-content {
@@ -46,32 +50,34 @@
   font-size: 1.02rem !important; font-style: italic; line-height: 1.55 !important;
 }
 
-/* Bottoni */
+/* ------ Bottoni personalizzati */
 .swal2-actions { gap: 0.6rem !important; margin-top: 1.5rem !important; }
+
+/* Stili orrendi di default annullati */
 .swal2-styled.swal2-confirm, .swal2-styled.swal2-deny, .swal2-styled.swal2-cancel {
   font-family: 'Cinzel', serif !important; font-size: 0.78rem !important; letter-spacing: 0.22em !important;
   text-transform: uppercase; border-radius: 2px !important; padding: 0.7rem 1.4rem !important; transition: all 0.25s ease; background-image: none !important;
 }
+
+/* Bottone di conferma in oro */
 .swal2-styled.swal2-confirm {
   color: #1a1108 !important; background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold-mid) 45%, var(--gold-deep) 100%) !important;
   border: 1px solid rgba(0, 0, 0, 0.55) !important; box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), 0.7), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(var(--accent-1), 0.5), 0 6px 14px -4px rgba(0, 0, 0, 0.7) !important;
 }
-.swal2-styled.swal2-confirm:hover {
-  filter: brightness(1.08); transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), 0.85), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(var(--accent-1-light), 0.7), 0 0 22px rgba(var(--accent-1), 0.4), 0 8px 18px -4px rgba(0, 0, 0, 0.85) !important;
-}
-.swal2-styled.swal2-cancel, .swal2-styled.swal2-deny {
-  color: var(--gold-pale) !important; background: rgba(20, 12, 4, 0.6) !important; border: 1px solid rgba(var(--accent-1), 0.45) !important; box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), 0.10) !important;
-}
+.swal2-styled.swal2-confirm:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), 0.85), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(var(--accent-1-light), 0.7), 0 0 22px rgba(var(--accent-1), 0.4), 0 8px 18px -4px rgba(0, 0, 0, 0.85) !important; }
+
+/* Bottoni di annulla scuro */
+.swal2-styled.swal2-cancel, .swal2-styled.swal2-deny { color: var(--gold-pale) !important; background: rgba(20, 12, 4, 0.6) !important; border: 1px solid rgba(var(--accent-1), 0.45) !important; box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), 0.10) !important; }
 .swal2-styled.swal2-cancel:hover, .swal2-styled.swal2-deny:hover { background: rgba(40, 25, 10, 0.85) !important; border-color: rgba(var(--accent-1-light), 0.7) !important; color: var(--gold-light) !important; }
 .swal2-styled:focus { box-shadow: 0 0 0 2px rgba(var(--accent-1-light), 0.4) !important; outline: none !important; }
 
-/* Inputs */
+/* --------- Input form all'interno dell'alert*/
 .swal2-input, .swal2-textarea, .swal2-select, .swal2-file {
   font-family: 'Crimson Text', Georgia, serif !important; background: rgba(8, 4, 2, 0.7) !important; color: var(--text-primary) !important; border: 1px solid rgba(var(--accent-1), 0.35) !important; border-radius: 3px !important; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6) !important; transition: border-color 0.2s ease;
 }
 .swal2-input:focus, .swal2-textarea:focus, .swal2-select:focus { border-color: rgba(var(--accent-1-light), 0.7) !important; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 0 3px rgba(var(--accent-1), 0.18) !important; outline: none !important; }
 
-/* Icone: bordi e tinte*/
+/* ------- Icone di stato (successo, errore, avvertimento)*/
 .swal2-icon { border-width: 2px !important; margin-top: 0.5rem !important; }
 .swal2-icon.swal2-success { border-color: rgba(var(--accent-1), 0.7) !important; color: var(--gold-pale) !important; }
 .swal2-icon.swal2-success [class^='swal2-success-line'] { background-color: var(--gold-pale) !important; }
@@ -83,13 +89,14 @@
 .swal2-icon.swal2-warning { border-color: rgba(var(--accent-1), 0.7) !important; color: var(--gold-pale) !important; }
 .swal2-icon.swal2-info, .swal2-icon.swal2-question { border-color: rgba(var(--accent-1), 0.7) !important; color: var(--gold-pale) !important; }
 
-/* Pulsante di chiusura fisso in alto a destra */
+/* Pulsante x di chiusura fisso in alto a destra */
 .swal2-close {
     position: absolute !important; top: 10px !important; right: 10px !important; z-index: 999 !important;
     color: rgba(var(--accent-1), 0.6) !important; outline: none !important; box-shadow: none !important; transition: color 0.2s ease, transform 0.2s ease;
 }
 .swal2-close:hover { color: #f5d98e !important; transform: scale(1.05); }
 
-/* Timer popup */
+/* ── Notifiche a scomparsa in basso */
 .swal2-toast { background: rgba(14, 8, 5, 0.92) !important; border: 1px solid rgba(var(--accent-1), 0.45) !important; box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), 0.15), 0 8px 24px -8px rgba(0, 0, 0, 0.85) !important; }
+/* Barra di caricamento del timer sul fondo del messaggio */
 .swal2-timer-progress-bar { background: linear-gradient(90deg, rgba(var(--accent-1), 0.4), rgba(var(--accent-1-light), 0.85)) !important; height: 2px !important; }
