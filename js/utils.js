@@ -1,6 +1,6 @@
-export const $ = id => document.getElementById(id);
+export const $ = id => document.getElementById(id); // per facilitare la scrittura, serve a ritornare il primo elemento nel documento il cui attributo (l'id) è quello tra parentesi, se non esiste ritorna NULL
 
-export function escHtml(str) {
+export function escHtml(str) { // piccole chicche di sicurezza
   return String(str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -21,7 +21,6 @@ export function closeModal(el) {
 export function closeDropdown() {
     document.querySelectorAll('.nav-dd.open').forEach(el => el.classList.remove('open'));
     document.querySelectorAll('.nav-tab.open, .nav-user-btn.open').forEach(el => el.classList.remove('open'));
-    // legacy fallback
     $('dropdown-menu')?.classList.remove('open');
     $('hamburger-btn')?.classList.remove('open');
 }

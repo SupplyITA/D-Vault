@@ -1,459 +1,155 @@
-/* ════════════════════════════════════════════════
-   GRIGLIA CARD
-   ════════════════════════════════════════════════ */
+
+/* --------- Griglia delle carte*/
+
 .content-grid {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-  gap: 1.4rem;
-  animation: fade-up 0.6s ease both;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));  /* Riempie di carte tutto lo spazio disponibile */
+  gap: 1.6rem;
+  align-items: stretch; /* Le card sulla stessa riga hanno la stessa altezza */
+  animation: fade-up 0.6s ease both; /* Caricamento */
 }
 
-/* ════════════════════════════════════════════════
-   CARD — effetto metallo fantasy
-   ════════════════════════════════════════════════ */
+/* -------- Card base: effetto metallo */
 .vault-card {
-  position: relative;
+  position: relative; /* Posizionamento per pseudo-elementi */
   background: linear-gradient(145deg, rgba(28,14,10,0.97) 0%, rgba(18,8,7,0.99) 100%);
   border: 1px solid rgba(var(--accent-1-dark), 0.28);
   border-radius: 3px;
   padding: 1.5rem 1.7rem 1.4rem;
   cursor: pointer;
-  overflow: hidden;
-  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.5) inset,
-    0 8px 28px rgba(0,0,0,0.6),
-    0 1px 0 rgba(var(--accent-1), 0.08) inset;
+  overflow: hidden; /* Se i riflessi escono fuori dalla card li taglia */
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1); /* Transizione non lineare */
+  
+  /* Ombre per effetto 3D*/
+  box-shadow: 
+    0 0 0 1px rgba(0,0,0,0.5) inset,  /* Contorno nero interno */
+    0 8px 28px rgba(0,0,0,0.6),       /* Ombra esterna che va verso il basso  */
+    0 1px 0 rgba(var(--accent-1), 0.08) inset; /* Filo di luce sopra */
 }
 
-/* Linea dorata top */
+/* Pseudo-elemento: linea oro superiore*/
 .vault-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 10%; right: 10%;
-  height: 1px;
+  content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
   background: linear-gradient(90deg, transparent, rgba(var(--accent-1), 0.5), transparent);
-  transition: all 0.3s;
-  opacity: 0.5;
+  transition: all 0.3s; opacity: 0.5;
 }
-
-/* Riflesso metallico */
+/* Pseudo-elemento: riflesso di luce metallico diagonale */
 .vault-card::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 3px;
   background: linear-gradient(135deg, rgba(var(--accent-1-light), 0.03) 0%, transparent 50%);
-  pointer-events: none;
-  border-radius: 3px;
 }
 
+/* --------- Effetto tilt ( :-) ) */
 .vault-card:hover {
   background: linear-gradient(145deg, rgba(35,18,12,0.98) 0%, rgba(22,10,8,1) 100%);
-  border-color: rgba(var(--accent-1), 0.5);
-  transform: translateY(-5px);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.5) inset,
-    0 18px 50px rgba(0,0,0,0.75),
-    0 0 30px rgba(var(--accent-1), 0.1),
+  border-color: rgba(var(--accent-1), 0.5); 
+  transform: translateY(-5px); /* La fa tiltare alzandola lungo l'asse Y */
+  box-shadow: 
+    0 0 0 1px rgba(0,0,0,0.5) inset, 
+    0 18px 50px rgba(0,0,0,0.75), /* Allunga l'ombra per far sembrare la card alzata in aria*/
+    0 0 30px rgba(var(--accent-1), 0.1), /* Illumina i contorni della card*/
     0 1px 0 rgba(var(--accent-1), 0.14) inset;
 }
-
 .vault-card:hover::before {
-  opacity: 1;
-  left: 5%; right: 5%;
+  opacity: 1; left: 5%; right: 5%; /* La linea d'oro superiore si allarga */
   background: linear-gradient(90deg, transparent, rgba(var(--accent-1-light), 0.7), transparent);
 }
 
-/* Tipografia card */
-.card-tag {
-  font-family: var(--font-display);
-  font-size: 0.58rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--gold-dim);
-  margin-bottom: 0.55rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.card-tag::before {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 1px;
-  background: var(--gold-dim);
-  opacity: 0.6;
-  flex-shrink: 0;
-}
+/* Tipografia delle card (generale) */
+.card-tag { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 0.55rem; display: flex; align-items: center; gap: 0.4rem; }
+.card-tag::before { content: ''; display: inline-block; width: 14px; height: 1px; background: var(--gold-dim); opacity: 0.6; flex-shrink: 0; }
+.card-title { font-family: var(--font-display); font-size: 1.08rem; font-weight: 700; color: var(--gold-bright); margin-bottom: 0.35rem; letter-spacing: 0.04em; line-height: 1.25; }
+.vault-card:hover .card-title { text-shadow: 0 0 14px rgba(var(--accent-1), 0.749); } /* Testo illuminato da dietro, si legge un po' malino ma è carino */
+.card-sub { font-family: 'Crimson Text', Georgia, serif; font-style: italic; color: rgba(var(--accent-1-light), 0.6); font-size: 0.88rem; line-height: 1.4; }
+.card-level { position: absolute; top: 1rem; right: 1rem; font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.12em; color: var(--gold-dim); background: rgba(var(--accent-1), 0.07); border: 1px solid rgba(var(--accent-1), 0.18); border-radius: 99px; padding: 0.2rem 0.65rem; }
 
-.card-title {
-  font-family: var(--font-display);
-  font-size: 1.08rem;
-  font-weight: 700;
-  color: var(--gold-bright);
-  margin-bottom: 0.35rem;
-  letter-spacing: 0.04em;
-  line-height: 1.25;
-}
-.vault-card:hover .card-title {
-  text-shadow: 0 0 14px rgba(var(--accent-1), 0.749);
-}
-
-.card-sub {
-  font-family: 'Crimson Text', Georgia, serif;
-  font-style: italic;
-  color: rgba(var(--accent-1-light), 0.6);
-  font-size: 0.88rem;
-  line-height: 1.4;
-}
-
-.card-level {
-  position: absolute;
-  top: 1rem; right: 1rem;
-  font-family: var(--font-display);
-  font-size: 0.6rem;
-  letter-spacing: 0.12em;
-  color: var(--gold-dim);
-  background: rgba(var(--accent-1), 0.07);
-  border: 1px solid rgba(var(--accent-1), 0.18);
-  border-radius: 99px;
-  padding: 0.2rem 0.65rem;
-}
-
-/* ════════════════════════════════════════════════
-   LUXURY CARD
-   ════════════════════════════════════════════════ */
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 1.6rem;
-  align-items: stretch;
-}
-
+/* ------- Divisione delle card LUXURY  */
 .vault-card.luxury {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 260px;
-  padding: 1.6rem 1.6rem 1.4rem;
-  cursor: pointer;
-  border-radius: 4px;
-  border: 1px solid rgba(var(--accent-1-dark), .45);
-  background:
-    /* texture pergamena scurissima */
-    radial-gradient(ellipse at 20% 0%, rgba(var(--accent-1-light), .06) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 100%, rgba(var(--accent-1-dark), .10) 0%, transparent 60%),
+  display: flex; flex-direction: column; min-height: 260px; padding: 1.6rem 1.6rem 1.4rem;
+  border-radius: 4px; border: 1px solid rgba(var(--accent-1-dark), .45); 
+  isolation: isolate;  /* Impedisce ai riflessi (z-index: 0) di coprire il testo (z-index: 1) */
+  background: 
+    radial-gradient(ellipse at 20% 0%, rgba(var(--accent-1-light), .06) 0%, transparent 55%), /* Si illumina a sinistra alto */
+    radial-gradient(ellipse at 80% 100%, rgba(var(--accent-1-dark), .10) 0%, transparent 60%), /* Ombra sotto a destra */
     linear-gradient(160deg, #1a1108 0%, #0c0805 60%, #06040a 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.7),
-    inset 0 1px 0 rgba(var(--accent-1-light), .18),
-    inset 0 -1px 0 rgba(0,0,0,.8),
-    0 1px 0 rgba(var(--accent-1-light), .05),
-    0 14px 30px -10px rgba(0,0,0,.85),
-    0 26px 50px -20px rgba(0,0,0,.7);
-  transition:
-    transform .35s cubic-bezier(.2,.8,.2,1),
-    box-shadow .35s ease,
-    border-color .35s ease;
-  overflow: hidden;
-  isolation: isolate;
+  
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.7), inset 0 1px 0 rgba(var(--accent-1-light), .18), inset 0 -1px 0 rgba(0,0,0,.8), 0 1px 0 rgba(var(--accent-1-light), .05), 0 14px 30px -10px rgba(0,0,0,.85), 0 26px 50px -20px rgba(0,0,0,.7);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, border-color .35s ease;
 }
 
-/* Cornice oro doppia interna */
-.vault-card.luxury::before {
-  content: '';
-  position: absolute;
-  inset: 8px;
-  border: 1px solid rgba(var(--accent-1), .35);
-  border-radius: 2px;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(var(--accent-1-light), .04) 0%, transparent 30%, transparent 70%, rgba(var(--accent-1-light), .025) 100%);
-  z-index: 0;
-}
+/* Colori dello sfondo dinamico (fuocherello) in base al ruolo */
+.vault-card.luxury-hero { background: radial-gradient(ellipse at 0% 0%, rgba(120,160,210,.06) 0%, transparent 55%), radial-gradient(ellipse at 100% 100%, rgba(var(--accent-1-dark), .10) 0%, transparent 60%), linear-gradient(160deg, #0e1322 0%, #0a0a14 55%, #06060a 100%); }
+.vault-card.luxury-master { background: radial-gradient(ellipse at 0% 0%, rgba(var(--accent-2), .10) 0%, transparent 55%), radial-gradient(ellipse at 100% 100%, rgba(var(--accent-1-dark), .12) 0%, transparent 60%), linear-gradient(160deg, #1c0c08 0%, #100604 55%, #06030a 100%); }
+.vault-card.luxury-player { background: radial-gradient(ellipse at 0% 0%, rgba(60,140,90,.07) 0%, transparent 55%), radial-gradient(ellipse at 100% 100%, rgba(var(--accent-1-dark), .12) 0%, transparent 60%), linear-gradient(160deg, #0d160f 0%, #08100a 55%, #050608 100%); }
 
-/* Riflesso diagonale */
-.vault-card.luxury::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(125deg, transparent 35%, rgba(var(--accent-1-light), .07) 50%, transparent 65%);
-  opacity: .55;
-  z-index: 0;
-  transition: opacity .4s ease;
-}
 
-.vault-card.luxury > * { position: relative; z-index: 1; }
+/* Cornici doppie interne (non so se considerarli pseudo elementi) */
+.vault-card.luxury::before { content: ''; position: absolute; inset: 8px; border: 1px solid rgba(var(--accent-1), .35); border-radius: 2px; pointer-events: none; background: linear-gradient(180deg, rgba(var(--accent-1-light), .04) 0%, transparent 30%, transparent 70%, rgba(var(--accent-1-light), .025) 100%); z-index: 0; }
+.vault-card.luxury::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .55; z-index: 0; transition: opacity .4s ease; background: linear-gradient(125deg, transparent 35%, rgba(var(--accent-1-light), .07) 50%, transparent 65%); }
+.vault-card.luxury > * { position: relative; z-index: 1; } /* Mantiene il testo sopra le cornici */
 
-/* Ornamenti a "L" agli angoli */
-.vault-card.luxury .lux-corner {
-  width: 18px; height: 18px;
-  background: none;
-  border: 0;
-  filter: none;
-}
-.vault-card.luxury .lux-corner::before,
-.vault-card.luxury .lux-corner::after {
-  content: '';
-  position: absolute;
-  background: var(--lux-metal);
-  box-shadow: 0 0 6px rgba(var(--accent-1-light), .25);
-}
+
+/* -------- Angoli della carta (fail, non sembrano metallo ma le rende più grandi)*/
+.vault-card.luxury .lux-corner { width: 18px; height: 18px; background: none; border: 0; filter: none; }
+.vault-card.luxury .lux-corner::before, .vault-card.luxury .lux-corner::after { content: ''; position: absolute; background: var(--lux-metal); box-shadow: 0 0 6px rgba(var(--accent-1-light), .25); }
 .vault-card.luxury .lux-corner::before { width: 18px; height: 1.5px; }
 .vault-card.luxury .lux-corner::after  { width: 1.5px; height: 18px; }
 
-.vault-card.luxury .lux-corner-tl { top: 4px; left: 4px; }
-.vault-card.luxury .lux-corner-tl::before { top: 0; left: 0; }
-.vault-card.luxury .lux-corner-tl::after  { top: 0; left: 0; }
+/* Posizione di ogni angolo */
+.vault-card.luxury .lux-corner-tl { top: 4px; left: 4px; } .vault-card.luxury .lux-corner-tl::before, .vault-card.luxury .lux-corner-tl::after { top: 0; left: 0; }
+.vault-card.luxury .lux-corner-tr { top: 4px; right: 4px; } .vault-card.luxury .lux-corner-tr::before, .vault-card.luxury .lux-corner-tr::after { top: 0; right: 0; }
+.vault-card.luxury .lux-corner-bl { bottom: 4px; left: 4px; } .vault-card.luxury .lux-corner-bl::before, .vault-card.luxury .lux-corner-bl::after { bottom: 0; left: 0; }
+.vault-card.luxury .lux-corner-br { bottom: 4px; right: 4px; } .vault-card.luxury .lux-corner-br::before, .vault-card.luxury .lux-corner-br::after { bottom: 0; right: 0; }
 
-.vault-card.luxury .lux-corner-tr { top: 4px; right: 4px; }
-.vault-card.luxury .lux-corner-tr::before { top: 0; right: 0; }
-.vault-card.luxury .lux-corner-tr::after  { top: 0; right: 0; }
-
-.vault-card.luxury .lux-corner-bl { bottom: 4px; left: 4px; }
-.vault-card.luxury .lux-corner-bl::before { bottom: 0; left: 0; }
-.vault-card.luxury .lux-corner-bl::after  { bottom: 0; left: 0; }
-
-.vault-card.luxury .lux-corner-br { bottom: 4px; right: 4px; }
-.vault-card.luxury .lux-corner-br::before { bottom: 0; right: 0; }
-.vault-card.luxury .lux-corner-br::after  { bottom: 0; right: 0; }
-
-/* Hover */
+/* Sempre l'hover ma specifico per queste card*/
 .vault-card.luxury:hover {
-  transform: translateY(-6px);
-  border-color: rgba(var(--accent-1-light), .7);
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.7),
-    inset 0 1px 0 rgba(var(--accent-1-light), .28),
-    inset 0 -1px 0 rgba(0,0,0,.8),
-    0 22px 45px -15px rgba(0,0,0,.9),
-    0 35px 65px -22px rgba(0,0,0,.75),
-    0 0 35px -8px rgba(var(--accent-1), .30);
+  transform: translateY(-6px); border-color: rgba(var(--accent-1-light), .7);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.7), inset 0 1px 0 rgba(var(--accent-1-light), .28), inset 0 -1px 0 rgba(0,0,0,.8), 0 22px 45px -15px rgba(0,0,0,.9), 0 35px 65px -22px rgba(0,0,0,.75), 0 0 35px -8px rgba(var(--accent-1), .30);
 }
-.vault-card.luxury:hover::after { opacity: .9; }
+.vault-card.luxury:hover::after { opacity: .9; } /* Illumina la diagonale */
 
-/* Variante hero */
-.vault-card.luxury-hero {
-  background:
-    radial-gradient(ellipse at 0% 0%, rgba(120,160,210,.06) 0%, transparent 55%),
-    radial-gradient(ellipse at 100% 100%, rgba(var(--accent-1-dark), .10) 0%, transparent 60%),
-    linear-gradient(160deg, #0e1322 0%, #0a0a14 55%, #06060a 100%);
-}
-.vault-card.luxury-master {
-  background:
-    radial-gradient(ellipse at 0% 0%, rgba(var(--accent-2), .10) 0%, transparent 55%),
-    radial-gradient(ellipse at 100% 100%, rgba(var(--accent-1-dark), .12) 0%, transparent 60%),
-    linear-gradient(160deg, #1c0c08 0%, #100604 55%, #06030a 100%);
-}
-.vault-card.luxury-player {
-  background:
-    radial-gradient(ellipse at 0% 0%, rgba(60,140,90,.07) 0%, transparent 55%),
-    radial-gradient(ellipse at 100% 100%, rgba(var(--accent-1-dark), .12) 0%, transparent 60%),
-    linear-gradient(160deg, #0d160f 0%, #08100a 55%, #050608 100%);
-}
+/* ------- Componenti interni (bordi, contenitori...) */
+/* Testa della card - sigillo + titolo */
+.lux-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.lux-head-text { min-width: 0; flex: 1; } /* Evita che il flex-item sfori se il testo è lungo */
 
-/* Header carta */
-.lux-head {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
+/* Sigillo circolare con la lettera dell'eroe */
 .lux-sigil {
-  width: 56px; height: 56px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background:
-    radial-gradient(circle at 35% 30%, #1a1208 0%, #0a0604 70%);
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.9),
-    inset 0 0 0 2px rgba(var(--accent-1), .6),
-    inset 0 0 0 3px rgba(0,0,0,.7),
-    0 0 18px rgba(var(--accent-1), .18),
-    0 4px 8px rgba(0,0,0,.8);
+  width: 56px; height: 56px; flex-shrink: 0; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #1a1208 0%, #0a0604 70%);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.9), inset 0 0 0 2px rgba(var(--accent-1), .6), inset 0 0 0 3px rgba(0,0,0,.7), 0 0 18px rgba(var(--accent-1), .18), 0 4px 8px rgba(0,0,0,.8);
 }
 .lux-sigil::before {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
-  background: conic-gradient(from 220deg,
-    rgba(var(--accent-1-light), .0) 0deg,
-    rgba(var(--accent-1-light), .45) 60deg,
-    rgba(var(--accent-1-dark), .0) 140deg,
-    rgba(var(--accent-1-light), .30) 240deg,
-    rgba(var(--accent-1-light), .0) 360deg);
-  mask: radial-gradient(circle, transparent 64%, #000 65%);
-  -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%);
-  pointer-events: none;
+  content: ''; position: absolute; inset: 4px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 220deg, rgba(var(--accent-1-light), .0) 0deg, rgba(var(--accent-1-light), .45) 60deg, rgba(var(--accent-1-dark), .0) 140deg, rgba(var(--accent-1-light), .30) 240deg, rgba(var(--accent-1-light), .0) 360deg);
+  mask: radial-gradient(circle, transparent 64%, #000 65%); -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%);
 }
-.lux-sigil span {
-  font-family: 'Cinzel', serif;
-  font-weight: 900;
-  font-size: 1.45rem;
-  background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold-pale) 50%, var(--gold-deep) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 1px 0 rgba(0,0,0,.4);
-  letter-spacing: .02em;
-}
-.lux-head-text { min-width: 0; flex: 1; }
+.lux-sigil span { font-family: 'Cinzel', serif; font-weight: 900; font-size: 1.45rem; background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold-pale) 50%, var(--gold-deep) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 1px 0 rgba(0,0,0,.4); letter-spacing: .02em; }
 
-.vault-card.luxury .card-tag {
-  font-family: 'Cinzel', serif !important;
-  font-size: .58rem;
-  letter-spacing: .28em;
-  text-transform: uppercase;
-  color: rgba(var(--accent-1), 0.958) !important;
-  margin-bottom: .35rem;
-}
+.vault-card.luxury .card-tag { font-family: 'Cinzel', serif !important; font-size: .58rem; letter-spacing: .28em; text-transform: uppercase; color: rgba(var(--accent-1), 0.958) !important; margin-bottom: .35rem; }
 .vault-card.luxury .card-tag::before { display: none; }
-.vault-card.luxury .card-title {
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
-  font-size: 1.2rem;
-  letter-spacing: .04em;
-  line-height: 1.2;
-  background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold-pale) 55%, var(--bronze) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.vault-card.luxury .card-sub {
-  font-family: 'Crimson Text', Georgia, serif;
-  font-style: italic;
-  color: rgba(var(--accent-1-light), .68);
-  font-size: .95rem;
-  line-height: 1.45;
-  margin-top: .25rem;
-}
-.vault-card.luxury .card-level {
-  position: absolute;
-  top: 14px; right: 14px;
-  font-family: 'Cinzel', serif;
-  font-size: .6rem;
-  letter-spacing: .18em;
-  color: var(--gold-pale);
-  background: linear-gradient(180deg, rgba(20,12,4,.95), rgba(8,5,2,.95));
-  border: 1px solid rgba(var(--accent-1), .55);
-  border-radius: 99px;
-  padding: .25rem .65rem;
-  box-shadow:
-    inset 0 1px 0 rgba(var(--accent-1-light), .25),
-    0 2px 6px rgba(0,0,0,.6);
-}
+.vault-card.luxury .card-title { font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.2rem; letter-spacing: .04em; line-height: 1.2; background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold-pale) 55%, var(--bronze) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.vault-card.luxury .card-sub { font-family: 'Crimson Text', Georgia, serif; font-style: italic; color: rgba(var(--accent-1-light), .68); font-size: .95rem; line-height: 1.45; margin-top: .25rem; }
+.vault-card.luxury .card-level { position: absolute; top: 14px; right: 14px; font-family: 'Cinzel', serif; font-size: .6rem; letter-spacing: .18em; color: var(--gold-pale); background: linear-gradient(180deg, rgba(20,12,4,.95), rgba(8,5,2,.95)); border: 1px solid rgba(var(--accent-1), .55); border-radius: 99px; padding: .25rem .65rem; box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), .25), 0 2px 6px rgba(0,0,0,.6); }
 
-.lux-divider {
-  height: 1px;
-  margin: .9rem 0 .8rem;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(var(--accent-1), .0) 6%,
-    rgba(var(--accent-1), .55) 30%,
-    rgba(var(--accent-1-light), .85) 50%,
-    rgba(var(--accent-1), .55) 70%,
-    rgba(var(--accent-1), 0) 94%,
-    transparent 100%);
-  position: relative;
-}
-.lux-divider::after {
-  content: '◆';
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-  background: #0a0604;
-  padding: 0 .45rem;
-  font-size: .55rem;
-  color: var(--gold-mid);
-  text-shadow: 0 0 6px rgba(var(--accent-1-light), .4);
-}
+/* Sezione per la lineetta centrale col rombino */
+.lux-divider { height: 1px; margin: .9rem 0 .8rem; background: linear-gradient(90deg, transparent 0%, rgba(var(--accent-1), .0) 6%, rgba(var(--accent-1), .55) 30%, rgba(var(--accent-1-light), .85) 50%, rgba(var(--accent-1), .55) 70%, rgba(var(--accent-1), 0) 94%, transparent 100%); position: relative; }
+.lux-divider::after { content: '◆'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #0a0604; padding: 0 .45rem; font-size: .55rem; color: var(--gold-mid); text-shadow: 0 0 6px rgba(var(--accent-1-light), .4); }
 
-.lux-meta, .lux-invite {
-  margin-top: .9rem;
-  font-family: 'Crimson Text', Georgia, serif;
-  font-size: .82rem;
-  text-align: center;
-  color: rgba(var(--accent-1-light), .7);
-}
-.lux-invite {
-  letter-spacing: .04em;
-  color: var(--gold-pale);
-  background: linear-gradient(180deg, rgba(28,18,6,.85), rgba(14,8,3,.85));
-  border: 1px solid rgba(var(--accent-1), .35);
-  border-radius: 3px;
-  padding: .45rem .6rem;
-  position: relative;
-}
-.lux-invite strong {
-  font-family: 'Cinzel', serif;
-  letter-spacing: .35em;
-  margin-left: .4rem;
-  color: var(--gold-light);
-}
+.lux-meta, .lux-invite { margin-top: .9rem; font-family: 'Crimson Text', Georgia, serif; font-size: .82rem; text-align: center; color: rgba(var(--accent-1-light), .7); }
 .lux-meta strong { color: var(--gold-pale); font-weight: 700; }
+.lux-invite { letter-spacing: .04em; color: var(--gold-pale); background: linear-gradient(180deg, rgba(28,18,6,.85), rgba(14,8,3,.85)); border: 1px solid rgba(var(--accent-1), .35); border-radius: 3px; padding: .45rem .6rem; position: relative; }
+.lux-invite strong { font-family: 'Cinzel', serif; letter-spacing: .35em; margin-left: .4rem; color: var(--gold-light); }
 
-.lux-actions {
-  margin-top: auto;
-  padding-top: 1rem;
-}
-.lux-btn {
-  width: 100%;
-  padding: .7rem 1rem !important;
-  font-family: 'Cinzel', serif !important;
-  font-size: .78rem !important;
-  letter-spacing: .22em;
-  text-transform: uppercase;
-  color: #1a1108 !important;
-  background:
-    linear-gradient(180deg, var(--gold-bright) 0%, var(--gold-mid) 45%, var(--gold-deep) 100%) !important;
-  border: 1px solid rgba(0,0,0,.55) !important;
-  border-radius: 2px !important;
-  box-shadow:
-    inset 0 1px 0 rgba(var(--accent-1-light), .7),
-    inset 0 -1px 0 rgba(0,0,0,.4),
-    0 0 0 1px rgba(var(--accent-1), .4),
-    0 6px 14px -4px rgba(0,0,0,.7);
-  transition: all .25s ease;
-}
-.lux-btn:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(var(--accent-1-light), .85),
-    inset 0 -1px 0 rgba(0,0,0,.4),
-    0 0 0 1px rgba(var(--accent-1-light), .65),
-    0 0 22px rgba(var(--accent-1), .35),
-    0 8px 16px -4px rgba(0,0,0,.8);
-}
+/* Pulsanti entra e cancella */
+.lux-actions { margin-top: auto; padding-top: 1rem; }
+.lux-btn { width: 100%; padding: .7rem 1rem !important; font-family: 'Cinzel', serif !important; font-size: .78rem !important; letter-spacing: .22em; text-transform: uppercase; color: #1a1108 !important; border-radius: 2px !important; transition: all .25s ease; background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold-mid) 45%, var(--gold-deep) 100%) !important; border: 1px solid rgba(0,0,0,.55) !important; box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), .7), inset 0 -1px 0 rgba(0,0,0,.4), 0 0 0 1px rgba(var(--accent-1), .4), 0 6px 14px -4px rgba(0,0,0,.7); }
+.lux-btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), .85), inset 0 -1px 0 rgba(0,0,0,.4), 0 0 0 1px rgba(var(--accent-1-light), .65), 0 0 22px rgba(var(--accent-1), .35), 0 8px 16px -4px rgba(0,0,0,.8); }
+.vault-card.luxury .btn-delete { top: 10px; right: 10px; width: 22px; height: 22px; font-size: 14px; background: rgba(8,4,4,.85); color: rgba(var(--accent-2-light), .7); border: 1px solid rgba(var(--accent-2-light), .35); z-index: 6; }
+.vault-card.luxury .btn-delete:hover { background: var(--red-dark); color: var(--gold-light); border-color: var(--gold-mid); }
 
-/* Pulsante elimina più discreto, in tema */
-.vault-card.luxury .btn-delete {
-  top: 10px; right: 10px;
-  width: 22px; height: 22px;
-  font-size: 14px;
-  background: rgba(8,4,4,.85);
-  color: rgba(var(--accent-2-light), .7);
-  border: 1px solid rgba(var(--accent-2-light), .35);
-  z-index: 6;
-}
-.vault-card.luxury .btn-delete:hover {
-  background: var(--red-dark);
-  color: var(--gold-light);
-  border-color: var(--gold-mid);
-}
-
-/* ════════════════════════════════════════════════
-   Luxury Card e modali che condividono la pallette (ma vengono usati in parti diverse del codice quindi sono separati)
-   ════════════════════════════════════════════════ */
-
+/* ------------ Sovrascrivo cose che stanno già in modali, ma specifiche per le card luxury */
 :root {
   --lux-gold-1:   var(--gold-bright);
   --lux-gold-2:   var(--gold-mid);
@@ -461,117 +157,35 @@
   --lux-gold-4:   var(--gold-deepest);
   --lux-ink:      #08040a;
   --lux-paper:    #1a1108;
-  --lux-shadow:   0 30px 60px -20px rgba(0,0,0,.85),
-                  0 18px 30px -12px rgba(0,0,0,.7);
-  --lux-metal: linear-gradient(
-    180deg,
-    var(--gold-deeper) 0%,
-    var(--bronze) 12%,
-    var(--gold-bright) 28%,
-    var(--gold-mid) 50%,
-    var(--gold-deep) 72%,
-    var(--gold-pale) 88%,
-    var(--gold-deeper) 100%
-  );
+  --lux-shadow:   0 30px 60px -20px rgba(0,0,0,.85), 0 18px 30px -12px rgba(0,0,0,.7);
+  --lux-metal: linear-gradient(180deg, var(--gold-deeper) 0%, var(--bronze) 12%, var(--gold-bright) 28%, var(--gold-mid) 50%, var(--gold-deep) 72%, var(--gold-pale) 88%, var(--gold-deeper) 100%);
 }
 
-/* Header sezione ricostruito — */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  position: relative;
-}
-.section-header::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 1px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(var(--accent-1), .0) 4%,
-    rgba(var(--accent-1), .55) 18%,
-    rgba(var(--accent-1-light), .85) 50%,
-    rgba(var(--accent-1), .55) 82%,
-    rgba(var(--accent-1), 0) 96%,
-    transparent 100%);
-  filter: drop-shadow(0 1px 0 rgba(0,0,0,.6));
-}
-.section-header h2 {
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
-  font-size: 1.35rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  margin: 0;
-  background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold-pale) 45%, var(--bronze) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 1px 0 rgba(0,0,0,.4);
-}
-.section-cta {
-  padding: .55rem 1.2rem !important;
-  font-size: .8rem !important;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-}
+.section-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1rem; position: relative; }
+.section-header::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); background: linear-gradient(90deg, transparent 0%, rgba(var(--accent-1), .0) 4%, rgba(var(--accent-1), .55) 18%, rgba(var(--accent-1-light), .85) 50%, rgba(var(--accent-1), .55) 82%, rgba(var(--accent-1), 0) 96%, transparent 100%); }
+.section-header h2 { font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.35rem; letter-spacing: .14em; text-transform: uppercase; margin: 0; text-shadow: 0 1px 0 rgba(0,0,0,.4); background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold-pale) 45%, var(--bronze) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.section-cta { padding: .55rem 1.2rem !important; font-size: .8rem !important; letter-spacing: .14em; text-transform: uppercase; }
 
-/* Pannelli centrali: vetro dorato traslucido — */
+/* Override sezione dashboard */
 .dashboard-section {
-  position: relative;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background-clip: padding-box;
-
-  /* Vetro dorato: tono caldo ambrato traslucido */
-  background:
-    linear-gradient(160deg,
-      rgba(var(--accent-1-dark), 0.32) 0%,
-      rgba(var(--accent-1-dark), 0.28) 45%,
-      rgba(40, 25, 12, 0.34) 100%);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  backdrop-filter: blur(14px) saturate(1.2);
-  box-shadow:
-    inset 0 1px 0 rgba(var(--accent-1-light), 0.18),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(var(--accent-1), 0.45),
-    0 0 0 2px rgba(0, 0, 0, 0.65),
-    0 0 0 3px rgba(var(--accent-1-dark), 0.35),
-    0 30px 80px -25px rgba(0, 0, 0, 0.85),
-    0 0 90px -20px rgba(var(--accent-1), 0.18);
-  padding: 2.6rem 2.8rem 2.8rem;
+  position: relative; border-radius: 6px; border: 1px solid transparent; background-clip: padding-box; padding: 2.6rem 2.8rem 2.8rem;
+  background: linear-gradient(160deg, rgba(var(--accent-1-dark), 0.32) 0%, rgba(var(--accent-1-dark), 0.28) 45%, rgba(40, 25, 12, 0.34) 100%);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(var(--accent-1-light), 0.18), inset 0 0 0 1px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(var(--accent-1), 0.45), 0 0 0 2px rgba(0, 0, 0, 0.65), 0 0 0 3px rgba(var(--accent-1-dark), 0.35), 0 30px 80px -25px rgba(0, 0, 0, 0.85), 0 0 90px -20px rgba(var(--accent-1), 0.18);
+  /* Angoli ad L che purtroppo non appaiono */
+  background-image: linear-gradient(var(--lux-gold-2), var(--lux-gold-2)), linear-gradient(var(--lux-gold-2), var(--lux-gold-2)), linear-gradient(var(--lux-gold-2), var(--lux-gold-2)), linear-gradient(var(--lux-gold-2), var(--lux-gold-2)), linear-gradient(var(--lux-gold-2), var(--lux-gold-2)), linear-gradient(var(--lux-gold-2), var(--lux-gold-2)), linear-gradient(var(--lux-gold-2), var(--lux-gold-2)), linear-gradient(var(--lux-gold-2), var(--lux-gold-2)), linear-gradient(160deg, rgba(var(--accent-1-dark), 0.32) 0%, rgba(var(--accent-1-dark), 0.28) 45%, rgba(40, 25, 12, 0.34) 100%);
+  background-repeat: no-repeat;
+  background-size: 22px 1px, 1px 22px, 22px 1px, 1px 22px, 22px 1px, 1px 22px, 22px 1px, 1px 22px, 100% 100%;
+  background-position: 14px 14px, 14px 14px, calc(100% - 14px) 14px, calc(100% - 14px) 14px, 14px calc(100% - 14px), 14px calc(100% - 14px), calc(100% - 14px) calc(100% - 14px), calc(100% - 14px) calc(100% - 14px), 0 0;
 }
-
-/* Linea dorata superiore più ricca */
 .dashboard-section::before {
-  left: 4%; right: 4%;
-  height: 2px;
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(var(--accent-1-dark), .0) 6%,
-      rgba(var(--accent-1), .7) 22%,
-      rgba(var(--accent-1-light), .95) 50%,
-      rgba(var(--accent-1), .7) 78%,
-      rgba(var(--accent-1-dark), .0) 94%,
-      transparent 100%);
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,.7));
+  content: ''; position: absolute; left: 4%; right: 4%; height: 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.7)); z-index: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(var(--accent-1-dark), .0) 6%, rgba(var(--accent-1), .7) 22%, rgba(var(--accent-1-light), .95) 50%, rgba(var(--accent-1), .7) 78%, rgba(var(--accent-1-dark), .0) 94%, transparent 100%);
 }
-
-/* Riflesso vitreo: highlight superiore + alone caldo */
 .dashboard-section::after {
-  background:
-    radial-gradient(ellipse 80% 35% at 50% 0%, rgba(var(--accent-1-light), 0.16) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 50% at 100% 100%, rgba(var(--accent-1), 0.10) 0%, transparent 65%),
-    linear-gradient(165deg, rgba(var(--accent-1-light), 0.08) 0%, transparent 40%);
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse 80% 35% at 50% 0%, rgba(var(--accent-1-light), 0.16) 0%, transparent 70%), radial-gradient(ellipse 60% 50% at 100% 100%, rgba(var(--accent-1), 0.10) 0%, transparent 65%), linear-gradient(165deg, rgba(var(--accent-1-light), 0.08) 0%, transparent 40%);
 }
-
-/* Layering: pseudo dietro al contenuto */
-.dashboard-section::before, .dashboard-section::after { z-index: 0; }
 .dashboard-section > * { position: relative; z-index: 1; }
 
 /* Angoli ad "L" dorati sovrapposti al vetro (senza coprire il fondo) */
@@ -705,3 +319,5 @@
   flex-shrink: 0;
   opacity: 0.85;
 }
+.blur-code { filter: blur(5px); transition: filter 0.3s ease; cursor: pointer; user-select: text !important; }
+.blur-code:hover, .blur-code:active { filter: blur(0); }

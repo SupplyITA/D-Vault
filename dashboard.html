@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>D-Vault — Dashboard</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/dashboard.css" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -21,7 +19,6 @@
   <link rel="stylesheet" href="css/modals.css" />
   <link rel="stylesheet" href="css/chat.css" />
   <link rel="stylesheet" href="css/tabs-layout.css" />
-  <link rel="stylesheet" href="css/tables.css" />
   <link rel="stylesheet" href="css/sweetalert-theme.css" />
   <link rel="stylesheet" href="css/themes.css" />
   <link rel="stylesheet" href="css/interactive-sheet.css">
@@ -87,6 +84,17 @@
 </script>
 
 <body class="dashboard-page">
+
+  <!-- Sezione per l'overlay di orientamento landascape che dobbiamo rimettere qui
+       fuori da qualsiasi sezione della dashboard.
+       Viene attivato in dashboard.js (attivaOverlayLandscape) ogni volta che l'utente
+       entra in una campagna, indipendentemente dalla posizione di scroll -->
+  <div id="global-landscape-overlay" class="force-landscape-overlay">
+    <button onclick="esciDalTavolo()"; style="position:absolute; top:1rem; right:1rem; background:transparent; border:1px solid rgba(255,255,255,0.3); color:#fff; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.85rem;">✕ Esci</button>
+    <i class="fa-solid fa-mobile-screen rotate-icon"></i>
+    <h2 class="rotate-title">Ruota il Dispositivo</h2>
+    <p class="rotate-text">Il Tavolo da Gioco richiede una visuale più ampia.<br>Gira il telefono in orizzontale per giocare.</p>
+  </div>
 
   <div class="dash-bg"></div>
   <div class="dash-bg-overlay"></div>
@@ -314,6 +322,14 @@
 
   <!-- Sezione Master -->
   <section id="campaign-detail" class="detail-section">
+     <!-- Overlay per forzare l'orientamento orizzontale -->
+    <div id="global-landscape-overlay" class="force-landscape-overlay">
+      <button onclick="esciDalTavolo()"; showDashMain(); style="position:absolute; top:1rem; right:1rem; background:transparent; border:1px solid rgba(255,255,255,0.3); color:#fff; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.85rem;">✕ Esci</button>
+      <i class="fa-solid fa-mobile-screen rotate-icon"></i>
+      <h2 class="rotate-title">Ruota il Dispositivo</h2>
+      <p class="rotate-text">Il Tavolo da Gioco richiede una visuale più ampia.<br>Gira il telefono in orizzontale per giocare.</p>
+    </div>
+
     <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
       <button id="btn-back-campaign" class="btn-ghost" style="margin: 0;">← Torna all'Archivio</button>
       <h1 id="campaign-detail-title" style="font-family: 'Cinzel', serif; font-size: 2.2rem; color: #e8c97e; margin: 0;">Nome Campagna</h1>
@@ -492,6 +508,14 @@
 
   <!-- Sezione: Giocatore in Partita -->
   <section id="player-campaign-detail" class="detail-section">
+
+    <!-- Overlay per forzare l'orientamento orizzontale -->
+    <div id="global-landscape-overlay" class="force-landscape-overlay">
+      <button onclick="esciDalTavolo()"; showDashMain(); style="position:absolute; top:1rem; right:1rem; background:transparent; border:1px solid rgba(255,255,255,0.3); color:#fff; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.85rem;">✕ Esci</button>
+      <i class="fa-solid fa-mobile-screen rotate-icon"></i>
+      <h2 class="rotate-title">Ruota il Dispositivo</h2>
+      <p class="rotate-text">Il Tavolo da Gioco richiede una visuale più ampia.<br>Gira il telefono in orizzontale per giocare.</p>
+    </div>
     <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
       <button id="btn-back-player-camp" class="btn-ghost" style="margin: 0;">← Esci dal Tavolo</button>
       <div>

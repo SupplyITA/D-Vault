@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
           
           Swal.fire({
             title: 'Bentornato, Eroe!',
-            text: 'I cancelli del Vault si aprono per te.',
+            text: 'I cancelli del regno si aprono per te.',
             icon: 'success',
             timer: 1500, 
             showConfirmButton: false,
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Controllo validazione Password (elegante con SweetAlert2)
+      // Controlliamo se la password è valida (utilizzando la libreria SweetAlert2 che fa gli alert più carini)
       if (data.password !== data.confirm) {
         Swal.fire({
             title: 'Errore Magico',
@@ -229,13 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Particles (Intatto)
+  // Generazione particelle spawn
   const container = document.getElementById('particles');
   if (container) spawnParticles(container, 25);
 
 });
 
-// Funzione per particelle random 
+// Funzione per particelle random animate
 function spawnParticles(container, count) {
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');

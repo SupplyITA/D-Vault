@@ -99,20 +99,19 @@ window.aggiungiSegnalino = function(latlng, mappa, isLocal = true, owner = State
 
     // Calcola mId:
     // - mostro/npc: ID univoco con timestamp+random (illimitati, ognuno distinto)
-    // - eroe/color: ID basato su owner+tipo (uno solo per owner)
-    // - se arriva dal socket ha già markerId → lo usa sempre
+    // - eroe/color: ID basato su colui che lo piazza +tipo (uno solo per owner)
+    // - se arriva dal socket rimuove il precedente mID per evitare duplicati
     const mId = tokenInfo.markerId
         ? tokenInfo.markerId
         : (tokenInfo.tipo === 'mostro' || tokenInfo.tipo === 'npc')
             ? `${tokenInfo.tipo}_${tokenInfo.nome || 'x'}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`
             : `${owner}_${tokenInfo.tipo || 'color'}_${tokenInfo.nome || owner}`;
 
-    // Vincolo unicità: solo eroe e color (uno per owner)
-    // Il precheck rimuove solo se è un aggiornamento via socket (isLocal=false)
+    //Per rendere il segnalino unico, se sei il master
     // oppure se è un piazzamento locale di eroe/color
     if (tokenInfo.tipo === 'eroe' || !tokenInfo.tipo || tokenInfo.tipo === 'color') {
         if (isLocal) {
-            // Controllo duplicato locale
+            // Controllo se ci sono duplicazioni
             let duplicato = false;
             mappa.eachLayer(layer => {
                 if (layer instanceof L.Marker && layer.proprietario === owner) {
@@ -137,9 +136,9 @@ window.aggiungiSegnalino = function(latlng, mappa, isLocal = true, owner = State
             toRemove.forEach(l => mappa.removeLayer(l));
         }
     }
-    // mostro e npc: nessuna rimozione previa, ID sempre univoco
+    // mostro e npc: nessuna rimozione, ID sempre univoco per ogni mostro, così non ci sono duplicati
 
-    // --- 1. PERMESSI ---
+    // Controllo se l'utente è il master della campagna 
     const isMaster = ($('campaign-detail')?.style.display === 'block');
     const canDrag = isMaster
         || (owner === State.username)
@@ -148,7 +147,7 @@ window.aggiungiSegnalino = function(latlng, mappa, isLocal = true, owner = State
     const userColor = getColorForUser(owner);
     let customIcon;
 
-    // --- 2. ICONA ---
+    // Icone dei vari token nella mappa
     if (tokenInfo.type === 'image' && tokenInfo.url) {
         customIcon = L.divIcon({
             html: `<img src="${tokenInfo.url}" style="width:40px;height:40px;border-radius:50%;border:3px solid ${userColor};box-shadow:0 4px 10px rgba(0,0,0,0.8);object-fit:cover;background:#111;">`,
@@ -166,7 +165,7 @@ window.aggiungiSegnalino = function(latlng, mappa, isLocal = true, owner = State
     marker.tokenInfo = tokenInfo;
     marker.markerId = mId;
 
-    // --- 3. TOOLTIP ---
+    // Visualizzazione nomi dei vari token con il passaggio del mouse, hit
     const isPing = !tokenInfo.tipo || tokenInfo.tipo === 'color';
     const nomeDisplay = tokenInfo.nome || owner;
     const fotoUrl = (!isPing && tokenInfo.type === 'image' && tokenInfo.url) ? tokenInfo.url : null;
@@ -187,7 +186,7 @@ window.aggiungiSegnalino = function(latlng, mappa, isLocal = true, owner = State
         { permanent: false, direction: 'top', className: 'vault-marker-tooltip', opacity: 1 }
     );
 
-    // --- 4. DRAG ---
+    // trasporto segnalini nella mappa, così li possiamo muovere
     if (canDrag) {
         marker.on('dragend', () => {
             const newPos = marker.getLatLng();
@@ -201,7 +200,7 @@ window.aggiungiSegnalino = function(latlng, mappa, isLocal = true, owner = State
         });
     }
 
-    // --- 5. RIMOZIONE ---
+    // funzione per cancellare i segnalini, solo se sei il master o se sei il giocatore che l'ha piazzato
     const gestisciRimozione = () => {
         const puoRimuovere = isMaster
             || marker.proprietario === State.username
@@ -221,7 +220,7 @@ window.aggiungiSegnalino = function(latlng, mappa, isLocal = true, owner = State
     marker.on('dblclick', gestisciRimozione);
     if (isPing) marker.on('click', gestisciRimozione);
 
-    // --- 6. SOCKET ---
+    // Collegamento col socket per il server per sincronizzare 
     if (socket && isLocal) {
         const campName = $('campaign-detail-title')?.dataset.campname || $('player-camp-title')?.textContent.trim();
         socket.emit('invia_segnalino', {
@@ -291,7 +290,7 @@ window.renderizzaStoricoMappe = function(campName) {
         deleteBtn.onmouseout = () => { deleteBtn.style.background = 'rgba(139, 26, 26, 0.85)'; };
         
         deleteBtn.onclick = (e) => {
-            e.stopPropagation(); // Impedisce al click di propagarsi al container della mappa
+            e.stopPropagation();
             rimuoviMappaDaStorico(url, camp.campName);
         };
         

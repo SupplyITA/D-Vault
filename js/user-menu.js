@@ -1,25 +1,32 @@
-/* ════════════════════════════════════════════════
-   USER MENU — Account / Statistiche / Impostazioni / Tema
-   ════════════════════════════════════════════════ */
+/* USER MENU — account / statistiche / impostazioni / tema */
+
 (function () {
   //  Carica il theme per primac cosa, così siamo sicuri che si carichi subito
   const THEME_KEY = 'dvault_theme';
-  const VALID = ['vault', 'verdant', 'azure'];
+  const VALID = ['vault', 'verdant', 'azure']; // Lista dei temi permessi per sicurezza
+
   function applyTheme(name) {
-    if (!VALID.includes(name)) name = 'vault';
+    if (!VALID.includes(name)) name = 'vault';  // Fallback di sicurezza - se viene iniettao un tema non valido, mette il default 'vault'
     document.documentElement.setAttribute('data-theme', name);
     try { localStorage.setItem(THEME_KEY, name); } catch (_) {}
   }
+
+  // Applica il tema appena il file viene letto
   applyTheme(localStorage.getItem(THEME_KEY) || 'vault');
   window.DVaultTheme = { apply: applyTheme, current: () => localStorage.getItem(THEME_KEY) || 'vault' };
 
-  // Helpers 
+  // Helpers - recupera username dell'utente
   const username = () => localStorage.getItem('dvault_username') || 'Avventuriero';
-
+  
+  // Recuperare tutti i dati dell'utente dal database (asincrono)
   async function fetchData() {
     const me = username();
     try {
-      const [s, c] = await Promise.all([
+      const [s, c] = await Promise.all([   // Promise.all esegue due richieste HTTP fetch IN PARALLELO, velocizza un po'
+
+        //Se utilizzavamo un ciclo for per esempio, ogni chiamata doveva aspettare quella di prima, il che 
+        //diventa lento con molti dati. Questo lancia tutto insieme
+
         fetch(`/api/sheets?user=${encodeURIComponent(me)}`).then(r => r.json()),
         fetch(`/api/campaigns?user=${encodeURIComponent(me)}`).then(r => r.json())
       ]);
@@ -29,6 +36,7 @@
     }
   }
 
+  // PArte per le statistiche: prende in input i dati estratti dal db e calcola le statistiche
   function computeStats({ sheets, campaigns }) {
     const me = username();
     const totalSheets = sheets.length;
@@ -40,54 +48,88 @@
   }
 
   // Parte per l'Account 
-async function openAccount() {
-    const me = username();
-    
-    // Recupero dati reali dal server
-    let userData = { email: '...', fullName: '...', avatar: '' };
-    try {
-        const resp = await fetch(`/api/user-info?username=${encodeURIComponent(me)}`);
-        userData = await resp.json();
-    } catch (e) { console.error("Errore caricamento dati utente"); }
+  async function openAccount() {
+      const me = username();
+      
+      // Recupero dati reali dal server
+      let userData = { email: '...', fullName: '...', avatar: '' };
+      try {
+          const resp = await fetch(`/api/user-info?username=${encodeURIComponent(me)}`);
+          userData = await resp.json();
+      } catch (e) { console.error("Errore caricamento dati utente"); }
 
   
+      // Lettura delle preferenze audio salvate in locale
+      const sfxEnabled = localStorage.getItem('dvault_sfx') !== 'false';
+      const bgmEnabled = localStorage.getItem('dvault_bgm') !== 'false';
 
-    Swal.fire({
-      title: 'Archivio Personale',
-      showCloseButton: true,
-      showConfirmButton: false,
-      background: '#0a0505',
-      color: '#e8c97e',
-      customClass: { popup: 'vault-account-popup' },
-      html: `
-        <div class="vault-account-container">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <div class="user-avatar-wrapper" style="position: relative; display: inline-block; cursor: pointer;" id="trigger-avatar-options">
-              <img id="user-profile-pic" src="${userData.avatar || 'https://via.placeholder.com/100'}" 
-                   style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--gold-mid); object-fit: cover; transition: transform 0.2s;"
-                   title="Clicca per gestire l'avatar">
-              <div style="position: absolute; bottom: 5px; right: 5px; background: #8b1a1a; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #000;">
-                <i class="fa-solid fa-camera" style="font-size: 0.7rem; color: white;"></i>
+      Swal.fire({
+        title: 'Archivio Personale',
+        showCloseButton: true,
+        showConfirmButton: false,
+        background: '#0a0505',
+        color: '#e8c97e',
+        customClass: { popup: 'vault-account-popup' },
+        html: `
+          <div class="vault-account-container">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div class="user-avatar-wrapper" style="position: relative; display: inline-block; cursor: pointer;" id="trigger-avatar-options">
+                <img id="user-profile-pic" src="${userData.avatar || 'https://via.placeholder.com/100'}" 
+                    style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--gold-mid); object-fit: cover; transition: transform 0.2s;"
+                    title="Clicca per gestire l'avatar">
+                <div style="position: absolute; bottom: 5px; right: 5px; background: #8b1a1a; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #000;">
+                  <i class="fa-solid fa-camera" style="font-size: 0.7rem; color: white;"></i>
+                </div>
+              </div>
+              <h3 style="margin: 10px 0 0 0; font-family: 'Cinzel', serif;">${userData.fullName}</h3>
+              <p style="color: #888; font-size: 0.8rem; margin: 0;">@${me}</p>
+            </div>
+
+            <div style="text-align: left; margin-bottom: 15px;">
+              <label style="color: var(--gold-dim); font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Email della Locanda</label>
+              <div style="display: flex; gap: 10px;">
+                  <input type="email" id="acc-email-input" value="${userData.email}" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #444; color: #fff; border-radius: 4px;">
+                  <button id="btn-save-email" class="btn-primary" style="margin:0; padding: 0 15px; font-size: 0.8rem;">Salva</button>
               </div>
             </div>
             <h3 style="margin: 10px 0 0 0; font-family: 'Cinzel', serif;">${me}</h3>
             <p style="color: #888; font-size: 0.8rem; margin: 0;">@${me}</p>
           </div>
 
-          <div style="text-align: left; margin-bottom: 15px;">
-             <label style="color: var(--gold-dim); font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Email della Locanda</label>
-             <div style="display: flex; gap: 10px;">
-                <input type="email" id="acc-email-input" value="${userData.email}" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #444; color: #fff; border-radius: 4px;">
-                <button id="btn-save-email" class="btn-primary" style="margin:0; padding: 0 15px; font-size: 0.8rem;">Salva</button>
-             </div>
-          </div>
+            <div style="text-align: left; margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(212,168,67,0.1);">
+              <label style="color: var(--gold-dim); font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 10px; letter-spacing: 1px;">Sicurezza Account</label>
+              <button id="btn-change-pwd-acc" class="btn-ghost" style="width: 100%; font-size: 0.85rem; padding: 10px;">
+                <i class="fa-solid fa-key" style="margin-right: 8px;"></i> Modifica Parola d'Ordine
+              </button>
+            </div>
 
-          <div style="text-align: left; margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(212,168,67,0.1);">
-            <label style="color: var(--gold-dim); font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 10px; letter-spacing: 1px;">Sicurezza Account</label>
-            <button id="btn-change-pwd-acc" class="btn-ghost" style="width: 100%; font-size: 0.85rem; padding: 10px;">
-              <i class="fa-solid fa-key" style="margin-right: 8px;"></i> Modifica Parola d'Ordine
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+              <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Suoni Interfaccia</span>
+              <input type="checkbox" id="acc-toggle-sfx" ${sfxEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+              <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Musica Sottofondo</span>
+              <input type="checkbox" id="acc-toggle-bgm" ${bgmEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
+            </div>
+
+            <div class="vault-divider" style="height: 1px; background: rgba(212,168,67,0.1); margin: 5px 0;"></div>
+
+            <style>
+              #btn-acc-delete {
+                width: 100%; background: rgba(139, 26, 26, 0.05); border: 1px solid #333; color: #8b1a1a; 
+                padding: 10px; cursor: pointer; border-radius: 4px; font-size: 0.75rem; margin-top: 10px; transition: all 0.3s ease;
+              }
+              #btn-acc-delete:hover {
+                background: rgba(139, 26, 26, 0.25); border-color: #8b1a1a; color: #ff4d4d; box-shadow: 0 0 12px rgba(139, 26, 26, 0.4);
+              }
+            </style>
+            <button id="btn-acc-delete">
+                <i class="fa-solid fa-skull-crossbones"></i> Elimina Account
             </button>
           </div>
+          <input type="file" id="acc-avatar-file" style="display:none;" accept="image/*">
+        
 
 
           <div class="vault-divider" style="height: 1px; background: rgba(212,168,67,0.1); margin: 5px 0;"></div>
@@ -188,17 +230,43 @@ async function openAccount() {
                 showConfirmButton: false, customClass: { popup: 'vault-popup' }
               });
             }
-          });
-        });
+        // didOpen chiamata da SweetAlert SOLO DOPO che l'HTML qui sopra è stato montato nel DOM.
+        // Serve per poter assegnare gli EventListener, altrimenti avremmo null.
+        didOpen: () => {
+          // Carico file avatar
+          const avatarInput = document.getElementById('acc-avatar-file');
+          avatarInput.addEventListener('change', async (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
 
-        // Funzione scelta galleria
-        window.selectGalleryAvatar = async (url) => {
-            await fetch('/api/user/avatar', { 
-                method: 'POST', headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify({ username: me, avatarUrl: url }) 
+              // FormData per gestire l'invio di un file binario via AJAX, il json stringify non può farlo
+              const formData = new FormData();
+              formData.append('avatar', file); 
+              formData.append('username', me);
+
+              try {
+                  Swal.showLoading();
+                  const resp = await fetch('/api/user/upload-avatar', { method: 'POST', body: formData });
+                  const data = await resp.json();
+                  if (data.success) {
+                      Swal.fire({ title: 'Ritratto Caricato!', icon: 'success', timer: 1000, showConfirmButton: false });
+                      setTimeout(() => location.reload(), 1000);
+                  }
+              } catch (err) { console.error("Errore upload:", err); }
+          });
+
+          // Parte per salvare mail
+          document.getElementById('btn-save-email').addEventListener('click', async () => {
+            const newEmail = document.getElementById('acc-email-input').value;
+            const res = await fetch('/api/update-email', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ username: me, newEmail })
             });
             location.reload();
-        };
+             if(res.ok) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Email aggiornata!', showConfirmButton: false, timer: 1500 });
+          });
+          
+
         
         document.getElementById('btn-change-pwd-acc').onclick = () => { Swal.close(); openChangePassword(); };
         
@@ -208,16 +276,91 @@ async function openAccount() {
                 text: "Sei davvero pronto a cancellare la tua intera esistenza dal Vault?",
                 icon: 'warning', showCancelButton: true, confirmButtonText: 'Sì, cancellami',
                 confirmButtonColor: '#8b1a1a', background: '#0a0505', color: '#d4a843'
-            });
-            if (confirm.isConfirmed) {
-                const res = await fetch(`/api/delete-account?username=${encodeURIComponent(me)}`, { method: 'DELETE' });
-                if (res.ok) { localStorage.clear(); window.location.href = 'index.html'; }
-            }
-        };
-      }
-    });
-}
+          });
 
+          // Avatar parte di gestione
+          document.getElementById('trigger-avatar-options').addEventListener('click', () => {
+            Swal.fire({
+              title: 'Gestisci Avatar',
+              text: "Scegli come cambiare il tuo volto nel Vault",
+              showDenyButton: true, showCancelButton: true,
+              confirmButtonText: ' Ingrandisci', denyButtonText: ' Carica Foto', cancelButtonText: ' Galleria',
+              background: '#1a1108', color: '#d4a843', customClass: { popup: 'vault-popup' }
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                // Apre semplicemente la foto in grande
+                Swal.fire({ imageUrl: userData.avatar, imageWidth: 400, background: 'rgba(0,0,0,0.9)', showConfirmButton: false });
+              } else if (result.isDenied) {
+                // Apre la finestra di selezione del SO
+                avatarInput.click(); 
+              } else if (result.dismiss === Swal.DismissReason.cancel) {
+
+                // Immagini pre scelte
+                const galleryImages = [
+                  { url: '/img/avatars/male-1.jpg', label: 'Guerriero' },
+                  { url: '/img/avatars/male-2.jpg', label: 'Mago' },
+                  { url: '/img/avatars/female-1.jpg', label: 'Esploratrice' },
+                  { url: '/img/avatars/female-2.jpg', label: 'Incantatrice' },
+                  { url: '/img/avatars/other-1.jpg', label: 'Creatura' }
+                ];
+
+                // Sottomenù dinamico per stampare tutte le immagini
+                Swal.fire({
+                  title: 'Galleria del Vault', background: '#0a0505', color: '#e8c97e',
+                  html: `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 10px;">
+                      ${galleryImages.map(img => `
+                        <div class="gallery-item" onclick="selectGalleryAvatar('${img.url}')" style="cursor:pointer; text-align:center;">
+                          <img src="${img.url}" style="width:80px; height:80px; border-radius:50%; border:2px solid #444; object-fit:cover; transition:0.3s;">
+                          <p style="font-size:0.7rem; margin-top:5px; color:#888;">${img.label}</p>
+                        </div>`).join('')}
+                    </div>`,
+                  showConfirmButton: false, customClass: { popup: 'vault-popup' }
+                });
+              }
+            });
+          });
+
+          // Funzione scelta galleria esposta globalmente (window) per poter essere richiamata da onclick
+          window.selectGalleryAvatar = async (url) => {
+              await fetch('/api/user/avatar', { 
+                  method: 'POST', headers: {'Content-Type':'application/json'}, 
+                  body: JSON.stringify({ username: me, avatarUrl: url }) 
+              });
+              location.reload();
+          };
+
+          // Gestione toggle suoni
+          document.getElementById('acc-toggle-sfx').addEventListener('change', (e) => {
+              if (window.DVaultAudio) window.DVaultAudio.toggleSfx(e.target.checked);
+              else localStorage.setItem('dvault_sfx', e.target.checked);
+          });
+
+          document.getElementById('acc-toggle-bgm').addEventListener('change', (e) => {
+              if (window.DVaultAudio) window.DVaultAudio.toggleBgm(e.target.checked);
+              else localStorage.setItem('dvault_bgm', e.target.checked);
+          });
+          
+          // Rotte per cambio password e cancellazione account
+          document.getElementById('btn-change-pwd-acc').onclick = () => { Swal.close(); openChangePassword(); };
+          
+          // Per eliminare l'account chiede da leconda modifica
+          document.getElementById('btn-acc-delete').onclick = async () => {
+              const confirm = await Swal.fire({
+                  title: 'AZIONE SUPREMA',
+                  text: "Sei davvero pronto a cancellare la tua intera esistenza dal Vault?",
+                  icon: 'warning', showCancelButton: true, confirmButtonText: 'Sì, cancellami',
+                  confirmButtonColor: '#8b1a1a', background: '#0a0505', color: '#d4a843'
+              });
+              if (confirm.isConfirmed) {
+                  const res = await fetch(`/api/delete-account?username=${encodeURIComponent(me)}`, { method: 'DELETE' });
+                  if (res.ok) { localStorage.clear(); window.location.href = 'index.html'; }
+              }
+          };
+        }
+      });
+  }
+  
+  // Cambia password con popup dalla sezione account
   function openChangePassword() {
     Swal.fire({
       title: 'Cambia Password',
@@ -239,6 +382,8 @@ async function openAccount() {
       background: '#1a1108',
       color: '#d4a843',
       customClass: { popup: 'vault-popup' },
+
+      // Cattura i dati del popup prima di chiuderlo
       preConfirm: () => {
         const pwd = document.getElementById('vault-new-pwd-field').value;
         if (!pwd) { Swal.showValidationMessage('Inserisci una password'); return false; }
@@ -246,6 +391,7 @@ async function openAccount() {
         return { pwd };
       }
     }).then(async (r) => {
+      // Vede se l'utente ha premuto annulla
       if (!r.isConfirmed) return;
 
       try {
@@ -288,6 +434,7 @@ async function openAccount() {
     });
     const data = await fetchData();
     const s = computeStats(data);
+    // Inietta il DOM nel popup aperto
     Swal.update({
       html: `
         <div class="vault-stats">
@@ -308,6 +455,7 @@ async function openAccount() {
   // Temi (usando popup)
   function openTheme() {
     const cur = window.DVaultTheme.current();
+    // I quadratini d'anteprima
     const themes = [
       { id: 'vault',   name: 'Vault',    a: '#5a0f0f', b: '#e8c97e', c: '#1a0a0a' },
       { id: 'verdant', name: 'Verdant',  a: '#8a2756', b: '#7be0a8', c: '#0c1f17' },
@@ -335,11 +483,13 @@ async function openAccount() {
       showCloseButton: false,
       confirmButtonText: 'Chiudi',
       customClass: { popup: 'vault-popup' },
+      // Applica l'EventListener ad ogni card di tema per innescare lo switch in tempo reale
       didOpen: () => {
         document.querySelectorAll('.theme-card').forEach(card => {
           card.addEventListener('click', () => {
             const t = card.dataset.theme;
             applyTheme(t);
+            // Aggiorna il bordo oro della card attiva
             document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('is-active'));
             card.classList.add('is-active');
           });
@@ -438,7 +588,10 @@ document.getElementById('set-bgm-vol').addEventListener('input', (e) => {
   localStorage.setItem('dvault_bgm_vol', v);
   if (window.DVaultAudio) window.DVaultAudio.setBgmVolume(v);
 });
+        // Routing verso il gestore temi
         document.getElementById('set-theme').addEventListener('click', () => { Swal.close(); openTheme(); });
+
+        // Logica per svuotare tutto l'array delle note di TUTTO
         document.getElementById('set-clear-notes').addEventListener('click', async () => {
           
           const result = await Swal.fire({
@@ -483,6 +636,7 @@ document.getElementById('set-bgm-vol').addEventListener('input', (e) => {
             Swal.fire({ title: 'Errore magico', text: 'Non è stato possibile comunicare con il Vault.', icon: 'error' });
           }
         });
+        // Eventi per l'eliminazione di Schede o Campagne
         document.getElementById('set-clear-sheets').addEventListener('click', () => confirmAndDelete('schede'));
         document.getElementById('set-clear-camps').addEventListener('click',  () => confirmAndDelete('campagne'));
       }
@@ -491,12 +645,14 @@ document.getElementById('set-bgm-vol').addEventListener('input', (e) => {
     Swal.getConfirmButton().textContent = 'Chiudi';
   }
 
+  // Funzione ricorsiva per l'eliminazione di tutto
   async function confirmAndDelete(kind) {
     const me = username();
     const data = await fetchData();
     const items = kind === 'schede'
       ? data.sheets
       : data.campaigns.filter(c => c.owner === me);
+    // Se non ci sono elementi, avvisa l'utente ed esce dalla funzione
     if (!items.length) return Swal.fire({ title: 'Niente da cancellare', icon: 'info', customClass: { popup: 'vault-popup' } });
 
     const ok = await Swal.fire({
@@ -509,6 +665,9 @@ document.getElementById('set-bgm-vol').addEventListener('input', (e) => {
     if (!ok.isConfirmed) return;
 
     try {
+      // Promise.all combinato con array.map()
+      // Comodo, lancia tutte le richieste di delete contemporaneamente (una chiamata API per ogni scheda e campagna)
+      // e aspetta che tutte siano andate a buon fine prima di continuare, veloce e sicuro
       if (kind === 'schede') {
         await Promise.all(items.map(it =>
           fetch(`/api/sheets/${encodeURIComponent(it.charName)}?user=${encodeURIComponent(me)}`, { method: 'DELETE' })
@@ -526,12 +685,16 @@ document.getElementById('set-bgm-vol').addEventListener('input', (e) => {
   }
 
   // Unisce i dati da dashboard e server 
+
+  // Invece di fare un AddEventListener per 50 bottoni diversi, usa un solo listener 
+  // sul documento root che "intercetta" i click. Risparmia RAm
   document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-user-action]');
     if (!el) return;
     e.preventDefault();
     const action = el.dataset.userAction;
 
+    // Chiude tutti i menu a tendina aperti resettando la classe 'open'
     document.querySelectorAll('.nav-dd.open, [data-dd-target].open').forEach(n => n.classList.remove('open'));
     if (action === 'account')  return openAccount();
     if (action === 'stats')    return openStats();

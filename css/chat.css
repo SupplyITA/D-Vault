@@ -1,139 +1,108 @@
+/* ------ Chat laterale con struttura ad albero*/
+/* ------ Colori definiti in themes.css */
+
+/* Contenitore principale della chat */
 .right-panel-box {
-  flex: 1;
+  flex: 1;         /* Occupa tutto lo spazio verticale disponibile nel pannello destro */
+  display: flex;
+  flex-direction: column;     /* Per posizionare tutto in verticale (messaggi, dadi, barra di input) */
+  overflow: hidden;           /* Mantiene il contenuto all'interno del contenitore */
   background: rgba(14, 5, 5, 0.92);
   border: 1px solid rgba(var(--accent-1-dark), 0.18);
   border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
+/* Intestazione del conetenitore */
 .panel-box-title {
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  letter-spacing: 0.1em;
-  color: var(--gold-mid);
-  background: rgba(10,4,4,0.9);
-  padding: 10px 15px;
+  font-family: var(--font-display); font-size: 0.82rem; letter-spacing: 0.1em;
+  color: var(--gold-mid); background: rgba(10,4,4,0.9);
+  padding: 10px 15px; margin: 0; text-transform: uppercase;
   border-bottom: 1px solid rgba(var(--accent-1-dark), 0.14);
-  margin: 0;
-  text-transform: uppercase;
 }
 
+/* Area dei messaggi */
 .chat-messages {
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
+  flex: 1;      /* Occupa tutto lo spazio centrale */
+  overflow-y: auto;     /* La barra di scorrimento appare quando ci sono troppi messaggi */
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: column;   /* Messaggi incolonnati (ad albero) */
+  padding: 15px; gap: 10px;  /* Distanza tra i messaggi */
 }
 
-.chat-msg { padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; line-height: 1.4; max-width: 85%; }
-.chat-msg.system {
-  background: rgba(255,255,255,0.04);
-  color: #888;
-  align-self: center;
-  text-align: center;
-  font-style: italic;
-  font-size: 0.8rem;
+/* -------- Struttura dei messaggi*/
+.chat-msg { 
+  padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; line-height: 1.4; 
+  max-width: 85%;   /* Se un messaggio è tropppo lungo non occupa tutto lo spazio orizzontale */
 }
-.chat-msg.me {
-  background: rgba(var(--accent-1-dark), 0.12);
-  color: #fff;
-  align-self: flex-end;
-  border: 1px solid rgba(var(--accent-1-dark), 0.3);
-  border-bottom-right-radius: 0;
-}
-.chat-msg.other {
-  background: rgba(255,255,255,0.07);
-  color: #ddd;
-  align-self: flex-start;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-bottom-left-radius: 0;
-}
-.chat-msg .sender {
-  display: block;
-  font-size: 0.7rem;
-  color: var(--gold-mid);
-  margin-bottom: 3px;
-  font-family: var(--font-display);
+/* Nome di chi ha inviato il messaggio */
+.chat-msg .sender { 
+  display: block; font-size: 0.7rem; color: var(--gold-mid); margin-bottom: 3px; font-family: var(--font-display); 
 }
 
-.chat-input-area {
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  background: rgba(8,3,3,0.8);
-  border-top: 1px solid rgba(var(--accent-1-dark), 0.12);
-}
-.chat-input-area input {
-  flex: 1;
-  background: rgba(20,8,8,0.9);
-  color: white;
-  border: 1px solid rgba(var(--accent-1-dark), 0.2);
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-family: 'Crimson Text', Georgia, serif;
-}
-.chat-input-area input:focus {
-  outline: none;
-  border-color: rgba(var(--accent-1), 0.4);
+/* Messaggio di sistema di entrata/uscita/uscita forzata dalla campagna
+   gestito dai Socket in server.js con l'evento 'entra_stanza_campagna' */
+.chat-msg.system { 
+  background: rgba(255,255,255,0.04); color: #888; 
+  align-self: center;          /* Lo posiziona al centro dell'area messaggi */
+  text-align: center; font-style: italic; font-size: 0.8rem; 
 }
 
-/* --- STILE BOTTONI DADI --- */
+/* Messaggi inviat da me */
+.chat-msg.me { 
+  background: rgba(var(--accent-1-dark), 0.12); color: #fff; 
+  align-self: flex-end;        /* Il messaggio appare a destra (quindi "end" dell'area messaggi) */
+  border: 1px solid rgba(var(--accent-1-dark), 0.3); 
+  border-bottom-right-radius: 0; /* Angolo tagliato a destra per un effetto fumetto tipo */
+}
+
+/* Messaggi ricevut da altri */
+.chat-msg.other { 
+  background: rgba(255,255,255,0.07); color: #ddd; 
+  align-self: flex-start;      /* Il messaggio appare a sinistra (quindi "start" dell'area messaggi) */
+  border: 1px solid rgba(255,255,255,0.1); 
+  border-bottom-left-radius: 0;  /* Angolo tagliato a sinistra come prima*/
+}
+
+/* Messaggi PRIVATI visti solo da mittente e destinatario */
+.chat-msg.private { 
+  background: rgba(139, 26, 26, 0.15); border: 1px dashed rgba(139, 26, 26, 0.6); color: var(--gold-mid); 
+  align-self: flex-start; font-style: italic; border-bottom-left-radius: 0; 
+}
+
+/* ------ Lancio dei dadi*/
+
+/* Pulsanti  set di dadi (d4, d6, d20..., d100) */
 .btn-dice {
-    background: rgba(10, 5, 5, 0.6);
-    border: 1px solid rgba(212, 168, 67, 0.4);
-    color: var(--gold, #e8c97e);
-    padding: 4px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    font-weight: bold;
-    transition: all 0.2s;
+  background: rgba(10, 5, 5, 0.6); border: 1px solid rgba(212, 168, 67, 0.4); border-radius: 4px;
+  color: var(--gold, #e8c97e); font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: bold;
+  padding: 4px 10px; cursor: pointer; transition: all 0.2s;
+}
+.btn-dice:hover { 
+  background: rgba(212, 168, 67, 0.2); border-color: var(--gold-bright, #f5d98e); 
+  transform: translateY(-2px); box-shadow: 0 2px 8px rgba(212, 168, 67, 0.3); 
 }
 
-.btn-dice:hover {
-    background: rgba(212, 168, 67, 0.2);
-    border-color: var(--gold-bright, #f5d98e);
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(212, 168, 67, 0.3);
-}
-/* --- STILE MESSAGGIO DADO IN CHAT --- */
+/* Messaggio del risultato del dado nella chat (appare come un messaggio ricevuto da altri/inviato da me) */
 .chat-msg.dice {
-    background: linear-gradient(90deg, rgba(212, 168, 67, 0.15) 0%, transparent 100%);
-    border-left: 3px solid var(--gold, #e8c97e);
-    color: var(--gold-bright, #f5d98e);
-    font-style: italic;
-    padding: 8px 12px;
-    margin: 6px 0;
+  background: linear-gradient(90deg, rgba(212, 168, 67, 0.15) 0%, transparent 100%); /* Sfumatura (gradient) dorata */
+  border-left: 3px solid var(--gold, #e8c97e); /* Barra oro verticale per separarlo dagli altri messaggi visivamente */
+  color: var(--gold-bright, #f5d98e); font-style: italic; padding: 8px 12px; margin: 6px 0;
 }
+.chat-msg.dice .sender { color: var(--gold, #e8c97e); font-weight: bold; font-style: normal; }
 
-.chat-msg.dice .sender {
-    color: var(--gold, #e8c97e);
-    font-weight: bold;
-    font-style: normal;
+/* ------- Barra di input e bottoni di invio*/
+.chat-input-area { 
+  display: flex; gap: 10px; padding: 10px; background: rgba(8,3,3,0.8); 
+  border-top: 1px solid rgba(var(--accent-1-dark), 0.12); 
 }
-
-/* Chat privata */
-.chat-msg.private {
-  background: rgba(139, 26, 26, 0.15); 
-  border: 1px dashed rgba(139, 26, 26, 0.6);
-  color: var(--gold-mid);
-  align-self: flex-start;
-  font-style: italic;
-  border-bottom-left-radius: 0;
+.chat-input-area input { 
+  flex: 1; background: rgba(20,8,8,0.9); color: white; border: 1px solid rgba(var(--accent-1-dark), 0.2); 
+  padding: 8px 12px; border-radius: 4px; font-family: 'Crimson Text', Georgia, serif; 
 }
+.chat-input-area input:focus { outline: none; border-color: rgba(var(--accent-1), 0.4); } /* Diventa luminoso */
 
-.whisper-box {
-  color: #aaa;
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  margin-bottom: 5px;
-  min-height: 18px;
-  text-align: right;
-  padding-right: 5px;
-  transition: opacity 0.3s ease;
+/* Box dei messaggi privati - è una piccola barra che a livello di frontend non viene percepito*/
+.whisper-box { 
+  color: #aaa; font-family: var(--font-display); font-size: 0.8rem; margin-bottom: 5px; 
+  min-height: 18px; text-align: right; padding-right: 5px; transition: opacity 0.3s ease; 
 }

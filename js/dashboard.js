@@ -99,7 +99,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
 
   if($('dash-main')) $('dash-main').style.display = 'none';
   if($('player-campaign-detail')) $('player-campaign-detail').style.display = 'block';
-  
+
   if($('player-camp-title')) $('player-camp-title').textContent = campName;
   if($('player-camp-char')) {
       $('player-camp-char').textContent = "Eroe: " + sheet.charName;
@@ -113,7 +113,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
       $('tab-pc-mappa').style.height = '100%';
       $('tab-pc-mappa').style.width = '100%';
   }
-
+  attivaOverlayLandscape();
   costruisciSchedaInterattiva('pc-sheet-container', sheet, false);
 
   // Gestisce chat giocatore 
@@ -322,10 +322,79 @@ async function caricaTokenEroi(campName) {
         });
     } catch(e) { console.error('Errore caricamento token eroi:', e); }
 }
+
+// Overlay globale (fuori dal flusso di pagina) che garantisce che l'avviso "Ruota il dispositivo" 
+// sia sempre visibile indipendentemente dal livello di scroll nella dashboard.
+
+let _inCampagna = false;
+
+function attivaOverlayLandscape() {
+  const overlay = document.getElementById('global-landscape-overlay');
+  if (!overlay) return;
+
+  _inCampagna = true;
+
+  const isLandscape = window.screen.orientation?.type?.includes('landscape') || window.innerWidth > window.innerHeight;
+  if (!isLandscape) {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    overlay.classList.add('active-lock');
+    document.body.classList.add('lock-scroll');
+  }
+
+  if (overlay._resizeHandler) {
+    window.removeEventListener('resize', overlay._resizeHandler);
+    window.removeEventListener('orientationchange', overlay._resizeHandler);
+  }
+
+  const handler = () => {
+    if (!_inCampagna) return; // se non siamo in campagna, non fare nulla
+    setTimeout(() => {
+      const isLandscape = window.screen.orientation?.type?.includes('landscape') || window.innerWidth > window.innerHeight;
+      if (isLandscape) {
+        overlay.classList.remove('active-lock');
+        document.body.classList.remove('lock-scroll');
+        document.body.classList.add('is-landscape-game');
+      } else {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        overlay.classList.add('active-lock');
+        document.body.classList.add('lock-scroll');
+        document.body.classList.remove('is-landscape-game');
+      }
+    }, 300);
+  };
+
+  window.addEventListener('orientationchange', handler);
+  window.addEventListener('resize', handler);
+  overlay._resizeHandler = handler;
+}
+
+window.disattivaOverlayLandscape = function() {
+  _inCampagna = false;
+  const overlay = document.getElementById('global-landscape-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('active-lock');
+  document.body.classList.remove('lock-scroll');
+  document.body.classList.remove('is-landscape-game');
+  if (overlay._resizeHandler) {
+    window.removeEventListener('resize', overlay._resizeHandler);
+    window.removeEventListener('orientationchange', overlay._resizeHandler);
+    delete overlay._resizeHandler;
+  }
+}
+
+const esciDalTavolo = () => {
+    if (socket) socket.emit('esci_stanza_campagna');
+    AudioManager.updateBackgroundMusic(false);
+    disattivaOverlayLandscape();
+    renderGrid(); applicaTilt3D(); closeDetails();
+};
+window.esciDalTavolo = esciDalTavolo;
+
 function openCampaignDetail(camp) {
   hideAllSections(); 
   if($('dm-chat-messages')) caricaMemoriaChat(camp.campName, 'dm-chat-messages');
-  if($('dash-main')) $('dash-main').style.display = 'none'; 
+  if($('dash-main')) $('dash-main').style.display = 'none';
+  attivaOverlayLandscape(); 
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
   if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName; $('campaign-detail-title').dataset.campname = camp.campName;
   //Salvataggio della storia
@@ -418,22 +487,18 @@ function openCampaignDetail(camp) {
       leafletMap.fitBounds(bounds);
       setTimeout(() => leafletMap.invalidateSize(), 100);
 
-      // [DENTRO dashboard.js -> openCampaignDetail]
       leafletMap.off('click');
       leafletMap.on('click', function(e) {
-        // 1. Recuperiamo le info del token selezionato nel menu laterale
         const info = { 
             type: window.activeTokenType, 
             url: window.activeTokenUrl, 
             ...window.activeTokenExtra 
         };
 
-        // 2. Determiniamo chi sarà il proprietario "legale" del segnalino
+       // Scegliamo chi è il proprietario del segnalino
         // Se è un eroe, l'owner deve essere il giocatore (ownerUsername), altrimenti è il Master (State.username)
         const effettivoOwner = (info.tipo === 'eroe' && info.ownerUsername) ? info.ownerUsername : State.username;
-        // FORZIAMO lo stesso ID che userebbe il giocatore
         info.markerId = `${effettivoOwner}_${info.tipo || 'color'}_${info.nome || effettivoOwner}`;
-        // 3. Chiamiamo la funzione che abbiamo appena pulito in map.js
         aggiungiSegnalino(e.latlng, leafletMap, true, effettivoOwner, info);
     });
   }
@@ -472,6 +537,8 @@ async function caricaEroiParty(campName) {
                             <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
                         </div>
                     </div>
+                    <div class="party-hero-name"> ${escHtml(eroe.charName)}</div>
+                    <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
                 </div>
                 ${isMaster && eroe.owner !== State.username ? 
                     `<button onclick="cacciaGiocatore('${escHtml(eroe.owner)}', '${escHtml(campName)}')" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #8b1a1a; cursor: pointer; font-size: 1.1rem;" title="Caccia dal tavolo"><i class="fa-solid fa-user-slash"></i></button>` 
@@ -542,6 +609,7 @@ window.visualizzaSchedaParty = function(charName) {
 function openSheetDetail(sheet) {
   if (!sheet) return;
   hideAllSections(); 
+  disattivaOverlayLandscape();
   
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
@@ -782,7 +850,8 @@ function bindEvents() {
       const campName = $('campaign-detail-title').textContent.trim();
       
       if (!file) return alert("Seleziona prima un'immagine dal tuo PC!");
-
+      
+      // Come per la gestione dellr immagini degli avatar, non possiamo usare  json stringify per file binari
       const formData = new FormData();
       formData.append('mapImage', file);
       formData.append('username', State.username); 

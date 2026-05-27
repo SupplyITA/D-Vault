@@ -65,6 +65,8 @@ export async function costruisciSchedaInterattiva(containerId, sheetData, isRead
         </div>`;
 
         // Livelli da 1 a 9
+        // per far si che gli slot siano selezionabili finché ci ritroviamo entro il limite, usiamo un array che viene riempito di 0, poi usuiamo .map per  trasformare ogni 
+        // 0 in un pezzo di html (quindi lo slot selezionabile)
         for (let lvl = 1; lvl <= 9; lvl++) {
             spellsHTML += `
             <div class="spell-level-box">
@@ -81,14 +83,16 @@ export async function costruisciSchedaInterattiva(containerId, sheetData, isRead
                             <input type="checkbox" name="prep${lvl}_${i}" class="spell-prep-check">
                             <input type="text" name="spell${lvl}_${i}" class="spell-name-input">
                         </div>
-                    `).join('')}
+                    `).join('')} 
                 </div>
             </div>`;
-        }
+        } // i vari checkbox sono salvati con un nome che viene assegnato in base alla spell e se è preprato o meno
         spellsContainer.innerHTML = spellsHTML;
         spellsContainer.dataset.generated = "true";
     }
 
+    // questa funzione verrà attivata ogni. singola. volta. che verrà digitato qualcosa da parte dell'utente nella scheda
+    // serve letteralmente per assicurarsi che ogni calcolo sia rispettato e fatto per bene 
 const aggiornaTuttiICalcoli = () => {
         const livelloInput = document.querySelector('#vue-scheda-personaggio input[type="number"]');
         const livello = livelloInput ? parseInt(livelloInput.value) : (parseInt(sheetData.charLevel) || 1);
@@ -160,7 +164,7 @@ const aggiornaTuttiICalcoli = () => {
             form.elements['hpMax'].value = hpLivello1 + hpLivelliSucc;
         }
 
-        //  GESTIONE MEZZ'INCANTATORI E SLOT TOTALI 
+        //  Slto per intantatori e mezzi incantatori
         let slots = [];
         if (infoClasse.fullCaster) {
             slots = dndData.spellSlots[livello] || [];
@@ -286,7 +290,8 @@ aggiornaTuttiICalcoli();
         form.addEventListener('input', (e) => {
             if (e.target.type === 'checkbox') return;
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => salvaDati(false), 800); 
+            debounceTimer = setTimeout(() => salvaDati(false), 800); // Punto forte, serve per assicurarsi che SQLite non esploda,
+            //  se una perosna non scrive per poco meno di 1 secondo, salva il testo. Così ci assicuriamo che salvi sempre senza far impazzire il database
         });
 
         // Salva immediatamente quando si spunta una checkbox o si preme invio
@@ -306,8 +311,8 @@ aggiornaTuttiICalcoli();
             await salvaDati(false); 
             
             Swal.fire({
-                title: 'Forgiatura del PDF in corso...',
-                text: 'Gli gnomi archivisti stanno preparando il documento.',
+                title: 'Stilatura del PDF in corso...',
+                text: 'Gli scribi stanno preparando il documento.',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
@@ -315,7 +320,7 @@ aggiornaTuttiICalcoli();
             try {
 
                 const urlTemplate = '/pdf/scheda_dnd_5e.pdf'; 
-                const arrayBuffer = await fetch(urlTemplate).then(res => {
+                const arrayBuffer = await fetch(urlTemplate).then(res => { // grazie a questa funzione, scannerizziamo (con fetch) ogni singola porta del file per capire cos'è dove 
                     if(!res.ok) throw new Error("Template PDF non trovato!");
                     return res.arrayBuffer();
                 });
@@ -329,6 +334,8 @@ aggiornaTuttiICalcoli();
                 const profBonus = "+" + (Math.ceil(livello / 4) + 1);
 
                 // Compila i campi leggendo il JSON salvato nel database
+                // questo è il ciò che ci permette di far funzionare la scheda interattiva, controlla OGNI SINGOLO SLOT DEL PDF (sono circa 300 caselle o più), le mappa
+                // e capisce come fare per inserirli 
                 try {
                     // Info Base
                     formPdf.getTextField('CharacterName').setText(sheetData.charName || '');
@@ -359,7 +366,7 @@ aggiornaTuttiICalcoli();
                     formPdf.getTextField('Initiative').setText(String(details.initiative || 0));
                     formPdf.getTextField('Speed').setText(String(details.speed || 30));
                     formPdf.getTextField('HPMax').setText(String(details.hpMax || 10));
-                    formPdf.getTextField('HPCurrent').setText(String(details.hpCurrent || details.hpMax || 10));
+                    formPdf.getTextField('HPCurrent').setText(String(''));
                     formPdf.getTextField('HDTotal').setText(String(livello));
                     formPdf.getTextField('HD').setText(details.hitDice || '');
                     formPdf.getTextField('AttacksSpellcasting').setText(details.attacksList || '');

@@ -23,8 +23,9 @@ app.use(express.static(__dirname));
 // Database SQLite
 const db = new sqlite3.Database('./dvault.sqlite', (err) => {
     if (err) console.error("Errore DB:", err.message);
-    else console.log(' Database SQLite connesso con successo.');
+    else console.log(' Database SQLite connesso con successo.'); 
 });
+
 
 // Creazione Tabelle Relazionali
 db.serialize(() => {
@@ -427,22 +428,34 @@ app.get('/api/sheets', (req, res) => {
 
 // Mostra le schede dei giocatori iscritti alla campagna al Master
 app.post('/api/campaigns/set-active-char', (req, res) => {
+    // Questa parte è per selezionare il giocatore e ricollegarlo a quale personaggio sta giocando
     const { campName, owner, charName } = req.body;
+    // Qui invece il server ottiene lo username del player e il nome dell'eroe
     db.get('SELECT activeCharacters FROM campagne WHERE campName = ?', [campName], (err, row) => {
         if (err || !row) return res.status(404).send();
         
+        // Q questo punto il server chiede alla tabella campagne quali giocatori sono connessi (attivi), la qualke contiene una stringa JSON con tutti i dettagli
         let active = {}
         try { active = JSON.parse(row.activeCharacters || "{}");} catch(e){}
     
+        // Qui facciamo un controllo per assicurarci che la stringa da Database venga convertita in oggetto Javascript con .parse (come facciamo per il Lab di Ing inf). Se la colonna
+        // è vuota, usiamo {}
+
+        // po sovrascriviamo o aggiungiamo la chiave dell'utente con il nome del pg, ovvero se vogliamo cambiare personaggio quando ci colleghiamo alla campagna (Anche se non accade praticamente mai)
+
         active[owner] = charName; 
     
+        // INfine l'oggetto viene ritrasformato in stringa di testo puro con stringify ed inviato al file SQL
         db.run('UPDATE campagne SET activeCharacters = ? WHERE campName = ?', [JSON.stringify(active), campName], () => {
             res.json({success: true});
         });
     });
 });
 
+// questo invece serve al master per poter visualizzare le schede dei player 
 app.get('/api/campaigns/:campName/party', (req, res) => {
+
+    // qui prende i vari payload e li analizza per capire quali giocatori sta considerando, chi sono etc, presi da SQL
     const campName = req.params.campName;
     db.get('SELECT activeCharacters FROM campagne WHERE campName = ?', [campName], (err, row) => {
         if(err || !row) return res.status(404).json({error: "Campagna non trovata"});
@@ -450,12 +463,17 @@ app.get('/api/campaigns/:campName/party', (req, res) => {
         let active = {};
         try { active = JSON.parse(row.activeCharacters || "{}"); } catch(e){}
 
+        // a questo punto estrae i nomi dei personaggi (di tuttti i giocatori insomma), li salva in array permettendogli poi di visualizzarli
         const charNames = Object.values(active);
         if (charNames.length === 0) return res.json([]);
+
+        // piccola chicca, questo ci assicura che il server non sappia quanti player ci siano a priori, visto che la campagna può avere dai 3 ai 6 / 7 giocatori 
+        // (o di più ma vorrei conoscere il party che ha così tanti giocatori), quindi si assicura che non cerchi di capire quante persone ci sono, inserisce solo dei ? per l'array di giocatori
         const placeholders = charNames.map(() => '?').join(','); 
         db.all(`SELECT * FROM schede WHERE charName IN (${placeholders})`, charNames, (err, sheets) => {
             if (err) return res.status(500).json({error: err.message});
-            const parsedSheets = (sheets || []).map(s => ({
+            const parsedSheets = (sheets || []).map(s => ({ // la funzione map estrae la lunghissima riga di testo che contiene tutti i dati della scheda e li inserisce in sheetdataDetails 
+            // (quella  che contiene tutti i dettagli delle schede)
                 ...s,
                 sheetDataDetails: s.details ? JSON.parse(s.details) : {}
             }));
@@ -669,7 +687,7 @@ io.on('connection', (socket) => {
         if (socket.username && socket.campName) {
             socket.to(socket.campName).emit('ricevi_messaggio_campagna', {
                 mittente: 'Taverniere',
-                testo: `${socket.username} è tornato all'Archivio.`, // <-- Modificato qui
+                testo: `${socket.username} è tornato all'Archivio.`,
                 type: 'system',
                 campName: socket.campName
             });
@@ -684,7 +702,7 @@ io.on('connection', (socket) => {
         if (socket.username && socket.campName) {
             socket.to(socket.campName).emit('ricevi_messaggio_campagna', {
                 mittente: 'Taverniere',
-                testo: `${socket.username} è svanito nel nulla (disconnesso).`, // <-- Modificato qui
+                testo: `${socket.username} è svanito nel nulla (disconnesso).`,
                 type: 'system',
                 campName: socket.campName
             });
