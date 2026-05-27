@@ -100,7 +100,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
 
   if($('dash-main')) $('dash-main').style.display = 'none';
   if($('player-campaign-detail')) $('player-campaign-detail').style.display = 'block';
-  
+
   if($('player-camp-title')) $('player-camp-title').textContent = campName;
   if($('player-camp-char')) {
       $('player-camp-char').textContent = "Eroe: " + sheet.charName;
@@ -114,7 +114,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
       $('tab-pc-mappa').style.height = '100%';
       $('tab-pc-mappa').style.width = '100%';
   }
-
+  attivaOverlayLandscape();
   costruisciSchedaInterattiva('pc-sheet-container', sheet, false);
 
   // Gestisce chat giocatore 
@@ -262,10 +262,78 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();
 });
 
+// Overlay globale (fuori dal flusso di pagina) che garantisce che l'avviso "Ruota il dispositivo" 
+// sia sempre visibile indipendentemente dal livello di scroll nella dashboard.
+
+let _inCampagna = false;
+
+function attivaOverlayLandscape() {
+  const overlay = document.getElementById('global-landscape-overlay');
+  if (!overlay) return;
+
+  _inCampagna = true;
+
+  const isLandscape = window.screen.orientation?.type?.includes('landscape') || window.innerWidth > window.innerHeight;
+  if (!isLandscape) {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    overlay.classList.add('active-lock');
+    document.body.classList.add('lock-scroll');
+  }
+
+  if (overlay._resizeHandler) {
+    window.removeEventListener('resize', overlay._resizeHandler);
+    window.removeEventListener('orientationchange', overlay._resizeHandler);
+  }
+
+  const handler = () => {
+    if (!_inCampagna) return; // se non siamo in campagna, non fare nulla
+    setTimeout(() => {
+      const isLandscape = window.screen.orientation?.type?.includes('landscape') || window.innerWidth > window.innerHeight;
+      if (isLandscape) {
+        overlay.classList.remove('active-lock');
+        document.body.classList.remove('lock-scroll');
+        document.body.classList.add('is-landscape-game');
+      } else {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        overlay.classList.add('active-lock');
+        document.body.classList.add('lock-scroll');
+        document.body.classList.remove('is-landscape-game');
+      }
+    }, 300);
+  };
+
+  window.addEventListener('orientationchange', handler);
+  window.addEventListener('resize', handler);
+  overlay._resizeHandler = handler;
+}
+
+window.disattivaOverlayLandscape = function() {
+  _inCampagna = false;
+  const overlay = document.getElementById('global-landscape-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('active-lock');
+  document.body.classList.remove('lock-scroll');
+  document.body.classList.remove('is-landscape-game');
+  if (overlay._resizeHandler) {
+    window.removeEventListener('resize', overlay._resizeHandler);
+    window.removeEventListener('orientationchange', overlay._resizeHandler);
+    delete overlay._resizeHandler;
+  }
+}
+
+const esciDalTavolo = () => {
+    if (socket) socket.emit('esci_stanza_campagna');
+    AudioManager.updateBackgroundMusic(false);
+    disattivaOverlayLandscape();
+    renderGrid(); applicaTilt3D(); closeDetails();
+};
+window.esciDalTavolo = esciDalTavolo;
+
 function openCampaignDetail(camp) {
   hideAllSections(); 
   if($('dm-chat-messages')) caricaMemoriaChat(camp.campName, 'dm-chat-messages');
-  if($('dash-main')) $('dash-main').style.display = 'none'; 
+  if($('dash-main')) $('dash-main').style.display = 'none';
+  attivaOverlayLandscape(); 
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
   if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName;
   //Salvataggio della storia
@@ -388,7 +456,7 @@ async function caricaEroiParty(campName) {
         listContainer.innerHTML = eroi.map(eroe => `
             <div class="party-hero-card" style="position: relative;">
                 <div onclick="visualizzaSchedaParty('${eroe.charName}')" style="cursor: pointer; padding-right: 25px;">
-                    <div class="party-hero-name">🛡️ ${escHtml(eroe.charName)}</div>
+                    <div class="party-hero-name"> ${escHtml(eroe.charName)}</div>
                     <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
                 </div>
                 ${isMaster && eroe.owner !== State.username ? 
@@ -460,6 +528,7 @@ window.visualizzaSchedaParty = function(charName) {
 function openSheetDetail(sheet) {
   if (!sheet) return;
   hideAllSections(); 
+  disattivaOverlayLandscape();
   
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
@@ -716,12 +785,6 @@ function bindEvents() {
   });
 
   // Pulsanti indietro (Modificati per avvisare l'uscita dalla chat)
-  const esciDalTavolo = () => {
-      if (socket) socket.emit('esci_stanza_campagna');
-      AudioManager.updateBackgroundMusic(false);
-      renderGrid(); applicaTilt3D(); closeDetails();
-  };
-  
   $('btn-back-campaign')?.addEventListener('click', esciDalTavolo);
   $('btn-back-sheet')?.addEventListener('click', esciDalTavolo);
   $('btn-back-player-camp')?.addEventListener('click', esciDalTavolo);

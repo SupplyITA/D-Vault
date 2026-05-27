@@ -178,3 +178,98 @@
 .lux-empty-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; letter-spacing: .12em; color: var(--gold-bright); text-shadow: 0 0 14px rgba(var(--accent-1), .25); margin: 0; }
 .lux-empty-sub { font-family: var(--font-body); font-style: italic; font-size: .98rem; line-height: 1.55; color: rgba(var(--accent-1-light), .72); max-width: 480px; margin: 0; }
 .lux-empty-sub em { color: var(--gold-bright); font-style: italic; }
+
+
+/* ------------ Overlay di rotazione schermo per le campagne */
+.force-landscape-overlay {
+  display: none; /* Nascosto di default sui dispositivi idonei */
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh; /* Considerazione del perimetro matematico dello schermo */
+  background: #0a0505; 
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 9999999 !important; /* Valore z-index insormontabile per bloccare il rendering sottostante */
+  
+  /* Sistema flexbox configurato per l'allineamento cartesiano perfetto */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  margin: 0 !important; padding: 2rem !important; /* Blocca il padding ereditati dal container padre */
+  pointer-events: auto !important; /* Forza il blocco dei click sull'overlay */
+  touch-action: none !important;    /* Disabilita i gesti touch (zoom/scroll) sull'overlay per non potersi spostare */
+}
+
+/* --------- Overlay globale (#global-landscape-overlay)
+   quando un utente entra in una campagna la classe .active-lock viene aggiunta indipendentemente 
+   dall'orientamento: se il telefono è già in landscape (orizzontale), l'overlay viene rimosso subito nel resize 
+   handler e 5resta visibile finché l'utente non ruota. */
+#global-landscape-overlay.active-lock {
+  display: flex !important;
+}
+
+/* Se l'overlay è attivo e il dispositivo è in landscape (orizzontale)viene nascosto */
+@media screen and (orientation: landscape) {
+  #global-landscape-overlay.active-lock {
+    display: none !important;
+  }
+}
+
+/* Questa serve per bloccare lo scroll del body quando l'overlay è attivo */
+.lock-scroll {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+/* Attivazione solo su telefoni orientati in verticale (Portrait)*/
+@media screen and (max-width: 900px) and (orientation: portrait) {
+  .force-landscape-overlay:not(#global-landscape-overlay) {
+    display: flex !important;
+  }
+}
+
+.force-landscape-overlay .rotate-icon {
+  font-size: 5rem; color: var(--gold-mid); margin-bottom: 2rem;
+  filter: drop-shadow(0 0 15px rgba(var(--accent-1), 0.5));
+  animation: rotatePhoneAnim 2s ease-in-out infinite; /* Suggerimento visivo loopato */
+}
+
+@keyframes rotatePhoneAnim {
+  0% { transform: rotate(0deg); }
+  40% { transform: rotate(-90deg); }
+  60% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* --------- Ottimizzazione e adattamento per il layout in landscape*/
+body.is-landscape-game .sheet-layout {
+  height: calc(100vh - 90px) !important;
+  min-height: auto !important;
+  gap: 12px !important;
+}
+
+body.is-landscape-game .sheet-left {
+  flex: 1.4 !important;
+}
+
+body.is-landscape-game .sheet-right {
+  flex: 1 !important;
+  min-width: auto !important;
+  width: auto !important;
+  padding-right: 0 !important;
+}
+
+body.is-landscape-game .story-textarea { height: 110px !important; }
+body.is-landscape-game #map,
+body.is-landscape-game #pc-map { height: 180px !important; min-height: auto !important; }
+body.is-landscape-game .chat-messages { height: 110px !important; flex: 1 !important; }
+
+body.is-landscape-game .campaign-tabs { margin: 5px 0 !important; padding-bottom: 5px !important; }
+body.is-landscape-game .tab-btn { font-size: 0.9rem !important; }
+body.is-landscape-game #campaign-detail-title,
+body.is-landscape-game #sheet-detail-title,
+body.is-landscape-game #player-camp-title { font-size: 1.3rem !important; }
+body.is-landscape-game .chat-input-area { padding: 6px !important; gap: 5px !important; }
+body.is-landscape-game .chat-input-area input,
+body.is-landscape-game .chat-input-area select { padding: 6px !important; font-size: 0.85rem !important; }
