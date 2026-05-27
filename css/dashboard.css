@@ -244,26 +244,47 @@
 
 /* --------- Ottimizzazione e adattamento per il layout in landscape*/
 body.is-landscape-game .sheet-layout {
-  height: calc(100vh - 90px) !important;
+  height: calc(100vh - 100px) !important;
   min-height: auto !important;
   gap: 12px !important;
+  display: flex !important;
+  flex-direction: row !important;
 }
 
+/* La restringiamo */
 body.is-landscape-game .sheet-left {
-  flex: 1.4 !important;
+  flex: 0.8 !important; 
+  max-width: 35% !important; /* Le impedisce di superare il 35% dello schermo */
+  display: flex !important;
+  flex-direction: column !important;
 }
 
+/* Le diamo la priorità assoluta */
 body.is-landscape-game .sheet-right {
-  flex: 1 !important;
+  flex: 2.2 !important; /* Si prende tutto lo spazio rimanente */
+  max-width: 65% !important;
   min-width: auto !important;
-  width: auto !important;
+  width: 100% !important;
   padding-right: 0 !important;
+} 
+
+body.is-landscape-game .story-textarea { 
+  height: 100% !important; 
+  flex: 1 !important;
 }
 
-body.is-landscape-game .story-textarea { height: 110px !important; }
 body.is-landscape-game #map,
-body.is-landscape-game #pc-map { height: 180px !important; min-height: auto !important; }
-body.is-landscape-game .chat-messages { height: 110px !important; flex: 1 !important; }
+body.is-landscape-game #pc-map { 
+  flex: none !important;
+  height: 100% !important; 
+  width: 100% !important;
+  min-height: 240px !important; 
+}
+
+body.is-landscape-game .chat-messages { 
+  flex: 1 !important; 
+  height: auto !important; 
+}
 
 body.is-landscape-game .campaign-tabs { margin: 5px 0 !important; padding-bottom: 5px !important; }
 body.is-landscape-game .tab-btn { font-size: 0.9rem !important; }
