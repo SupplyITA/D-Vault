@@ -119,11 +119,37 @@ input, select, textarea { font-family: var(--font-body); font-size: 1rem; color:
 .demo-link { text-align: center; animation: fade-up 0.9s 0.4s ease both; }
 
 /* ------- Componente di autenticazione (login/registra) */
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; }
+
 .auth-container {
-  width: 100%; overflow: hidden; background: var(--glass); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  backdrop-filter: blur(14px); /* Effetto vetro opaco */
+  width: 100%; 
+  overflow: hidden; 
+  background: var(--glass); 
+  border: 1px solid var(--border); 
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px); 
   box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(var(--accent-1), 0.05) inset;
   animation: fade-up 0.9s 0.2s ease both;
+}
+
+/* Regola per il Telefono: impila i campi e fa scorrere la card */
+@media (max-width: 768px) {
+  .auth-container {
+    overflow-y: auto !important; 
+    max-height: 90vh !important; 
+    padding-bottom: 25px !important;
+  }
+  
+  .form-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  .form-row .form-group {
+    width: 100% !important;
+    flex: none !important;
+  }
 }
 @keyframes fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 

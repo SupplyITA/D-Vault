@@ -78,11 +78,10 @@
         </form>
 
         <!-- REGISTER -->
-        <form class="auth-form" id="register-form" autocomplete="off">
-          
+        <form class="auth-form" id="register-form" autocomplete="off"> 
           <div class="form-group">
-            <label for="reg-fullname">Nome e Cognome</label>
-            <input type="text" id="reg-fullname" name="fullName" placeholder="Il tuo vero nome" required />
+             <label for="reg-fullname">Nome e Cognome</label>
+             <input type="text" id="reg-fullname" name="fullName" placeholder="Il tuo vero nome" required />
           </div>
 
           <div class="form-group">
@@ -90,12 +89,12 @@
             <input type="text" id="reg-username" name="username" placeholder="Es. DM_Morgana" required />
           </div>
 
-          <div style="display: flex; gap: 10px;">
-            <div class="form-group" style="flex: 1;">
+          <div class="form-row">
+            <div class="form-group">
               <label for="reg-email">Email</label>
               <input type="email" id="reg-email" name="email" placeholder="eroe@regno.com" required />
             </div>
-            <div class="form-group" style="flex: 1;">
+            <div class="form-group">
               <label for="reg-email-confirm">Conferma Email</label>
               <input type="email" id="reg-email-confirm" name="confirmEmail" placeholder="Ripeti email" required />
             </div>
@@ -110,12 +109,12 @@
             </select>
           </div>
 
-          <div style="display: flex; gap: 10px;">
-            <div class="form-group" style="flex: 1;">
+          <div class="form-row">
+            <div class="form-group">
               <label for="reg-password">Password</label>
               <input type="password" id="reg-password" name="password" placeholder="••••••••" required />
             </div>
-            <div class="form-group" style="flex: 1;">
+            <div class="form-group">
               <label for="reg-confirm">Conferma</label>
               <input type="password" id="reg-confirm" name="confirm" placeholder="••••••••" required />
             </div>
@@ -142,7 +141,6 @@
           <button type="submit" class="btn-primary"> Reimposta Password </button>
           <p class="form-note"><a href="#" id="back-to-login">← Torna al Login</a></p>
         </form>
-
       </div>
     </div>
 

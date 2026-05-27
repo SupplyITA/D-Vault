@@ -537,8 +537,6 @@ async function caricaEroiParty(campName) {
                             <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
                         </div>
                     </div>
-                    <div class="party-hero-name"> ${escHtml(eroe.charName)}</div>
-                    <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
                 </div>
                 ${isMaster && eroe.owner !== State.username ? 
                     `<button onclick="cacciaGiocatore('${escHtml(eroe.owner)}', '${escHtml(campName)}')" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #8b1a1a; cursor: pointer; font-size: 1.1rem;" title="Caccia dal tavolo"><i class="fa-solid fa-user-slash"></i></button>` 

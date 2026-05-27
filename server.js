@@ -15,7 +15,7 @@ const fs = require('fs');
 const app = express();
 const server = http.createServer(app); // Questo è per express in un server HTTP
 const io = new Server(server); // Questo è per Socket.io
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json()); // Questo serve ad Express per capire se i dati sono in formato json, prima di passarli alle varie funzioni (login/register etc)
 app.use(express.static(__dirname));
