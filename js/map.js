@@ -1,6 +1,7 @@
 import { $, escHtml } from './utils.js';
 import { State } from './state.js';
 import { socket } from './chat.js';
+import { renderDropdowns } from './ui.js';
 
 
 //Variabili per la mappa, serve per far capire al codice come
@@ -12,6 +13,7 @@ window.playerLeafletMap = null;
 window.currentImageOverlay = null;
 window.activeTokenType = 'color';
 window.activeTokenUrl = null;
+window.activeTokenExtra = {};
 
 // FUnzione per generare un colore univoco n base al nome utente (peak content)
 // ci assicura che ogni utente abbia il proprio colore generato a random
@@ -47,16 +49,37 @@ window.caricaTokenMostri = async function() {
             img.title = nome;
             img.className = 'token-option';
             img.style.cssText = 'width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; object-fit: cover; background: #000;';
-            img.onclick = function() { selezionaToken('image', avatar, this); };
+            img.onclick = function() { selezionaToken('image', avatar, this, { nome: nome, tipo: 'mostro' }); };           
             container.appendChild(img);
         });
+        // Carica gli eroi del party come token selezionabili
+        const campName = $('campaign-detail-title')?.dataset.campname;
+        const containerEroi = $('master-hero-tokens');
+        if (containerEroi && campName) {
+            try {
+                const res2 = await fetch(`/api/campaigns/${encodeURIComponent(campName)}/party`);
+                const eroi = await res2.json();
+                containerEroi.innerHTML = '';
+                eroi.forEach(eroe => {
+                    const avatarUrl = eroe.avatar || '/img/species/_default.jpg';
+                    const img2 = document.createElement('img');
+                    img2.src = avatarUrl;
+                    img2.title = eroe.charName;
+                    img2.className = 'token-option';
+                    img2.style.cssText = 'width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; object-fit: cover; background: #000;';
+                    img2.onclick = function() { selezionaToken('image', avatarUrl, this, { nome: eroe.charName, tipo: 'eroe', ownerUsername: eroe.owner }); };
+                    containerEroi.appendChild(img2);
+                });
+            } catch(e2) { console.error("Errore token eroi:", e2); }
+        }
     } catch(e) { console.error("Errore nel caricamento dei token mostri:", e); }
 }
 
 // Funzione per selezionare il token da piazzare nella mappa 
-window.selezionaToken = function(type, url, element) {
+window.selezionaToken = function(type, url, element, extra = {}) {
     activeTokenType = type;
     activeTokenUrl = url;
+    activeTokenExtra = extra;
     
     // Resetta i bordi di tutti i bottoni e accende quello cliccato
     document.querySelectorAll('.token-option').forEach(el => el.style.borderColor = 'transparent');
@@ -67,58 +90,149 @@ window.selezionaToken = function(type, url, element) {
 // Funzione che aggiunge e permette la rimozione dei segnalini con Proprietà, selezionare token personalizzati e bestiario 
 // da qui gestisco tutto
 window.aggiungiSegnalino = function(latlng, mappa, isLocal = true, owner = State.username, tokenInfo = null) {
-    
-    if (!tokenInfo) {
-        tokenInfo = { type: 'color', url: null };
+    if (!tokenInfo) tokenInfo = { type: 'color', url: null };
+
+    // Proprietario reale: per eroi piazzati dal master, è il giocatore
+    const realOwner = (tokenInfo.tipo === 'eroe' && tokenInfo.ownerUsername)
+        ? tokenInfo.ownerUsername : owner;
+    owner = realOwner;
+
+    // Calcola mId:
+    // - mostro/npc: ID univoco con timestamp+random (illimitati, ognuno distinto)
+    // - eroe/color: ID basato su owner+tipo (uno solo per owner)
+    // - se arriva dal socket ha già markerId → lo usa sempre
+    const mId = tokenInfo.markerId
+        ? tokenInfo.markerId
+        : (tokenInfo.tipo === 'mostro' || tokenInfo.tipo === 'npc')
+            ? `${tokenInfo.tipo}_${tokenInfo.nome || 'x'}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`
+            : `${owner}_${tokenInfo.tipo || 'color'}_${tokenInfo.nome || owner}`;
+
+    // Vincolo unicità: solo eroe e color (uno per owner)
+    // Il precheck rimuove solo se è un aggiornamento via socket (isLocal=false)
+    // oppure se è un piazzamento locale di eroe/color
+    if (tokenInfo.tipo === 'eroe' || !tokenInfo.tipo || tokenInfo.tipo === 'color') {
+        if (isLocal) {
+            // Controllo duplicato locale
+            let duplicato = false;
+            mappa.eachLayer(layer => {
+                if (layer instanceof L.Marker && layer.proprietario === owner) {
+                    const tipoEsistente = layer.tokenInfo?.tipo || 'color';
+                    if (tipoEsistente === (tokenInfo.tipo || 'color')) duplicato = true;
+                }
+            });
+            if (duplicato) {
+                const label = tokenInfo.tipo === 'eroe' ? 'eroe' : 'segnalino colore';
+                Swal.fire({ toast: true, position: 'bottom-end', icon: 'warning',
+                    title: `Hai già un ${label} sulla mappa!`,
+                    showConfirmButton: false, timer: 2000,
+                    background: '#1a1108', color: '#e8c97e' });
+                return;
+            }
+        } else {
+            // Aggiornamento via socket: rimuovi il precedente con stesso mId
+            const toRemove = [];
+            mappa.eachLayer(layer => {
+                if (layer instanceof L.Marker && layer.markerId === mId) toRemove.push(layer);
+            });
+            toRemove.forEach(l => mappa.removeLayer(l));
+        }
     }
+    // mostro e npc: nessuna rimozione previa, ID sempre univoco
+
+    // --- 1. PERMESSI ---
+    const isMaster = ($('campaign-detail')?.style.display === 'block');
+    const canDrag = isMaster
+        || (owner === State.username)
+        || (tokenInfo.ownerUsername === State.username);
 
     const userColor = getColorForUser(owner);
     let customIcon;
 
-    // Se è un'immagine usiamo il DivIcon di Leaflet per iniettare HTML personalizzato
+    // --- 2. ICONA ---
     if (tokenInfo.type === 'image' && tokenInfo.url) {
         customIcon = L.divIcon({
-            html: `<img src="${tokenInfo.url}" style="width:40px;height:40px;border-radius:50%;border:3px solid ${userColor};box-shadow: 0 4px 10px rgba(0,0,0,0.8);object-fit:cover;background:#111;">`,
-            className: 'custom-leaflet-token',
-            iconSize: [40, 40],
-            iconAnchor: [20, 20]
+            html: `<img src="${tokenInfo.url}" style="width:40px;height:40px;border-radius:50%;border:3px solid ${userColor};box-shadow:0 4px 10px rgba(0,0,0,0.8);object-fit:cover;background:#111;">`,
+            className: 'custom-leaflet-token', iconSize: [40,40], iconAnchor: [20,20]
         });
     } else {
-        // Altrimenti usiamo il semplice pallino colorato
         customIcon = L.divIcon({
             html: `<div style="width:24px;height:24px;background-color:${userColor};border:2px solid #fff;border-radius:50%;box-shadow:0 0 5px #000;"></div>`,
-            className: 'custom-leaflet-token',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            className: 'custom-leaflet-token', iconSize: [24,24], iconAnchor: [12,12]
         });
     }
 
-    const marker = L.marker(latlng, { icon: customIcon }).addTo(mappa);
-    marker.proprietario = owner; 
-    
-    const gestisciRimozione = () => {
-        // Controllo autorizzazioni
-        const isMaster = $('campaign-detail') && $('campaign-detail').style.display === 'block';
-        if (!isMaster && marker.proprietario !== State.username) {
-            Swal.fire({
-                toast: true, position: 'bottom-end', icon: 'warning', 
-                title: 'Puoi rimuovere solo i tuoi segnalini!', 
-                showConfirmButton: false, timer: 2000, background: '#1a1108', color: '#e8c97e'
+    const marker = L.marker(latlng, { icon: customIcon, draggable: canDrag }).addTo(mappa);
+    marker.proprietario = owner;
+    marker.tokenInfo = tokenInfo;
+    marker.markerId = mId;
+
+    // --- 3. TOOLTIP ---
+    const isPing = !tokenInfo.tipo || tokenInfo.tipo === 'color';
+    const nomeDisplay = tokenInfo.nome || owner;
+    const fotoUrl = (!isPing && tokenInfo.type === 'image' && tokenInfo.url) ? tokenInfo.url : null;
+    const fotoHtml = fotoUrl
+        ? `<img src="${fotoUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #e8c97e;display:block;margin:0 auto 6px;">`
+        : '';
+    const sottotitoloEroe = (tokenInfo.tipo === 'eroe' && tokenInfo.ownerUsername)
+        ? `<div style="color:#aaa;font-size:0.68rem;margin-top:2px;">@${escHtml(tokenInfo.ownerUsername)}</div>`
+        : '';
+    const rigaNome = isPing
+        ? `<div style="color:#e8c97e;font-family:'Cinzel',serif;font-size:0.78rem;">@${escHtml(owner)}</div>`
+        : `<button class="marker-nome-btn" data-owner="${escHtml(owner)}" data-tipo="${escHtml(tokenInfo.tipo)}" data-nome="${escHtml(nomeDisplay)}" style="color:#e8c97e;font-family:'Cinzel',serif;font-size:0.78rem;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;">${escHtml(nomeDisplay)}</button>${sottotitoloEroe}`;
+
+    marker.bindTooltip(
+        `<div style="text-align:center;min-width:80px;background:rgba(15,8,3,0.95);padding:6px 8px;border-radius:6px;border:1px solid #e8c97e33;">
+            ${fotoHtml}${rigaNome}
+        </div>`,
+        { permanent: false, direction: 'top', className: 'vault-marker-tooltip', opacity: 1 }
+    );
+
+    // --- 4. DRAG ---
+    if (canDrag) {
+        marker.on('dragend', () => {
+            const newPos = marker.getLatLng();
+            const campName = $('campaign-detail-title')?.dataset.campname || $('player-camp-title')?.textContent.trim();
+            if (socket) socket.emit('sposta_segnalino', {
+                owner, campName, tokenInfo,
+                newLat: newPos.lat, newLng: newPos.lng,
+                markerId: marker.markerId
             });
+            latlng = newPos;
+        });
+    }
+
+    // --- 5. RIMOZIONE ---
+    const gestisciRimozione = () => {
+        const puoRimuovere = isMaster
+            || marker.proprietario === State.username
+            || marker.tokenInfo?.ownerUsername === State.username;
+        if (!puoRimuovere) {
+            Swal.fire({ toast: true, position: 'bottom-end', icon: 'warning',
+                title: 'Non puoi rimuovere questo segnalino!',
+                showConfirmButton: false, timer: 2000,
+                background: '#1a1108', color: '#e8c97e' });
             return;
         }
         mappa.removeLayer(marker);
-        if (socket) socket.emit('rimuovi_segnalino', latlng);
+        const campName = $('campaign-detail-title')?.dataset.campname || $('player-camp-title')?.textContent.trim();
+        if (socket) socket.emit('rimuovi_segnalino', { markerId: marker.markerId, campName });
     };
-    // Elimina segnalino con:
-    marker.on('contextmenu', gestisciRimozione); // Tasto destro per pc
-    marker.on('click', gestisciRimozione); // Click per mobile
+    marker.on('contextmenu', gestisciRimozione);
+    marker.on('dblclick', gestisciRimozione);
+    if (isPing) marker.on('click', gestisciRimozione);
 
-    // Invia al socket includendo il tipo di token
+    // --- 6. SOCKET ---
     if (socket && isLocal) {
-        socket.emit('invia_segnalino', { lat: latlng.lat, lng: latlng.lng, owner: State.username, tokenInfo: tokenInfo });
+        const campName = $('campaign-detail-title')?.dataset.campname || $('player-camp-title')?.textContent.trim();
+        socket.emit('invia_segnalino', {
+            lat: latlng.lat, lng: latlng.lng,
+            owner: owner, tokenInfo: { ...tokenInfo, markerId: mId }, campName
+        });
     }
 }
+
+// Funzione per barra delle mappe laterale
+
 
 // Funzione per barra delle mappe laterale con history, permettendoci di salvare 
 // le vecchie mappe. In questo modo è più facile spostarsi tra un'ambiente all'altro
@@ -197,7 +311,7 @@ window.impostaMappaAttiva = async function(url, campName) {
       })
       leafletMap.off('click');
       leafletMap.on('click', function(e) {
-          const info = { type: activeTokenType, url: activeTokenUrl };
+          const info = { type: activeTokenType, url: activeTokenUrl, ...activeTokenExtra };
           aggiungiSegnalino(e.latlng, leafletMap, true, State.username, info);
       });
   }
@@ -208,6 +322,8 @@ window.impostaMappaAttiva = async function(url, campName) {
     if(camp) {
         camp.mapUrl = url;
         renderizzaStoricoMappe(campName); 
+        renderDropdowns();
+
     }
 
     try {

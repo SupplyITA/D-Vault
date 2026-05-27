@@ -22,7 +22,12 @@ export const AudioManager = {
         this.sfxCardHover.volume = 0.15; 
         this.sfxDelete.volume = 0.5;
         this.sfxEnter.volume = 0.5;
+        const _sv = parseFloat(localStorage.getItem('dvault_sfx_vol') ?? '1');
+        const _bv = parseFloat(localStorage.getItem('dvault_bgm_vol') ?? '1');
+        this.setSfxVolume(_sv);
+        this.setBgmVolume(_bv);
 
+        
         window.DVaultAudio = this;
 
         if (localStorage.getItem('dvault_sfx') === null) localStorage.setItem('dvault_sfx', 'true');
@@ -122,5 +127,20 @@ export const AudioManager = {
         if (this.isBgmEnabled()) {
             this.bgmCampaign.play().catch(() => {});
         }
+   },
+
+    setSfxVolume(v) {
+        localStorage.setItem('dvault_sfx_vol', v);
+        this.sfxClick.volume     = v * 0.4;
+        this.sfxHover.volume     = v * 0.6;
+        this.sfxCardHover.volume = v * 0.15;
+        this.sfxDelete.volume    = v * 0.5;
+        this.sfxEnter.volume     = v * 0.5;
+    },
+
+    setBgmVolume(v) {
+        localStorage.setItem('dvault_bgm_vol', v);
+        this.bgmFire.volume     = v * 0.4;
+        this.bgmCampaign.volume = v * 0.3;
     }
 };

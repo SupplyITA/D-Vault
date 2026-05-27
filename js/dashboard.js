@@ -13,8 +13,6 @@ let leafletMap = null;
 let playerLeafletMap = null;
 let currentImageOverlay = null;
 
-let activeTokenType = 'color'; // Può essere 'color' o 'image'
-let activeTokenUrl = null;
 
 // FUnzione per generare un colore univoco n base al nome utente (peak content)
 function getColorForUser(username) {
@@ -88,6 +86,7 @@ window.openCharacterSelectorForCampaign = function(camp) {
 
 window.enterPlayerCampaign = async function(sheetIndex, campName) {
   closeModal($('modal-select-char-backdrop'));
+  await State.loadFromServer();
   const sheet = State.sheets[sheetIndex];
 
   const camp = State.campaigns.find(c => c.campName === campName);
@@ -141,7 +140,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
   }
 
   //sezione per poter mettere segnalini personalizzati con immagine personaggio e colore
-  const myColor = getColorForUser(State.username);
+    const myColor = window.getColorForUser ? window.getColorForUser(State.username) : '#aaa';
   if($('player-color-marker')) $('player-color-marker').style.backgroundColor = myColor;
   
   const avatarUrl = sheet.avatar || '/img/species/_default.jpg';
@@ -150,31 +149,38 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
 
   $('player-camp-char').innerHTML = `Eroe: ${sheet.charName} <span style="display:inline-block;width:15px;height:15px;border-radius:50%;background-color:${myColor};vertical-align:middle;margin-left:10px;border:1px solid #fff;box-shadow:0 0 5px #000;" title="Il tuo colore identificativo"></span>`;
 
-  selezionaToken('color', null, document.querySelector('#player-token-sidebar .token-option'));
+    selezionaToken('color', null, document.querySelector('#player-token-sidebar .token-option'), { tipo: 'color' });
 
-  if (playerLeafletMap) {
-      playerLeafletMap.off('click');
-      playerLeafletMap.on('click', function(e) {
-          let urlToUse = activeTokenUrl;
-          if (activeTokenType === 'image') urlToUse = $('pc-avatar-img').src; 
+if (playerLeafletMap) {
+    playerLeafletMap.off('click');
+    playerLeafletMap.on('click', function(e) {
+        const avatarUrl = $('pc-avatar-img')?.src || '/img/species/_default.jpg';
+        const charName = $('player-camp-char')?.dataset.charname || State.username;
 
-          // Rimuove il vecchio token del giocatore (pedina) prima di metterne uno nuovo
-          if (activeTokenType === 'image') {
-              playerLeafletMap.eachLayer(layer => {
-                  // Controlla che contenga un'immagine (<img)
-                  if (layer instanceof L.Marker && 
-                      layer.proprietario === State.username && 
-                      layer.options?.icon?.options?.html?.includes('<img')) {
-                      
-                      playerLeafletMap.removeLayer(layer);
-                      if (socket) socket.emit('rimuovi_segnalino', layer.getLatLng());
-                  }
-              });
-          }
-          const info = { type: activeTokenType, url: urlToUse };
-          aggiungiSegnalino(e.latlng, playerLeafletMap, true, State.username, info);
-      });
-  }
+        let info;
+        if (window.activeTokenType === 'color') {
+            info = { type: 'color', url: null, tipo: 'color' };
+        } else {
+            info = { type: 'image', url: avatarUrl, nome: charName, tipo: 'eroe', ownerUsername: State.username };
+        }
+
+        // Se sta piazzando un eroe, rimuove il vecchio eroe prima
+        if (info.tipo === 'eroe') {
+            playerLeafletMap.eachLayer(layer => {
+                if (layer instanceof L.Marker &&
+                    layer.proprietario === State.username &&
+                    layer.tokenInfo?.tipo === 'eroe') {
+                    playerLeafletMap.removeLayer(layer);
+                    const pos = layer.getLatLng();
+                    const campName = $('player-camp-title')?.textContent.trim();
+                    if (socket) socket.emit('rimuovi_segnalino', { lat: pos.lat, lng: pos.lng, campName });
+                }
+            });
+        }
+
+        aggiungiSegnalino(e.latlng, playerLeafletMap, true, State.username, info);
+    });
+}
 
   // Aggiorna l'immagine 
   if (playerLeafletMap) {
@@ -202,6 +208,7 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
           try { active = JSON.parse(camp.activeCharacters || "{}"); } catch(e){}
           active[State.username] = sheet.charName;
           camp.activeCharacters = JSON.stringify(active);
+          renderGrid(); renderDropdowns();
       }
       //Aggiorna lista eroi subito
       if (socket) {
@@ -217,7 +224,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   AudioManager.init();
   if ($('nav-username')) $('nav-username').textContent = State.username;
   await State.loadFromServer();
-  
+
+  // Carica avatar e nome reale utente nel menu in alto a destra
+  (async () => {
+      try {
+          const resp = await fetch(`/api/user-info?username=${encodeURIComponent(State.username)}`);
+          const userData = await resp.json();
+          const avatarImg = document.getElementById('nav-user-avatar');
+          const avatarIcon = document.getElementById('nav-user-icon');
+          const ddLabel = document.getElementById('dd-user-label');
+          if (userData.avatar && avatarImg) {
+              avatarImg.src = userData.avatar;
+              avatarImg.style.display = 'inline-block';
+              if (avatarIcon) avatarIcon.style.display = 'none';
+          }
+          if (ddLabel) {
+              ddLabel.innerHTML = `<img src="${userData.avatar || ''}" 
+                  style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;border:1px solid rgba(212,168,67,0.4);"
+                  onerror="this.style.display='none'">
+                  ${State.username}`;
+          }
+      } catch(_) {}
+  })();
+
+  // Entra subito in tutte le stanze delle proprie campagne
+  // così gli eventi socket (rename, ecc.) arrivano anche dalla dashboard
+  if (socket) {
+      State.campaigns.forEach(c => {
+          socket.emit('entra_stanza_campagna', { campName: c.campName, username: State.username });
+      });
+  }
+
   if (typeof Vue !== 'undefined') {
       const { createApp, ref, computed, watch } = Vue;
       createApp({
@@ -261,13 +298,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   applicaTilt3D();
   bindEvents();
 });
-
+async function caricaTokenEroi(campName) {
+    const container = document.getElementById('master-hero-tokens');
+    if (!container) return;
+    container.innerHTML = '';
+    try {
+        const res = await fetch(`/api/campaigns/${encodeURIComponent(campName)}/party`);
+        const eroi = await res.json();
+        if (eroi.length === 0) {
+            container.innerHTML = '<span style="color:#666;font-size:0.75rem;font-style:italic;">Nessun eroe al tavolo</span>';
+            return;
+        }
+        eroi.forEach(eroe => {
+            const src = eroe.avatar || `img/species/_default.jpg`;
+            const img = document.createElement('img');
+            img.src = src;
+            img.title = eroe.charName;
+            img.className = 'token-option';
+            img.style.cssText = 'width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;background:#000;';
+            img.onerror = function() { this.src = 'img/species/_default.jpg'; };
+            img.onclick = function() { selezionaToken('image', src, this); };
+            container.appendChild(img);
+        });
+    } catch(e) { console.error('Errore caricamento token eroi:', e); }
+}
 function openCampaignDetail(camp) {
   hideAllSections(); 
   if($('dm-chat-messages')) caricaMemoriaChat(camp.campName, 'dm-chat-messages');
   if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
-  if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName;
+  if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName; $('campaign-detail-title').dataset.campname = camp.campName;
   //Salvataggio della storia
   if($('campaign-story-text')) $('campaign-story-text').value = camp.campDesc || '';
 
@@ -303,11 +363,13 @@ function openCampaignDetail(camp) {
   }
 
   // Per associare il colore del master alla campagna ed ai segnalini
-  const myColor = getColorForUser(State.username);
+    const myColor = window.getColorForUser ? window.getColorForUser(State.username) : '#aaa';
   if($('master-color-marker')) $('master-color-marker').style.backgroundColor = myColor;
   $('campaign-detail-title').innerHTML = `${camp.campName}<span style="display:inline-block;width:15px;height:15px;border-radius:50%;background-color:${myColor};vertical-align:middle;margin-left:10px;border:1px solid #fff;box-shadow:0 0 5px #000;" title="Il tuo colore identificativo"></span>`;  
+  $('campaign-detail-title').dataset.campname = camp.campName;
   selezionaToken('color', null, document.querySelector('#master-token-sidebar .token-option'));
   caricaTokenMostri();
+  caricaTokenEroi(camp.campName);
 
   const btnToggleInvite = $('btn-toggle-invite');
   if (btnToggleInvite) {
@@ -356,11 +418,24 @@ function openCampaignDetail(camp) {
       leafletMap.fitBounds(bounds);
       setTimeout(() => leafletMap.invalidateSize(), 100);
 
+      // [DENTRO dashboard.js -> openCampaignDetail]
       leafletMap.off('click');
       leafletMap.on('click', function(e) {
-          const info = { type: activeTokenType, url: activeTokenUrl };
-          aggiungiSegnalino(e.latlng, leafletMap, true, State.username, info);
-      });
+        // 1. Recuperiamo le info del token selezionato nel menu laterale
+        const info = { 
+            type: window.activeTokenType, 
+            url: window.activeTokenUrl, 
+            ...window.activeTokenExtra 
+        };
+
+        // 2. Determiniamo chi sarà il proprietario "legale" del segnalino
+        // Se è un eroe, l'owner deve essere il giocatore (ownerUsername), altrimenti è il Master (State.username)
+        const effettivoOwner = (info.tipo === 'eroe' && info.ownerUsername) ? info.ownerUsername : State.username;
+        // FORZIAMO lo stesso ID che userebbe il giocatore
+        info.markerId = `${effettivoOwner}_${info.tipo || 'color'}_${info.nome || effettivoOwner}`;
+        // 3. Chiamiamo la funzione che abbiamo appena pulito in map.js
+        aggiungiSegnalino(e.latlng, leafletMap, true, effettivoOwner, info);
+    });
   }
 
   if (socket) socket.emit('entra_stanza_campagna', { campName: camp.campName, username: State.username });
@@ -388,8 +463,15 @@ async function caricaEroiParty(campName) {
         listContainer.innerHTML = eroi.map(eroe => `
             <div class="party-hero-card" style="position: relative;">
                 <div onclick="visualizzaSchedaParty('${eroe.charName}')" style="cursor: pointer; padding-right: 25px;">
-                    <div class="party-hero-name">🛡️ ${escHtml(eroe.charName)}</div>
-                    <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <img src="${eroe.avatar || `img/species/${(eroe.charRace||'umano').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'umano'}-${eroe.charGender||'m'}.jpg`}"
+                             onerror="this.onerror=null;this.src='img/species/_default.jpg';"
+                             style="width:38px;height:38px;border-radius:50%;object-fit:cover;object-position:top center;border:2px solid rgba(212,168,67,0.4);flex-shrink:0;">
+                        <div>
+                            <div class="party-hero-name">${escHtml(eroe.charName)}</div>
+                            <div class="party-hero-sub">Liv: ${eroe.charLevel} | Giocatore: ${escHtml(eroe.owner)}</div>
+                        </div>
+                    </div>
                 </div>
                 ${isMaster && eroe.owner !== State.username ? 
                     `<button onclick="cacciaGiocatore('${escHtml(eroe.owner)}', '${escHtml(campName)}')" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #8b1a1a; cursor: pointer; font-size: 1.1rem;" title="Caccia dal tavolo"><i class="fa-solid fa-user-slash"></i></button>` 
@@ -502,13 +584,17 @@ function bindEvents() {
           confirmButtonText: 'Sì, pulisci'
       }).then((result) => {
           if (result.isConfirmed) {
+              const campName = $('campaign-detail-title')?.dataset.campname;
+              const markers = [];
               leafletMap.eachLayer(layer => {
-                  if (layer instanceof L.Marker) {
-                      const pos = layer.getLatLng();
-                      leafletMap.removeLayer(layer);
-                      if (socket) socket.emit('rimuovi_segnalino', pos);
-                  }
-              });
+                    if (layer instanceof L.Marker) markers.push(layer);
+                });
+                markers.forEach(layer => {
+                    leafletMap.removeLayer(layer);
+                    if (socket) socket.emit('rimuovi_segnalino', { markerId: layer.markerId, campName });
+                });
+                if (socket && campName) socket.emit('pulisci_mappa', { campName });
+
               Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: 'Mappa immacolata!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
           }
       });
@@ -607,6 +693,7 @@ function bindEvents() {
         titleEl.textContent = newName;
         await State.loadFromServer(); 
         renderGrid(); renderDropdowns();
+        if (socket) socket.emit('forza_aggiornamento_globale');
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Rinominata!', showConfirmButton: false, timer: 1500, background: '#1a1108', color: '#e8c97e' });
       }
     }
@@ -715,10 +802,14 @@ function bindEvents() {
   });
 
   // Pulsanti indietro (Modificati per avvisare l'uscita dalla chat)
-  const esciDalTavolo = () => {
+  const esciDalTavolo = async () => {
       if (socket) socket.emit('esci_stanza_campagna');
       AudioManager.updateBackgroundMusic(false);
-      renderGrid(); applicaTilt3D(); closeDetails();
+      await State.loadFromServer();
+      closeDetails();
+      renderGrid();
+      renderDropdowns();
+      applicaTilt3D();
   };
   
   $('btn-back-campaign')?.addEventListener('click', esciDalTavolo);
@@ -955,6 +1046,8 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
     
     closeModal($('modal-sheet-backdrop'));
     renderGrid(); 
+    renderDropdowns();
+
 });
 
 // Creazione Nuova Campagna 
@@ -1042,8 +1135,11 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
       });
       if (res.ok) {
         // Aggiorniamo la memoria locale di State
+        await State.loadFromServer();
         const camp = State.campaigns.find(c => c.campName === campName);
-        if (camp) camp.campDesc = story;
+        if (camp) camp.campDesc = story; 
+        // Pulisce le altre schermate
+        if (typeof hideAllSections === 'function') hideAllSections();
 
         Swal.fire({
           toast: true, position: 'bottom-end', icon: 'success',
@@ -1163,6 +1259,8 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
                       }) 
                   });
                   sheet.avatar = defaultAvatarUrl;
+                  renderGrid(); renderDropdowns();
+
 
                   Swal.fire({ 
                       title: 'Magia annullata!', 
@@ -1268,6 +1366,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
 
                   const sheet = State.sheets.find(s => s.charName === pendingAvatarData.charName);
                   if (sheet) sheet.avatar = data.url;
+                  renderGrid(); renderDropdowns();
 
                   Swal.fire({ title: 'Ritratto aggiornato!', icon: 'success', customClass: { popup: 'vault-popup' }, timer: 1500, showConfirmButton: false });
               }
@@ -1449,31 +1548,83 @@ function openJukebox() {
           }
       });
 
-      //Per inserire i segnalini sulla mappa
-      socket.on('ricevi_segnalino', (dati) => {
-        const latlng = { lat: dati.lat, lng: dati.lng };
-        if (leafletMap) aggiungiSegnalino(latlng, leafletMap, false, dati.owner, dati.tokenInfo);
-        if (playerLeafletMap) aggiungiSegnalino(latlng, playerLeafletMap, false, dati.owner, dati.tokenInfo);
-      });
+        //Per inserire i segnalini sulla mappa
+        // Quando ricevo un segnalino da qualcun altro (Master o Player), 
+        // uso la funzione aggiungiSegnalino che ora ha il "killer di duplicati" integrato
+        socket.on('ricevi_segnalino', (dati) => {
+            const masterAperto = $('campaign-detail')?.style.display === 'block';
+            const playerAperto = $('player-campaign-detail')?.style.display === 'block';
+            if (leafletMap && masterAperto) aggiungiSegnalino(L.latLng(dati.lat, dati.lng), leafletMap, false, dati.owner, dati.tokenInfo);
+            if (playerLeafletMap && playerAperto) aggiungiSegnalino(L.latLng(dati.lat, dati.lng), playerLeafletMap, false, dati.owner, dati.tokenInfo);
+        });
 
-      // Per rimuovere i segnalini
-      socket.on('segnalino_rimosso', (latlng) => {
-          const rimuoviDaMappa = (mappa) => {
-              if(!mappa) return;
-              mappa.eachLayer(layer => {
-                  if (layer instanceof L.Marker) {
-                      const pos = layer.getLatLng();
-                      if (Math.abs(pos.lat - latlng.lat) < 0.001 && Math.abs(pos.lng - latlng.lng) < 0.001) {
-                          mappa.removeLayer(layer);
-                      }
-                  }
-              });
-          };
-          rimuoviDaMappa(leafletMap);
-          rimuoviDaMappa(playerLeafletMap);
-      });
+            // Per rimuovere i segnalini
+            socket.on('segnalino_rimosso', (dati) => {
+            const masterAperto = $('campaign-detail')?.style.display === 'block';
+            const playerAperto = $('player-campaign-detail')?.style.display === 'block';
+            
+            const rimuoviDaMappa = (mappa) => {
+                if(!mappa) return;
+                mappa.eachLayer(layer => {
+                    // Rimuoviamo cercando l'ID univoco che abbiamo creato in map.js
+                    if (layer instanceof L.Marker && layer.markerId === dati.markerId) {
+                        mappa.removeLayer(layer);
+                    }
+                });
+            };
+
+            if (masterAperto) rimuoviDaMappa(window.leafletMap);
+            if (playerAperto) rimuoviDaMappa(window.playerLeafletMap);
+        });
+    
+      // Per spostare i segnalini
+        socket.on('sposta_segnalino', (dati) => {
+            const masterAperto = $('campaign-detail')?.style.display === 'block';
+            const playerAperto = $('player-campaign-detail')?.style.display === 'block';
+            // Aggiorna TUTTE le mappe aperte (sia master che player)
+            // Leaflet non duplica se il layer è già alla posizione giusta
+            const mappe = [
+                window.leafletMap,
+                window.playerLeafletMap
+            ].filter(Boolean);
+            mappe.forEach(mappa => {
+                mappa.eachLayer(layer => {
+                    if (!(layer instanceof L.Marker)) return;
+                    const matchId = dati.markerId && layer.markerId === dati.markerId;
+                    const matchPos = !dati.markerId &&
+                        layer.proprietario === dati.owner &&
+                        Math.abs(layer.getLatLng().lat - dati.oldLat) < 0.5 &&
+                        Math.abs(layer.getLatLng().lng - dati.oldLng) < 0.5;
+                    if (matchId || matchPos) {
+                        layer.setLatLng([dati.newLat, dati.newLng]);
+                    }
+                });
+            });
+        });
+
+      socket.on('pulisci_mappa', () => {
+            // Questa versione è più potente: cicla su tutte le mappe possibili e pulisce tutto
+            const mappe = [window.leafletMap, window.playerLeafletMap].filter(Boolean);
+            
+            mappe.forEach(mappa => {
+                const markersDaRimuovere = [];
+                mappa.eachLayer(layer => {
+                    if (layer instanceof L.Marker) {
+                        markersDaRimuovere.push(layer);
+                    }
+                });
+                markersDaRimuovere.forEach(m => mappa.removeLayer(m));
+            });
+        });
+
+
 
       socket.on('nuova_mappa_ricevuta', (url) => {
+          const campName = $('player-camp-title')?.textContent.trim();
+          if (campName) {
+              const camp = State.campaigns.find(c => c.campName === campName);
+              if (camp) { camp.mapUrl = url; renderDropdowns(); renderGrid(); }
+          }
           const bounds = [[0,0], [1000,1000]];
           if (leafletMap) {
               if (currentImageOverlay) leafletMap.removeLayer(currentImageOverlay);
@@ -1497,6 +1648,20 @@ function openJukebox() {
           }
       });
 
+
+
+
+        // Rinomina campagna
+      socket.on('campagna_rinominata', async ({ oldName, newName }) => {
+          await State.loadFromServer();
+          renderGrid();
+          renderDropdowns();
+          // Aggiorna il titolo se il giocatore è dentro quella sezione
+          const titleEl = $('player-camp-title');
+          if (titleEl && titleEl.textContent.trim() === oldName) {
+              titleEl.textContent = newName;
+          }
+      });
       // Eliminazione campagna dal master
       socket.on('ricarica_dati', async () => {
           // Ricarica i dati in background
@@ -1582,6 +1747,7 @@ function openJukebox() {
               await State.loadFromServer();
               // Modifica la lista
               caricaEroiParty(dati.campName);
+              caricaTokenEroi(dati.campName);
           }
       });
   }

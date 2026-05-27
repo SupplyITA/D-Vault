@@ -24,7 +24,30 @@ function emptyState({ icon, title, subtitle }) {
     </div>`;
 }
 
-function dropdownItemHtml(label, type, i) {
+// DOPO
+function dropdownItemHtml(label, type, i, extra = null) {
+  if (type === 'sheet' && extra) {
+    const slug = (extra.charRace || 'umano').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'umano';
+    const gender = extra.charGender || 'm';
+    const src = extra.avatar || `img/species/${slug}-${gender}.jpg`;
+    return `<li class="dropdown-item" data-type="${type}" data-index="${i}">
+      <img class="dd-item-avatar" src="${escHtml(src)}"
+           onerror="this.onerror=null;this.src='img/species/_default.jpg';"
+           alt="${escHtml(label)}" />
+      <span class="dd-item-label">${escHtml(label)}</span>
+    </li>`;
+  }
+  if (type === 'campaign' && extra) {
+    const mapSrc = extra.mapUrl || extra.campMap || '/maps/mappa_1.jpg';
+    return `<li class="dropdown-item" data-type="${type}" data-index="${i}">
+      <img class="dd-item-map" src="${escHtml(mapSrc)}"
+           onerror="this.onerror=null;this.src='/maps/mappa_1.jpg';"
+           alt="${escHtml(label)}" />
+      <span class="dd-item-label">${escHtml(label)}</span>
+    </li>`;
+  }
   const ico = type === 'sheet' ? 'fa-shield-halved' : 'fa-dragon';
   return `<li class="dropdown-item" data-type="${type}" data-index="${i}">
     <i class="fa-solid ${ico} dd-item-ico"></i><span class="dd-item-label">${escHtml(label)}</span>
@@ -40,7 +63,7 @@ export function renderDropdowns() {
     if (State.sheets.length === 0) {
       dropdownSheetsList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna scheda</li>';
     } else {
-      dropdownSheetsList.innerHTML = State.sheets.map((s, i) => dropdownItemHtml(s.charName, 'sheet', i)).join('');
+      dropdownSheetsList.innerHTML = State.sheets.map((s, i) => dropdownItemHtml(s.charName, 'sheet', i, s)).join('');
     }
   }
 
@@ -61,7 +84,7 @@ export function renderDropdowns() {
     if (masterCamps.length === 0) {
       dropdownMasterList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna campagna</li>';
     } else {
-      dropdownMasterList.innerHTML = masterCamps.map(item => dropdownItemHtml(item.camp.campName, 'campaign', item.index)).join('');
+      dropdownMasterList.innerHTML = masterCamps.map(item => dropdownItemHtml(item.camp.campName, 'campaign', item.index, item.camp)).join('');
     }
   }
 
@@ -69,7 +92,7 @@ export function renderDropdowns() {
     if (playerCamps.length === 0) {
       dropdownPlayerList.innerHTML = '<li class="dropdown-empty"><i class="fa-solid fa-feather"></i> Nessuna avventura</li>';
     } else {
-      dropdownPlayerList.innerHTML = playerCamps.map(item => dropdownItemHtml(item.camp.campName, 'campaign', item.index)).join('');
+      dropdownPlayerList.innerHTML = playerCamps.map(item => dropdownItemHtml(item.camp.campName, 'campaign', item.index, item.camp)).join('');
     }
   }
 }

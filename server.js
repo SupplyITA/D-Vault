@@ -40,6 +40,9 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS chat_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT, campName TEXT, sender TEXT, target TEXT, testo TEXT, type TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+    db.run(`CREATE TABLE IF NOT EXISTS segnalini (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, campName TEXT, owner TEXT, lat REAL, lng REAL, tokenInfo TEXT
+    )`);
     db.run(`ALTER TABLE schede ADD COLUMN avatar TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN charGender TEXT`, (err) => {}); 
     
@@ -51,6 +54,12 @@ db.serialize(() => {
 
     //per salvare le mappe caricate in precedenza
     db.run(`ALTER TABLE campagne ADD COLUMN mapHistory TEXT DEFAULT '[]'`, (err) => {});
+    db.run(`ALTER TABLE segnalini ADD COLUMN markerId TEXT`, (err) => {});
+    db.run(`ALTER TABLE utenti ADD COLUMN autoRimuoviTavolo INTEGER DEFAULT 0`, (err) => {});
+    db.run(`ALTER TABLE segnalini ADD COLUMN markerId TEXT`, (err) => {});
+
+
+
 });
 
 // QUesto è per uploadare l'avatar del personaggio.
@@ -82,7 +91,7 @@ db.serialize(() => {
     db.run(`ALTER TABLE schede ADD COLUMN pdfUrl TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN details TEXT`, (err) => {});
     db.run(`ALTER TABLE schede ADD COLUMN playerNotes TEXT`, (err) => {});
-
+    db.run(`ALTER TABLE segnalini ADD COLUMN markerId TEXT`, (err) => {});
     db.run(`ALTER TABLE utenti ADD COLUMN fullName TEXT`, (err) => {});
     db.run(`ALTER TABLE utenti ADD COLUMN gender TEXT`, (err) => {});
     db.run(`ALTER TABLE utenti ADD COLUMN avatar TEXT`, (err) => {});
@@ -539,6 +548,7 @@ app.post('/api/campaigns/rename', (req, res) => {
     const { oldName, newName, owner } = req.body;
     db.run(`UPDATE campagne SET campName = ? WHERE campName = ? AND owner = ?`, [newName, oldName, owner], function(err) {
         if (err) return res.status(500).json({ error: err.message });
+        io.emit('campagna_rinominata', { oldName, newName });
         res.json({ success: true });
     });
 });
@@ -590,18 +600,51 @@ io.on('connection', (socket) => {
     });
 
     // Rimbalza le coordinate dei segnalini sulla mappa
-    socket.on('invia_segnalino', (coordinate) => {
-        socket.broadcast.emit('ricevi_segnalino', coordinate);
+    socket.on('invia_segnalino', (dati) => {
+        const campName = dati.campName || socket.campName;
+        if (!campName) return;
+        socket.to(campName).emit('ricevi_segnalino', dati);
+        // Salva nel DB
+        db.run(
+            `INSERT INTO segnalini (campName, owner, lat, lng, tokenInfo) VALUES (?, ?, ?, ?, ?)`,
+            [campName, dati.owner, dati.lat, dati.lng, JSON.stringify(dati.tokenInfo)]
+        );
     });
 
-    socket.on('rimuovi_segnalino', (latlng) => {
-    // Rimbalza l'ordine di rimozione a tutti gli altri client
-    socket.broadcast.emit('segnalino_rimosso', latlng);
+    socket.on('rimuovi_segnalino', (dati) => {
+        const campName = dati.campName || socket.campName;
+        if (!campName) return;
+        socket.to(campName).emit('segnalino_rimosso', dati);
+        if (dati.markerId) {
+            db.run(
+                `DELETE FROM segnalini WHERE campName = ? AND json_extract(tokenInfo, '$.markerId') = ?`,
+                [campName, dati.markerId]
+            );
+        }
     });
 
+    // listener per spostare i segnalini sulla mappa, con controllo di vicinanza per evitare spostamenti errati
+    socket.on('sposta_segnalino', (dati) => {
+        const campName = dati.campName || socket.campName;
+        if (!campName) return;
+        const markerId = dati.markerId;
+        if (markerId) {
+            db.run(
+                `UPDATE segnalini SET lat = ?, lng = ? WHERE campName = ? AND json_extract(tokenInfo, '$.markerId') = ?`,
+                [dati.newLat, dati.newLng, campName, markerId]
+            );
+        }
+        socket.to(campName).emit('sposta_segnalino', dati);
+    });
     // Cambio mappa per tutti i giocatori connessi
     socket.on('cambia_sfondo_mappa', (url) => {
         socket.broadcast.emit('nuova_mappa_ricevuta', url);
+    });
+    socket.on('pulisci_mappa', (dati) => {
+        const campName = dati.campName || socket.campName;
+        if (!campName) return;
+        db.run(`DELETE FROM segnalini WHERE campName = ?`, [campName]);
+        socket.to(campName).emit('pulisci_mappa', dati);
     });
 
     // Entra in una stanza specifica

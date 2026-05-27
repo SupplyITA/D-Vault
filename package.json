@@ -17,5 +17,14 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SupplyITA/D-Vault.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SupplyITA/D-Vault/issues"
+  },
+  "homepage": "https://github.com/SupplyITA/D-Vault#readme"
 }

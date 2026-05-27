@@ -50,8 +50,7 @@ async function openAccount() {
         userData = await resp.json();
     } catch (e) { console.error("Errore caricamento dati utente"); }
 
-    const sfxEnabled = localStorage.getItem('dvault_sfx') !== 'false';
-    const bgmEnabled = localStorage.getItem('dvault_bgm') !== 'false';
+  
 
     Swal.fire({
       title: 'Archivio Personale',
@@ -71,7 +70,7 @@ async function openAccount() {
                 <i class="fa-solid fa-camera" style="font-size: 0.7rem; color: white;"></i>
               </div>
             </div>
-            <h3 style="margin: 10px 0 0 0; font-family: 'Cinzel', serif;">${userData.fullName}</h3>
+            <h3 style="margin: 10px 0 0 0; font-family: 'Cinzel', serif;">${me}</h3>
             <p style="color: #888; font-size: 0.8rem; margin: 0;">@${me}</p>
           </div>
 
@@ -90,15 +89,6 @@ async function openAccount() {
             </button>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
-            <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Suoni Interfaccia</span>
-            <input type="checkbox" id="acc-toggle-sfx" ${sfxEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-            <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Musica Sottofondo</span>
-            <input type="checkbox" id="acc-toggle-bgm" ${bgmEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
-          </div>
 
           <div class="vault-divider" style="height: 1px; background: rgba(212,168,67,0.1); margin: 5px 0;"></div>
 
@@ -172,10 +162,24 @@ async function openAccount() {
                 { url: '/img/avatars/female-2.jpg', label: 'Incantatrice' },
                 { url: '/img/avatars/other-1.jpg', label: 'Creatura' }
               ];
+
+              // Aggiunge gli avatar degli eroi forgiati dall'utente
+              let heroImages = [];
+              try {
+                  const sheetsResp = await fetch(`/api/sheets?user=${encodeURIComponent(me)}`);
+                  const sheets = await sheetsResp.json();
+                  heroImages = sheets
+                      .filter(s => s.avatar)
+                      .map(s => ({ url: s.avatar, label: s.charName }))
+                      // Rimuovi duplicati rispetto alla galleria base
+                      .filter(h => !galleryImages.some(g => g.url === h.url));
+              } catch(_) {}
+
+              const allImages = [...galleryImages, ...heroImages];
               Swal.fire({
                 title: 'Galleria del Vault', background: '#0a0505', color: '#e8c97e',
                 html: `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 10px;">
-                    ${galleryImages.map(img => `
+                    ${allImages.map(img => `
                       <div class="gallery-item" onclick="selectGalleryAvatar('${img.url}')" style="cursor:pointer; text-align:center;">
                         <img src="${img.url}" style="width:80px; height:80px; border-radius:50%; border:2px solid #444; object-fit:cover; transition:0.3s;">
                         <p style="font-size:0.7rem; margin-top:5px; color:#888;">${img.label}</p>
@@ -195,16 +199,6 @@ async function openAccount() {
             });
             location.reload();
         };
-
-        document.getElementById('acc-toggle-sfx').addEventListener('change', (e) => {
-            if (window.DVaultAudio) window.DVaultAudio.toggleSfx(e.target.checked);
-            else localStorage.setItem('dvault_sfx', e.target.checked);
-        });
-
-        document.getElementById('acc-toggle-bgm').addEventListener('change', (e) => {
-            if (window.DVaultAudio) window.DVaultAudio.toggleBgm(e.target.checked);
-            else localStorage.setItem('dvault_bgm', e.target.checked);
-        });
         
         document.getElementById('btn-change-pwd-acc').onclick = () => { Swal.close(); openChangePassword(); };
         
@@ -360,6 +354,36 @@ async function openAccount() {
       title: 'Impostazioni',
       html: `
         <div style="display:flex;flex-direction:column;gap:.5rem;text-align:left">
+        <!-- AUDIO -->
+<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,168,67,0.12);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+  <p style="color:var(--gold-dim);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Audio</p>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <span style="color:var(--gold-mid);font-family:'Cinzel',serif;font-size:0.85rem;">
+      <i class="fa-solid fa-volume-high" style="margin-right:6px;font-size:0.75rem;"></i>Suoni Interfaccia
+    </span>
+    <input type="checkbox" id="set-toggle-sfx" style="cursor:pointer;width:17px;height:17px;accent-color:var(--gold-mid);">
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding-left:4px;">
+    <i class="fa-solid fa-volume-low" style="color:#888;font-size:0.75rem;"></i>
+    <input type="range" id="set-sfx-vol" min="0" max="1" step="0.05" value="1" style="flex:1;accent-color:var(--gold-mid);cursor:pointer;">
+    <i class="fa-solid fa-volume-high" style="color:#888;font-size:0.75rem;"></i>
+    <span id="set-sfx-vol-label" style="color:#aaa;font-size:0.75rem;min-width:30px;text-align:right;">100%</span>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+    <span style="color:var(--gold-mid);font-family:'Cinzel',serif;font-size:0.85rem;">
+      <i class="fa-solid fa-music" style="margin-right:6px;font-size:0.75rem;"></i>Musica Sottofondo
+    </span>
+    <input type="checkbox" id="set-toggle-bgm" style="cursor:pointer;width:17px;height:17px;accent-color:var(--gold-mid);">
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding-left:4px;">
+    <i class="fa-solid fa-volume-low" style="color:#888;font-size:0.75rem;"></i>
+    <input type="range" id="set-bgm-vol" min="0" max="1" step="0.05" value="0.4" style="flex:1;accent-color:var(--gold-mid);cursor:pointer;">
+    <i class="fa-solid fa-volume-high" style="color:#888;font-size:0.75rem;"></i>
+    <span id="set-bgm-vol-label" style="color:#aaa;font-size:0.75rem;min-width:30px;text-align:right;">40%</span>
+  </div>
+</div>
           <button id="set-clear-sheets" class="swal2-styled swal2-cancel" style="width:100%">
             <i class="fa-solid fa-shield-halved"></i> Cancella tutte le mie schede
           </button>
@@ -382,6 +406,38 @@ async function openAccount() {
       cancelButtonText: 'Chiudi',
       customClass: { popup: 'vault-popup' },
       didOpen: () => {
+        // Leggi valori salvati e inizializza i controlli
+const _sfxOn  = localStorage.getItem('dvault_sfx')     !== 'false';
+const _bgmOn  = localStorage.getItem('dvault_bgm')     !== 'false';
+const _sfxVol = parseFloat(localStorage.getItem('dvault_sfx_vol') ?? '1');
+const _bgmVol = parseFloat(localStorage.getItem('dvault_bgm_vol') ?? '0.4');
+document.getElementById('set-toggle-sfx').checked = _sfxOn;
+document.getElementById('set-toggle-bgm').checked = _bgmOn;
+document.getElementById('set-sfx-vol').value = _sfxVol;
+document.getElementById('set-bgm-vol').value = _bgmVol;
+document.getElementById('set-sfx-vol-label').textContent = Math.round(_sfxVol * 100) + '%';
+document.getElementById('set-bgm-vol-label').textContent = Math.round(_bgmVol * 100) + '%';
+
+document.getElementById('set-toggle-sfx').addEventListener('change', (e) => {
+  localStorage.setItem('dvault_sfx', e.target.checked);
+  if (window.DVaultAudio) window.DVaultAudio.toggleSfx(e.target.checked);
+});
+document.getElementById('set-sfx-vol').addEventListener('input', (e) => {
+  const v = parseFloat(e.target.value);
+  document.getElementById('set-sfx-vol-label').textContent = Math.round(v * 100) + '%';
+  localStorage.setItem('dvault_sfx_vol', v);
+  if (window.DVaultAudio) window.DVaultAudio.setSfxVolume(v);
+});
+document.getElementById('set-toggle-bgm').addEventListener('change', (e) => {
+  localStorage.setItem('dvault_bgm', e.target.checked);
+  if (window.DVaultAudio) window.DVaultAudio.toggleBgm(e.target.checked);
+});
+document.getElementById('set-bgm-vol').addEventListener('input', (e) => {
+  const v = parseFloat(e.target.value);
+  document.getElementById('set-bgm-vol-label').textContent = Math.round(v * 100) + '%';
+  localStorage.setItem('dvault_bgm_vol', v);
+  if (window.DVaultAudio) window.DVaultAudio.setBgmVolume(v);
+});
         document.getElementById('set-theme').addEventListener('click', () => { Swal.close(); openTheme(); });
         document.getElementById('set-clear-notes').addEventListener('click', async () => {
           

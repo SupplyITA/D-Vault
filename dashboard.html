@@ -54,7 +54,7 @@
     if (!bannerUser) return;
     var name = navUser && navUser.textContent.trim() && navUser.textContent.trim() !== 'Avventuriero'
       ? navUser.textContent.trim() : null;
-    if (!name) name = localStorage.getItem('username') || sessionStorage.getItem('username');
+    if (!name) name = localStorage.getItem('dvault_username') || sessionStorage.getItem('dvault_username');
     if (name) bannerUser.textContent = name;
     else setTimeout(setUsername, 800);
   }
@@ -228,14 +228,16 @@
 
     <div class="nav-right">
       <div class="nav-tab-wrap">
-        <button class="nav-user-btn" data-dd-target="dd-user" type="button">
-          <i class="fa-solid fa-user-shield"></i>
+         <button class="nav-user-btn" data-dd-target="dd-user" type="button">
+          <img id="nav-user-avatar" src="" alt=""
+               style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid rgba(212,168,67,0.4);display:none;">
+          <i class="fa-solid fa-user-shield" id="nav-user-icon"></i>
           <span class="nav-username" id="nav-username">Avventuriero</span>
           <i class="fa-solid fa-chevron-down nav-tab-caret"></i>
         </button>
         <div class="dropdown-menu nav-dd dd-user-menu" id="dd-user">
           <div class="dropdown-section">
-            <p class="dropdown-label"><i class="fa-solid fa-user-shield"></i> Giocatore</p>
+            <p class="dropdown-label" id="dd-user-label"><i class="fa-solid fa-user-shield"></i> Giocatore</p>
             <ul>
               <li class="dropdown-item" data-user-action="account"><i class="fa-solid fa-id-badge dd-item-ico"></i><span class="dd-item-label">Account</span></li>
               <li class="dropdown-item" data-user-action="stats"><i class="fa-solid fa-chart-line dd-item-ico"></i><span class="dd-item-label">Statistiche</span></li>
@@ -367,23 +369,25 @@
                   
                   <button id="btn-clear-tokens" class="btn-primary" style="padding: 5px; font-size: 0.75rem; margin: 0; width: 100%;"> Pulisci Mappa</button>
                   
-                  <div class="token-option" onclick="selezionaToken('color', null, this)" style="cursor: pointer; padding: 5px; border-radius: 4px; border: 2px solid #e8c97e; text-align: center;">
+                  <div class="token-option" onclick="selezionaToken('color', null, this, { tipo: 'color' })" style="cursor: pointer; padding: 5px; border-radius: 4px; border: 2px solid #e8c97e; text-align: center;">
                     <div id="master-color-marker" style="width:24px;height:24px;border-radius:50%;border:2px solid #fff;margin: 0 auto 5px auto;"></div>
                     <span style="font-size: 0.7rem; color: #aaa;">Generico (Colore)</span>
                   </div>
 
+                  <p style="color: #aaa; font-size: 0.8rem; margin: 5px 0 0 0;">Eroi al Tavolo</p>
+                  <div id="master-hero-tokens" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
                   <p style="color: #aaa; font-size: 0.8rem; margin: 5px 0 0 0;">Mostri</p>
                   <div id="master-monster-tokens" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
-
                   <p style="color: #aaa; font-size: 0.8rem; margin: 5px 0 0 0;">NPC</p>
                   <div id="master-npc-tokens" style="display: flex; flex-wrap: wrap; gap: 5px;">
-                      <img src="img/npc/locandiere.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this)" title="Locandiere">                      
-                      <img src="img/npc/locandiera.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this)" title="Locandiera">                     
-                      <img src="img/npc/borgomastro.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this)" title="Borgomastro">
-                      <img src="img/npc/cameriera.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this)" title="Cameriera">
-                      <img src="img/npc/cittadino.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this)" title="Cittadino">
-                      <img src="img/npc/cittadina.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this)" title="Cittadina">
+                      <img src="img/npc/locandiere.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this, { nome: 'Locandiere', tipo: 'npc' })" title="Locandiere">
+                      <img src="img/npc/locandiera.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this, { nome: 'Locandiera', tipo: 'npc' })" title="Locandiera">
+                      <img src="img/npc/borgomastro.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this, { nome: 'Borgomastro', tipo: 'npc' })" title="Borgomastro">
+                      <img src="img/npc/cameriera.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this, { nome: 'Cameriera', tipo: 'npc' })" title="Cameriera">
+                      <img src="img/npc/cittadino.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this, { nome: 'Cittadino', tipo: 'npc' })" title="Cittadino">
+                      <img src="img/npc/cittadina.jpg" class="token-option" style="width:35px;height:35px;border-radius:50%;cursor:pointer;border:2px solid transparent;object-fit:cover;" onclick="selezionaToken('image', this.src, this, { nome: 'Cittadina', tipo: 'npc' })" title="Cittadina">
                   </div>
+                
                 </div>
               </div>
           </div>
@@ -513,12 +517,12 @@
             <div id="player-token-sidebar" style="width: 110px; background: rgba(0,0,0,0.5); border: 1px solid #444; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 15px; align-items: center; flex-shrink: 0;">
               <p style="color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.8rem; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; width: 100%; margin: 0;">Tuo Segnalino</p>
               
-              <div class="token-option" onclick="selezionaToken('color', null, this)" style="cursor: pointer; padding: 5px; border-radius: 4px; border: 2px solid #e8c97e; text-align: center; width: 100%;">
+              <div class="token-option" onclick="selezionaToken('color', null, this, { tipo: 'color' })" style="cursor: pointer; padding: 5px; border-radius: 4px; border: 2px solid #e8c97e; text-align: center; width: 100%;">
                 <div id="player-color-marker" style="width:30px;height:30px;border-radius:50%;border:2px solid #fff;margin: 0 auto 5px auto;"></div>
                 <span style="font-size: 0.65rem; color: #aaa;">Generico</span>
               </div>
 
-              <div class="token-option" onclick="selezionaToken('image', document.getElementById('pc-avatar-img').src, this)" style="cursor: pointer; padding: 5px; border-radius: 4px; border: 2px solid transparent; text-align: center; width: 100%;">
+              <div class="token-option"  onclick="selezionaToken('image', document.getElementById('pc-avatar-img').src, this, { nome: document.getElementById('player-camp-char')?.dataset?.charname || '', tipo: 'eroe', ownerUsername: localStorage.getItem('dvault_username') || '' })" style="cursor: pointer; padding: 5px; border-radius: 4px; border: 2px solid transparent; text-align: center; width: 100%;">
                 <img id="player-token-avatar" src="" style="width:40px;height:40px;border-radius:50%;border:2px solid #333;object-fit:cover;margin:0 auto 5px auto;display:block;">
                 <span style="font-size: 0.65rem; color: #aaa;">Il mio Eroe</span>
               </div>
