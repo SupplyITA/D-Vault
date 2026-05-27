@@ -372,6 +372,7 @@
               <div style="display: flex; gap: 15px; flex: 1; min-height: 500px; width: 100%;">
                 
                 <div id="map-history-sidebar" style="width: 140px; background: rgba(0,0,0,0.5); border: 1px solid #444; border-radius: 8px; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;">
+                  <button class="sidebar-collapse-btn" onclick="this.closest('#map-history-sidebar').classList.toggle('collapsed')">◀</button>
                   <p style="color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.8rem; text-align: center; margin: 0 0 5px 0; border-bottom: 1px solid #444; padding-bottom: 5px;">Archivio Mappe</p>
                   <div id="map-history-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
@@ -432,6 +433,9 @@
           </div>
         </div>
       </div>
+
+      <!-- Linea per aumentare chat/pannello sinistro-->
+      <div class="sheet-resizer-master" id="chat-resizer"></div>
 
       <div class="sheet-right" style="flex: 0 0 500px; width: 420px; display: flex; flex-direction: column; height: 100%; padding-right: 10px;">
         <div class="right-panel-box" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
@@ -539,6 +543,7 @@
           <div style="display: flex; gap: 15px; height: 100%; min-height: 500px; width: 100%;">
             
             <div id="player-token-sidebar" style="width: 110px; background: rgba(0,0,0,0.5); border: 1px solid #444; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 15px; align-items: center; flex-shrink: 0;">
+              <button class="sidebar-collapse-btn" onclick="this.closest('#player-token-sidebar').classList.toggle('collapsed')">◀</button>
               <p style="color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.8rem; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; width: 100%; margin: 0;">Tuo Segnalino</p>
               
               <div class="token-option" onclick="selezionaToken('color', null, this, { tipo: 'color' })" style="cursor: pointer; padding: 5px; border-radius: 4px; border: 2px solid #e8c97e; text-align: center; width: 100%;">
@@ -559,6 +564,9 @@
           </div>
         </div>
       </div>
+
+      <!-- Linea per aumentare chat/pannello sinistro-->
+      <div class="sheet-resizer-player" id="chat-resizer-p"></div>
 
       <div class="sheet-right" style="flex: 0 0 500px; width: 420px; display: flex; flex-direction: column; overflow-y: auto; height: 100%; padding-right: 10px;">        
         <div class="right-panel-box" style="padding: 15px; margin-bottom: 50px; text-align: center; flex: 0 0 auto; display: block; overflow: visible;">

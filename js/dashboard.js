@@ -636,6 +636,66 @@ function refreshMap(map) {
     }
 }
 
+// Resizer (linea arancione) per ridimensionare pannello sinistro master/giocatore e mappa
+//Questo è per la chat del master
+const resizer = document.getElementById('chat-resizer');
+if (resizer) {
+  let x = 0, rightW = 0;
+  const layout = resizer.closest('.sheet-layout');
+  const right = layout?.querySelector('.sheet-right');
+
+  resizer.addEventListener('mousedown', e => {
+    x = e.clientX;
+    rightW = right.getBoundingClientRect().width;
+    resizer.classList.add('dragging');
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  const onMove = e => {
+    const dx = x - e.clientX; // invertito: trascini a sinistra = allarga destra
+    const newW = Math.min(Math.max(rightW + dx, 200), 700);
+    right.style.flex = `0 0 ${newW}px`;
+    right.style.width = `${newW}px`;
+  };
+
+  const onUp = () => {
+    resizer.classList.remove('dragging');
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+}
+
+
+// Resizer per la sezione del giocatore
+const resizer_p = document.getElementById('chat-resizer-p');
+if (resizer_p) {
+  let x = 0, rightW = 0;
+  const layout = resizer_p.closest('.sheet-layout');
+  const right = layout?.querySelector('.sheet-right');
+
+  resizer_p.addEventListener('mousedown', e => {
+    x = e.clientX;
+    rightW = right.getBoundingClientRect().width;
+    resizer_p.classList.add('dragging');
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  const onMove = e => {
+    const dx = x - e.clientX; // invertito: trascini a sinistra = allarga destra
+    const newW = Math.min(Math.max(rightW + dx, 200), 700);
+    right.style.flex = `0 0 ${newW}px`;
+    right.style.width = `${newW}px`;
+  };
+
+  const onUp = () => {
+    resizer_p.classList.remove('dragging');
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+}
+
 function bindEvents() {
 
 // tasto pulisci mappa
