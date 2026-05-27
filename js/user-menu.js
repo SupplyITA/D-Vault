@@ -57,7 +57,6 @@
           const resp = await fetch(`/api/user-info?username=${encodeURIComponent(me)}`);
           userData = await resp.json();
       } catch (e) { console.error("Errore caricamento dati utente"); }
-
   
       // Lettura delle preferenze audio salvate in locale
       const sfxEnabled = localStorage.getItem('dvault_sfx') !== 'false';
@@ -92,25 +91,12 @@
                   <button id="btn-save-email" class="btn-primary" style="margin:0; padding: 0 15px; font-size: 0.8rem;">Salva</button>
               </div>
             </div>
-            <h3 style="margin: 10px 0 0 0; font-family: 'Cinzel', serif;">${me}</h3>
-            <p style="color: #888; font-size: 0.8rem; margin: 0;">@${me}</p>
-          </div>
 
             <div style="text-align: left; margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(212,168,67,0.1);">
               <label style="color: var(--gold-dim); font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 10px; letter-spacing: 1px;">Sicurezza Account</label>
               <button id="btn-change-pwd-acc" class="btn-ghost" style="width: 100%; font-size: 0.85rem; padding: 10px;">
                 <i class="fa-solid fa-key" style="margin-right: 8px;"></i> Modifica Parola d'Ordine
               </button>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
-              <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Suoni Interfaccia</span>
-              <input type="checkbox" id="acc-toggle-sfx" ${sfxEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-              <span style="color: var(--gold-mid); font-family: 'Cinzel', serif; font-size: 0.9rem;">Musica Sottofondo</span>
-              <input type="checkbox" id="acc-toggle-bgm" ${bgmEnabled ? 'checked' : ''} style="cursor:pointer; width: 18px; height: 18px; accent-color: var(--gold-mid);">
             </div>
 
             <div class="vault-divider" style="height: 1px; background: rgba(212,168,67,0.1); margin: 5px 0;"></div>
@@ -129,109 +115,8 @@
             </button>
           </div>
           <input type="file" id="acc-avatar-file" style="display:none;" accept="image/*">
-        
-
-
-          <div class="vault-divider" style="height: 1px; background: rgba(212,168,67,0.1); margin: 5px 0;"></div>
-
-          <style>
-            #btn-acc-delete {
-              width: 100%; background: rgba(139, 26, 26, 0.05); border: 1px solid #333; color: #8b1a1a; 
-              padding: 10px; cursor: pointer; border-radius: 4px; font-size: 0.75rem; margin-top: 10px; transition: all 0.3s ease;
-            }
-            #btn-acc-delete:hover {
-              background: rgba(139, 26, 26, 0.25); border-color: #8b1a1a; color: #ff4d4d; box-shadow: 0 0 12px rgba(139, 26, 26, 0.4);
-            }
-          </style>
-          <button id="btn-acc-delete">
-              <i class="fa-solid fa-skull-crossbones"></i> Elimina Account
-          </button>
-        </div>
-        <input type="file" id="acc-avatar-file" style="display:none;" accept="image/*">
-      `,
-      didOpen: () => {
-        // Carico file avatar
-        const avatarInput = document.getElementById('acc-avatar-file');
-        avatarInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('avatar', file); 
-            formData.append('username', me);
-
-            try {
-                Swal.showLoading();
-                const resp = await fetch('/api/user/upload-avatar', { method: 'POST', body: formData });
-                const data = await resp.json();
-                if (data.success) {
-                    Swal.fire({ title: 'Ritratto Caricato!', icon: 'success', timer: 1000, showConfirmButton: false });
-                    setTimeout(() => location.reload(), 1000);
-                }
-            } catch (err) { console.error("Errore upload:", err); }
-        });
-
-        // Parte per salvare mail
-        document.getElementById('btn-save-email').addEventListener('click', async () => {
-           const newEmail = document.getElementById('acc-email-input').value;
-           const res = await fetch('/api/update-email', {
-               method: 'POST', headers: {'Content-Type':'application/json'},
-               body: JSON.stringify({ username: me, newEmail })
-           });
-           if(res.ok) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Email aggiornata!', showConfirmButton: false, timer: 1500 });
-        });
-
-        // Avatar parte di gestione
-        document.getElementById('trigger-avatar-options').addEventListener('click', () => {
-          Swal.fire({
-            title: 'Gestisci Avatar',
-            text: "Scegli come cambiare il tuo volto nel Vault",
-            showDenyButton: true, showCancelButton: true,
-            confirmButtonText: ' Ingrandisci', denyButtonText: ' Carica Foto', cancelButtonText: ' Galleria',
-            background: '#1a1108', color: '#d4a843', customClass: { popup: 'vault-popup' }
-          }).then(async (result) => {
-            if (result.isConfirmed) {
-              Swal.fire({ imageUrl: userData.avatar, imageWidth: 400, background: 'rgba(0,0,0,0.9)', showConfirmButton: false });
-            } else if (result.isDenied) {
-              avatarInput.click(); 
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-
-              // Immagini pre scelte
-              const galleryImages = [
-                { url: '/img/avatars/male-1.jpg', label: 'Guerriero' },
-                { url: '/img/avatars/male-2.jpg', label: 'Mago' },
-                { url: '/img/avatars/female-1.jpg', label: 'Esploratrice' },
-                { url: '/img/avatars/female-2.jpg', label: 'Incantatrice' },
-                { url: '/img/avatars/other-1.jpg', label: 'Creatura' }
-              ];
-
-              // Aggiunge gli avatar degli eroi forgiati dall'utente
-              let heroImages = [];
-              try {
-                  const sheetsResp = await fetch(`/api/sheets?user=${encodeURIComponent(me)}`);
-                  const sheets = await sheetsResp.json();
-                  heroImages = sheets
-                      .filter(s => s.avatar)
-                      .map(s => ({ url: s.avatar, label: s.charName }))
-                      // Rimuovi duplicati rispetto alla galleria base
-                      .filter(h => !galleryImages.some(g => g.url === h.url));
-              } catch(_) {}
-
-              const allImages = [...galleryImages, ...heroImages];
-              Swal.fire({
-                title: 'Galleria del Vault', background: '#0a0505', color: '#e8c97e',
-                html: `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 10px;">
-                    ${allImages.map(img => `
-                      <div class="gallery-item" onclick="selectGalleryAvatar('${img.url}')" style="cursor:pointer; text-align:center;">
-                        <img src="${img.url}" style="width:80px; height:80px; border-radius:50%; border:2px solid #444; object-fit:cover; transition:0.3s;">
-                        <p style="font-size:0.7rem; margin-top:5px; color:#888;">${img.label}</p>
-                      </div>`).join('')}
-                  </div>`,
-                showConfirmButton: false, customClass: { popup: 'vault-popup' }
-              });
-            }
+        `,
         // didOpen chiamata da SweetAlert SOLO DOPO che l'HTML qui sopra è stato montato nel DOM.
-        // Serve per poter assegnare gli EventListener, altrimenti avremmo null.
         didOpen: () => {
           // Carico file avatar
           const avatarInput = document.getElementById('acc-avatar-file');
@@ -239,7 +124,6 @@
               const file = e.target.files[0];
               if (!file) return;
 
-              // FormData per gestire l'invio di un file binario via AJAX, il json stringify non può farlo
               const formData = new FormData();
               formData.append('avatar', file); 
               formData.append('username', me);
@@ -257,26 +141,22 @@
 
           // Parte per salvare mail
           document.getElementById('btn-save-email').addEventListener('click', async () => {
-            const newEmail = document.getElementById('acc-email-input').value;
-            const res = await fetch('/api/update-email', {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ username: me, newEmail })
-            });
-            location.reload();
+             const newEmail = document.getElementById('acc-email-input').value;
+             const res = await fetch('/api/update-email', {
+                 method: 'POST', headers: {'Content-Type':'application/json'},
+                 body: JSON.stringify({ username: me, newEmail })
+             });
              if(res.ok) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Email aggiornata!', showConfirmButton: false, timer: 1500 });
           });
-          
 
-        
-        document.getElementById('btn-change-pwd-acc').onclick = () => { Swal.close(); openChangePassword(); };
-        
-        document.getElementById('btn-acc-delete').onclick = async () => {
-            const confirm = await Swal.fire({
-                title: 'AZIONE SUPREMA',
-                text: "Sei davvero pronto a cancellare la tua intera esistenza dal Vault?",
-                icon: 'warning', showCancelButton: true, confirmButtonText: 'Sì, cancellami',
-                confirmButtonColor: '#8b1a1a', background: '#0a0505', color: '#d4a843'
-          });
+          // Funzione scelta galleria esposta globalmente (window)
+          window.selectGalleryAvatar = async (url) => {
+              await fetch('/api/user/avatar', { 
+                  method: 'POST', headers: {'Content-Type':'application/json'}, 
+                  body: JSON.stringify({ username: me, avatarUrl: url }) 
+              });
+              location.reload();
+          };
 
           // Avatar parte di gestione
           document.getElementById('trigger-avatar-options').addEventListener('click', () => {
@@ -288,10 +168,8 @@
               background: '#1a1108', color: '#d4a843', customClass: { popup: 'vault-popup' }
             }).then(async (result) => {
               if (result.isConfirmed) {
-                // Apre semplicemente la foto in grande
                 Swal.fire({ imageUrl: userData.avatar, imageWidth: 400, background: 'rgba(0,0,0,0.9)', showConfirmButton: false });
               } else if (result.isDenied) {
-                // Apre la finestra di selezione del SO
                 avatarInput.click(); 
               } else if (result.dismiss === Swal.DismissReason.cancel) {
 
@@ -304,11 +182,22 @@
                   { url: '/img/avatars/other-1.jpg', label: 'Creatura' }
                 ];
 
-                // Sottomenù dinamico per stampare tutte le immagini
+                // Aggiunge gli avatar degli eroi forgiati dall'utente
+                let heroImages = [];
+                try {
+                    const sheetsResp = await fetch(`/api/sheets?user=${encodeURIComponent(me)}`);
+                    const sheets = await sheetsResp.json();
+                    heroImages = sheets
+                        .filter(s => s.avatar)
+                        .map(s => ({ url: s.avatar, label: s.charName }))
+                        .filter(h => !galleryImages.some(g => g.url === h.url));
+                } catch(_) {}
+
+                const allImages = [...galleryImages, ...heroImages];
                 Swal.fire({
                   title: 'Galleria del Vault', background: '#0a0505', color: '#e8c97e',
                   html: `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 10px;">
-                      ${galleryImages.map(img => `
+                      ${allImages.map(img => `
                         <div class="gallery-item" onclick="selectGalleryAvatar('${img.url}')" style="cursor:pointer; text-align:center;">
                           <img src="${img.url}" style="width:80px; height:80px; border-radius:50%; border:2px solid #444; object-fit:cover; transition:0.3s;">
                           <p style="font-size:0.7rem; margin-top:5px; color:#888;">${img.label}</p>
@@ -319,15 +208,6 @@
               }
             });
           });
-
-          // Funzione scelta galleria esposta globalmente (window) per poter essere richiamata da onclick
-          window.selectGalleryAvatar = async (url) => {
-              await fetch('/api/user/avatar', { 
-                  method: 'POST', headers: {'Content-Type':'application/json'}, 
-                  body: JSON.stringify({ username: me, avatarUrl: url }) 
-              });
-              location.reload();
-          };
 
           // Gestione toggle suoni
           document.getElementById('acc-toggle-sfx').addEventListener('change', (e) => {
@@ -340,10 +220,10 @@
               else localStorage.setItem('dvault_bgm', e.target.checked);
           });
           
-          // Rotte per cambio password e cancellazione account
+          // Rotte per cambio password
           document.getElementById('btn-change-pwd-acc').onclick = () => { Swal.close(); openChangePassword(); };
           
-          // Per eliminare l'account chiede da leconda modifica
+          // Per eliminare l'account
           document.getElementById('btn-acc-delete').onclick = async () => {
               const confirm = await Swal.fire({
                   title: 'AZIONE SUPREMA',
@@ -358,7 +238,7 @@
           };
         }
       });
-  }
+  } 
   
   // Cambia password con popup dalla sezione account
   function openChangePassword() {
@@ -557,37 +437,37 @@
       customClass: { popup: 'vault-popup' },
       didOpen: () => {
         // Leggi valori salvati e inizializza i controlli
-const _sfxOn  = localStorage.getItem('dvault_sfx')     !== 'false';
-const _bgmOn  = localStorage.getItem('dvault_bgm')     !== 'false';
-const _sfxVol = parseFloat(localStorage.getItem('dvault_sfx_vol') ?? '1');
-const _bgmVol = parseFloat(localStorage.getItem('dvault_bgm_vol') ?? '0.4');
-document.getElementById('set-toggle-sfx').checked = _sfxOn;
-document.getElementById('set-toggle-bgm').checked = _bgmOn;
-document.getElementById('set-sfx-vol').value = _sfxVol;
-document.getElementById('set-bgm-vol').value = _bgmVol;
-document.getElementById('set-sfx-vol-label').textContent = Math.round(_sfxVol * 100) + '%';
-document.getElementById('set-bgm-vol-label').textContent = Math.round(_bgmVol * 100) + '%';
+      const _sfxOn  = localStorage.getItem('dvault_sfx')     !== 'false';
+      const _bgmOn  = localStorage.getItem('dvault_bgm')     !== 'false';
+      const _sfxVol = parseFloat(localStorage.getItem('dvault_sfx_vol') ?? '1');
+      const _bgmVol = parseFloat(localStorage.getItem('dvault_bgm_vol') ?? '0.4');
+      document.getElementById('set-toggle-sfx').checked = _sfxOn;
+      document.getElementById('set-toggle-bgm').checked = _bgmOn;
+      document.getElementById('set-sfx-vol').value = _sfxVol;
+      document.getElementById('set-bgm-vol').value = _bgmVol;
+      document.getElementById('set-sfx-vol-label').textContent = Math.round(_sfxVol * 100) + '%';
+      document.getElementById('set-bgm-vol-label').textContent = Math.round(_bgmVol * 100) + '%';
 
-document.getElementById('set-toggle-sfx').addEventListener('change', (e) => {
-  localStorage.setItem('dvault_sfx', e.target.checked);
-  if (window.DVaultAudio) window.DVaultAudio.toggleSfx(e.target.checked);
-});
-document.getElementById('set-sfx-vol').addEventListener('input', (e) => {
-  const v = parseFloat(e.target.value);
-  document.getElementById('set-sfx-vol-label').textContent = Math.round(v * 100) + '%';
-  localStorage.setItem('dvault_sfx_vol', v);
-  if (window.DVaultAudio) window.DVaultAudio.setSfxVolume(v);
-});
-document.getElementById('set-toggle-bgm').addEventListener('change', (e) => {
-  localStorage.setItem('dvault_bgm', e.target.checked);
-  if (window.DVaultAudio) window.DVaultAudio.toggleBgm(e.target.checked);
-});
-document.getElementById('set-bgm-vol').addEventListener('input', (e) => {
-  const v = parseFloat(e.target.value);
-  document.getElementById('set-bgm-vol-label').textContent = Math.round(v * 100) + '%';
-  localStorage.setItem('dvault_bgm_vol', v);
-  if (window.DVaultAudio) window.DVaultAudio.setBgmVolume(v);
-});
+      document.getElementById('set-toggle-sfx').addEventListener('change', (e) => {
+        localStorage.setItem('dvault_sfx', e.target.checked);
+        if (window.DVaultAudio) window.DVaultAudio.toggleSfx(e.target.checked);
+      });
+      document.getElementById('set-sfx-vol').addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        document.getElementById('set-sfx-vol-label').textContent = Math.round(v * 100) + '%';
+        localStorage.setItem('dvault_sfx_vol', v);
+        if (window.DVaultAudio) window.DVaultAudio.setSfxVolume(v);
+      });
+      document.getElementById('set-toggle-bgm').addEventListener('change', (e) => {
+        localStorage.setItem('dvault_bgm', e.target.checked);
+        if (window.DVaultAudio) window.DVaultAudio.toggleBgm(e.target.checked);
+      });
+      document.getElementById('set-bgm-vol').addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        document.getElementById('set-bgm-vol-label').textContent = Math.round(v * 100) + '%';
+        localStorage.setItem('dvault_bgm_vol', v);
+        if (window.DVaultAudio) window.DVaultAudio.setBgmVolume(v);
+      });
         // Routing verso il gestore temi
         document.getElementById('set-theme').addEventListener('click', () => { Swal.close(); openTheme(); });
 
