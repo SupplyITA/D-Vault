@@ -97,6 +97,17 @@ input, select, textarea { font-family: var(--font-body); font-size: 1rem; color:
   100% { opacity: 0; transform: translateY(-80vh) scale(0.3); }
 }
 
+
+/* Per il telefono, si assicura che lo schermo venga adattato per telefono */
+@media (max-width: 600px) {
+  .responsive-flex-row {
+    flex-wrap: wrap; /* Permette agli elementi di andare a capo e quindi visibile pet tutto */
+  }
+  
+  .responsive-flex-row > div {
+    flex-basis: 100%; /* Costringe ogni input a prendere il massimo dello spazio */
+  }
+}
 /* ------------- Header, Hero e Footer */
 .site-header { position: relative; z-index: 10; padding: 1.5rem 2rem; width: 100%; display: flex; align-items: center; justify-content: center; }
 .logo-emblem { font-size: 1.6rem; opacity: 0.5; letter-spacing: 0.5em; }
