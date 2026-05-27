@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Particles (Intatto)
+  // Particles
   const container = document.getElementById('particles');
   if (container) spawnParticles(container, 25);
 

@@ -85,7 +85,7 @@ input, select, textarea { font-family: var(--font-body); font-size: 1rem; color:
 .bg-overlay { position: fixed; inset: 0; background: linear-gradient(160deg, rgba(13, 5, 5, 0.55) 0%, rgba(var(--accent-2-dark), 0.3) 40%, rgba(13, 5, 5, 0.85) 100%); z-index: 1; }
 /* Layer 2: bordi con vignettatura */
 .bg-vignette { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 30%, rgba(5, 2, 2, 0.9) 100%); z-index: 2; }
-/* Layer 3: come le particelle animate gestite via js */
+/* Layer 3: particelle animate gestite via js */
 .particles { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
 .particle { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: rgba(var(--accent-1), .8) !important; box-shadow: 0 0 8px rgba(var(--accent-1), .6) !important; opacity: 0; animation: float-up linear infinite; }
 

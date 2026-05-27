@@ -695,7 +695,8 @@ function bindEvents() {
       const campName = $('campaign-detail-title').textContent.trim();
       
       if (!file) return alert("Seleziona prima un'immagine dal tuo PC!");
-
+      
+      // Come per la gestione dellr immagini degli avatar, non possiamo usare  json stringify per file binari
       const formData = new FormData();
       formData.append('mapImage', file);
       formData.append('username', State.username); 

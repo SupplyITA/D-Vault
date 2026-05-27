@@ -110,10 +110,11 @@
 .vault-card.luxury:hover::after { opacity: .9; } /* Illumina la diagonale */
 
 /* ------- Componenti interni (bordi, contenitori...) */
+/* Testa della card - sigillo + titolo */
 .lux-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .lux-head-text { min-width: 0; flex: 1; } /* Evita che il flex-item sfori se il testo è lungo */
 
-/* Sigillo circolare del d-vault */
+/* Sigillo circolare con la lettera dell'eroe */
 .lux-sigil {
   width: 56px; height: 56px; flex-shrink: 0; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center;
   background: radial-gradient(circle at 35% 30%, #1a1208 0%, #0a0604 70%);
