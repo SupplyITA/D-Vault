@@ -164,7 +164,7 @@ const aggiornaTuttiICalcoli = () => {
             form.elements['hpMax'].value = hpLivello1 + hpLivelliSucc;
         }
 
-        //  Slto per mezzi incantatori (tipo ranger o paladino)
+        //  Slto per intantatori e mezzi incantatori
         let slots = [];
         if (infoClasse.fullCaster) {
             slots = dndData.spellSlots[livello] || [];
@@ -366,7 +366,7 @@ aggiornaTuttiICalcoli();
                     formPdf.getTextField('Initiative').setText(String(details.initiative || 0));
                     formPdf.getTextField('Speed').setText(String(details.speed || 30));
                     formPdf.getTextField('HPMax').setText(String(details.hpMax || 10));
-                    formPdf.getTextField('HPCurrent').setText(String(details.hpCurrent || ''));
+                    formPdf.getTextField('HPCurrent').setText(String(''));
                     formPdf.getTextField('HDTotal').setText(String(livello));
                     formPdf.getTextField('HD').setText(details.hitDice || '');
                     formPdf.getTextField('AttacksSpellcasting').setText(details.attacksList || '');

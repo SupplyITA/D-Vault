@@ -37,7 +37,7 @@
 .dnd-header-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; } /* I 4 blocchi alti in Statistiche */
 .dnd-main-grid { display: grid; grid-template-columns: 100px 1fr 1.5fr; gap: 20px; }               /* Griglia a tre colonne asimmetriche */
 .dnd-stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; }        /* I sei blocchi di statistiche base */
-.dnd-bio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.dnd-bio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }      /*Griglia per la bio */
 .dnd-combat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; } /* Layout auto-controllante per i parametri di combattimento */
 
 .dnd-col-stats { display: flex; flex-direction: column; gap: 10px; }

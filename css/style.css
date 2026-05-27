@@ -130,6 +130,7 @@ input, select, textarea { font-family: var(--font-body); font-size: 1rem; color:
 /* Tabs del login (accedi o registrati, non considerando il recupera password) */
 .auth-tabs { display: flex; border-bottom: 1px solid var(--border); }
 .auth-tab { flex: 1; padding: 0.9rem; font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; transition: all var(--transition); position: relative; }
+
 /* Sottolineatura che fa lucina */
 .auth-tab::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--red-bright); transform: scaleX(0); transition: transform var(--transition); }
 .auth-tab.active { color: var(--text-primary); background: rgba(var(--accent-2-dark), 0.12); }
