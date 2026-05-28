@@ -363,23 +363,8 @@ function attivaOverlayLandscape() {
     }, 300);
   };
 
-  window.addEventListener('resize', () => {
-    if (leafletMap) {
-        setTimeout(() => { leafletMap.invalidateSize(); }, 200);
-    }
-    if (playerLeafletMap) {
-        setTimeout(() => { playerLeafletMap.invalidateSize(); }, 200);
-    }
-});
-
-window.addEventListener('orientationchange', () => {
-    if (leafletMap) {
-        setTimeout(() => { leafletMap.invalidateSize(); }, 300);
-    }
-    if (playerLeafletMap) {
-        setTimeout(() => { playerLeafletMap.invalidateSize(); }, 300);
-    }
-});
+  window.addEventListener('orientationchange', handler);
+  window.addEventListener('resize', handler);
   overlay._resizeHandler = handler;
 }
 
