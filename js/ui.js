@@ -238,6 +238,7 @@ export function makeCampaignCard(camp, i, isMaster) {
          </svg>
        </div>`;
 
+  // Calcolo dei posti liberi
   const totali = camp.campPlayers || 4;
   const occupati = camp.joinedPlayers ? camp.joinedPlayers.length : 0;
   const liberi = totali - occupati;

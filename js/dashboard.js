@@ -88,16 +88,15 @@ window.enterPlayerCampaign = async function(sheetIndex, campName) {
   closeModal($('modal-select-char-backdrop'));
   await State.loadFromServer();
   const sheet = State.sheets[sheetIndex];
-
   const camp = State.campaigns.find(c => c.campName === campName);
 
-  // Pulisce le altre schermate
+  // Pulisce tutte le schermate
   if (typeof hideAllSections === 'function') hideAllSections(); 
   
   // Ripristina la memoria della chat
   if($('pc-chat-messages')) caricaMemoriaChat(campName, 'pc-chat-messages');
 
-  if($('dash-main')) $('dash-main').style.display = 'none';
+  //Accende solo la schermata del giocatore
   if($('player-campaign-detail')) $('player-campaign-detail').style.display = 'block';
 
   if($('player-camp-title')) $('player-camp-title').textContent = campName;
@@ -393,8 +392,9 @@ window.esciDalTavolo = esciDalTavolo;
 function openCampaignDetail(camp) {
   hideAllSections(); 
   if($('dm-chat-messages')) caricaMemoriaChat(camp.campName, 'dm-chat-messages');
-  if($('dash-main')) $('dash-main').style.display = 'none';
   attivaOverlayLandscape(); 
+
+  //Attiva solo la schermata del master
   if($('campaign-detail')) $('campaign-detail').style.display = 'block';
   if($('campaign-detail-title')) $('campaign-detail-title').textContent = camp.campName; $('campaign-detail-title').dataset.campname = camp.campName;
   //Salvataggio della storia
@@ -609,7 +609,6 @@ function openSheetDetail(sheet) {
   hideAllSections(); 
   disattivaOverlayLandscape();
   
-  if($('dash-main')) $('dash-main').style.display = 'none'; 
   if($('sheet-detail')) $('sheet-detail').style.display = 'block';
   if($('sheet-detail-title')) $('sheet-detail-title').textContent = sheet.charName;
 
