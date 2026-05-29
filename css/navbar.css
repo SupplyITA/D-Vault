@@ -159,7 +159,7 @@
 .btn-delete:hover { background: var(--red-bright); color: white; transform: scale(1.1); }
 
 /* ----- Adattamento a schermi mobili */
-@media (max-width: 640px) {
+@media (max-width: 890px) {
   .navbar { padding: 0 1rem; }
   /* Su telefoni si nasconde le etichette testuali (come "eroi" o "campagne") e lascia solo l'icona (si chiama approccio Mobile-First UI) */
   .nav-tab-label { display: none; }
