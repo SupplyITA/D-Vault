@@ -1744,7 +1744,7 @@ function openJukebox() {
         });
 
 
-
+      // Sezione per ricevere mappa e caricarla da link, la salva per la history delle mappe
       socket.on('nuova_mappa_ricevuta', (url) => {
           const campName = $('player-camp-title')?.textContent.trim();
           if (campName) {
@@ -1788,6 +1788,7 @@ function openJukebox() {
               titleEl.textContent = newName;
           }
       });
+      
       // Eliminazione campagna dal master
       socket.on('ricarica_dati', async () => {
           // Ricarica i dati in background

@@ -37,7 +37,7 @@
     <div class="logo-emblem">⚔</div>
   </header>
 
-  <!-- Selezione eroe-->
+  <!-- Pagina Iniziale per accesso o registrazione -->
   <main class="hero">
     <div class="hero-content">
       <p class="hero-eyebrow">Benvenuto nel</p>
@@ -59,10 +59,11 @@
 
       <div class="auth-form-wrapper">
         <!-- MESSAGGIO DEL SERVER -->
+
         <div id="auth-message" style="text-align: center; font-weight: bold; margin-bottom: 15px; min-height: 20px;"></div>
 
         <!-- LOGIN -->
-        <form class="auth-form active" id="login-form" autocomplete="off">
+        <form class="auth-form active" id="login-form" autocomplete="on">
           <div class="form-group">
             <label for="login-email">Email o Username</label>
             <input type="text" id="login-email" name="identifier" placeholder="eroe@regno.com" required />
@@ -78,7 +79,7 @@
         </form>
 
         <!-- REGISTER -->
-        <form class="auth-form" id="register-form" autocomplete="off"> 
+        <form class="auth-form" id="register-form" autocomplete="on"> 
           <div class="form-group">
              <label for="reg-fullname">Nome e Cognome</label>
              <input type="text" id="reg-fullname" name="fullName" placeholder="Il tuo vero nome" required />
