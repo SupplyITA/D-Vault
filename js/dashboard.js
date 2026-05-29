@@ -880,11 +880,11 @@ function bindEvents() {
               }
           }
 
-      if (targetTab === 'tab-mappa' && leafletMap) {
-          setTimeout(() => {
-              leafletMap.invalidateSize();
-              leafletMap.fitBounds([[0,0], [1000,1000]]);
-          }, 100);
+        if (targetTab === 'tab-mappa' && leafletMap) {
+        setTimeout(() => {
+            leafletMap.invalidateSize();
+            leafletMap.fitBounds([[0,0], [1000,1000]]);
+        }, 100);
       }
       if (targetTab === 'tab-bestiario') renderizzaBestiario();
     });
@@ -1551,7 +1551,7 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
             }
           if (clickedBtn.dataset.tab === 'pc-mappa' && playerLeafletMap) {
               setTimeout(() => { playerLeafletMap.invalidateSize(); playerLeafletMap.fitBounds([[0,0], [1000,1000]]); }, 100);
-          }
+}
       });
   });
 

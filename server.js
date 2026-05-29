@@ -221,11 +221,19 @@ app.post('/api/login', (req, res) => {
 app.post('/api/reset-password', async (req, res) => {
     const { username, email, newPassword } = req.body;
     const hash = await bcrypt.hash(newPassword, 10); // Esegue un Hash della password appena scritta prima di salvarla, verrà poi salvata nel database per il login, 
+     // Se email è vuota (cambio password da account loggato), aggiorna solo per username
+    if (!email) {
+        db.run(`UPDATE utenti SET password = ? WHERE username = ?`, [hash, username], function(err) {
+            if (this.changes > 0) res.json({ message: "Password aggiornata con successo! La magia ha funzionato." });
+            else res.status(404).json({ message: "Utente non trovato." });
+        });
+    } else {
     // identico a come funziona per la registrazione
     db.run(`UPDATE utenti SET password = ? WHERE username = ? AND email = ?`, [hash, username, email], function(err) {
         if (this.changes > 0) res.json({ message: "Password aggiornata con successo! La magia ha funzionato." });
         else res.status(404).json({ message: "Username o Email non corrispondenti." });
     });
+}
 });
 
 // Recupera le informazioni complete dell'utente per la sezione Account

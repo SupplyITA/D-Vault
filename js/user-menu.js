@@ -209,33 +209,27 @@
             });
           });
 
-          // Gestione toggle suoni
-          document.getElementById('acc-toggle-sfx').addEventListener('change', (e) => {
-              if (window.DVaultAudio) window.DVaultAudio.toggleSfx(e.target.checked);
-              else localStorage.setItem('dvault_sfx', e.target.checked);
-          });
-
-          document.getElementById('acc-toggle-bgm').addEventListener('change', (e) => {
-              if (window.DVaultAudio) window.DVaultAudio.toggleBgm(e.target.checked);
-              else localStorage.setItem('dvault_bgm', e.target.checked);
-          });
+          
           
           // Rotte per cambio password
           document.getElementById('btn-change-pwd-acc').onclick = () => { Swal.close(); openChangePassword(); };
           
           // Per eliminare l'account
-          document.getElementById('btn-acc-delete').onclick = async () => {
-              const confirm = await Swal.fire({
-                  title: 'AZIONE SUPREMA',
-                  text: "Sei davvero pronto a cancellare la tua intera esistenza dal Vault?",
-                  icon: 'warning', showCancelButton: true, confirmButtonText: 'Sì, cancellami',
-                  confirmButtonColor: '#8b1a1a', background: '#0a0505', color: '#d4a843'
-              });
-              if (confirm.isConfirmed) {
-                  const res = await fetch(`/api/delete-account?username=${encodeURIComponent(me)}`, { method: 'DELETE' });
-                  if (res.ok) { localStorage.clear(); window.location.href = 'index.html'; }
-              }
-          };
+          document.getElementById('btn-acc-delete').onclick = () => {
+            Swal.close(); // Chiude il popup account prima di aprire la conferma
+            setTimeout(async () => {
+                const confirm = await Swal.fire({
+                    title: 'AZIONE SUPREMA',
+                    text: "Sei davvero pronto a cancellare la tua intera esistenza dal Vault?",
+                    icon: 'warning', showCancelButton: true, confirmButtonText: 'Sì, cancellami',
+                    confirmButtonColor: '#8b1a1a', background: '#0a0505', color: '#d4a843'
+                });
+                if (confirm.isConfirmed) {
+                    const res = await fetch(`/api/delete-account?username=${encodeURIComponent(me)}`, { method: 'DELETE' });
+                    if (res.ok) { localStorage.clear(); window.location.href = 'index.html'; }
+                }
+            }, 300);
+        };
         }
       });
   } 
@@ -280,10 +274,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            username: username(), 
-            // Inviamo una stringa vuota o il nome per l'email se il server la richiede, 
-            // ma dato che siamo loggati l'importante è l'username
-            email: "", 
+            username: username(),
             newPassword: r.value.pwd 
           })
         });
