@@ -1788,7 +1788,7 @@ function openJukebox() {
               titleEl.textContent = newName;
           }
       });
-      
+
       // Eliminazione campagna dal master
       socket.on('ricarica_dati', async () => {
           // Ricarica i dati in background
