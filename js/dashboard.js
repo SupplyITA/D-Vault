@@ -433,12 +433,11 @@ function openCampaignDetail(camp) {
 
   // Per associare il colore del master alla campagna ed ai segnalini
     const myColor = window.getColorForUser ? window.getColorForUser(State.username) : '#aaa';
-  if($('master-color-marker')) $('master-color-marker').style.backgroundColor = myColor;
-  $('campaign-detail-title').innerHTML = `${camp.campName}<span style="display:inline-block;width:15px;height:15px;border-radius:50%;background-color:${myColor};vertical-align:middle;margin-left:10px;border:1px solid #fff;box-shadow:0 0 5px #000;" title="Il tuo colore identificativo"></span>`;  
-  $('campaign-detail-title').dataset.campname = camp.campName;
-  selezionaToken('color', null, document.querySelector('#master-token-sidebar .token-option'));
-  caricaTokenMostri();
-  caricaTokenEroi(camp.campName);
+    if($('master-color-marker')) $('master-color-marker').style.backgroundColor = myColor;
+    $('campaign-detail-title').innerHTML = `${camp.campName}<span style="display:inline-block;width:15px;height:15px;border-radius:50%;background-color:${myColor};vertical-align:middle;margin-left:10px;border:1px solid #fff;box-shadow:0 0 5px #000;" title="Il tuo colore identificativo"></span>`;  
+    $('campaign-detail-title').dataset.campname = camp.campName;
+    selezionaToken('color', null, document.querySelector('#master-token-sidebar .token-option'));
+    caricaTokenMostri();
 
   const btnToggleInvite = $('btn-toggle-invite');
   if (btnToggleInvite) {
@@ -498,7 +497,7 @@ function openCampaignDetail(camp) {
        // Scegliamo chi è il proprietario del segnalino
         // Se è un eroe, l'owner deve essere il giocatore (ownerUsername), altrimenti è il Master (State.username)
         const effettivoOwner = (info.tipo === 'eroe' && info.ownerUsername) ? info.ownerUsername : State.username;
-        info.markerId = `${effettivoOwner}_${info.tipo || 'color'}_${info.nome || effettivoOwner}`;
+        
         aggiungiSegnalino(e.latlng, leafletMap, true, effettivoOwner, info);
     });
   }
@@ -1829,15 +1828,13 @@ $('form-add-sheet')?.addEventListener('submit', async (e) => {
 
       //Aggiorna lista eroi (Master)
       socket.on('aggiorna_lista_party', async (dati) => {
-          const isMasterCamp = $('campaign-detail') && $('campaign-detail').style.display === 'block';
-          if (isMasterCamp && $('campaign-detail-title').textContent.trim() === dati.campName) {
-              // Scarica i dati dell'eroe
-              await State.loadFromServer();
-              // Modifica la lista
-              caricaEroiParty(dati.campName);
-              caricaTokenEroi(dati.campName);
-          }
-      });
+        const isMasterCamp = $('campaign-detail') && $('campaign-detail').style.display === 'block';
+        if (isMasterCamp && $('campaign-detail-title').textContent.trim() === dati.campName) {
+            await State.loadFromServer();
+            caricaEroiParty(dati.campName);
+            if (typeof window.caricaTokenMostri === 'function') window.caricaTokenMostri();
+        }   
+     });
   }
 }
 
