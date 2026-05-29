@@ -62,6 +62,13 @@
 }
 .nav-tab.open .nav-tab-caret, .nav-user-btn.open .nav-tab-caret { transform: rotate(180deg); opacity: 1; }
 
+/* ------- Immagine nella navbar degli eroi/mappe */
+.dd-item-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; object-position: top center; 
+  border: 1px solid rgba(var(--accent-1), 0.4); flex-shrink: 0;}
+
+.dd-item-map { width: 36px; height: 26px; border-radius: 3px; object-fit: cover; object-position: center; 
+  border: 1px solid rgba(var(--accent-1), 0.35); flex-shrink: 0; opacity: 0.85;}
+
 /* ----- Posizione del dropdown */
 .dropdown-menu, .nav-dd {
   position: absolute; /* Serve per far scnedere il menu senza spostare quello che sta sotto */

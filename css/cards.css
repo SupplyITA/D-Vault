@@ -188,67 +188,15 @@
 }
 .dashboard-section > * { position: relative; z-index: 1; }
 
-/* Angoli ad "L" dorati sovrapposti al vetro (senza coprire il fondo) */
-.dashboard-section {
-  background-image:
-    linear-gradient(var(--lux-gold-2), var(--lux-gold-2)),
-    linear-gradient(var(--lux-gold-2), var(--lux-gold-2)),
-    linear-gradient(var(--lux-gold-2), var(--lux-gold-2)),
-    linear-gradient(var(--lux-gold-2), var(--lux-gold-2)),
-    linear-gradient(var(--lux-gold-2), var(--lux-gold-2)),
-    linear-gradient(var(--lux-gold-2), var(--lux-gold-2)),
-    linear-gradient(var(--lux-gold-2), var(--lux-gold-2)),
-    linear-gradient(var(--lux-gold-2), var(--lux-gold-2)),
-    linear-gradient(160deg,
-      rgba(var(--accent-1-dark), 0.32) 0%,
-      rgba(var(--accent-1-dark), 0.28) 45%,
-      rgba(40, 25, 12, 0.34) 100%);
-  background-repeat: no-repeat;
-  background-size:
-    22px 1px, 1px 22px,
-    22px 1px, 1px 22px,
-    22px 1px, 1px 22px,
-    22px 1px, 1px 22px,
-    100% 100%;
-  background-position:
-    14px 14px, 14px 14px,
-    calc(100% - 14px) 14px, calc(100% - 14px) 14px,
-    14px calc(100% - 14px), 14px calc(100% - 14px),
-    calc(100% - 14px) calc(100% - 14px), calc(100% - 14px) calc(100% - 14px),
-    0 0;
-}
-
-
-
 /* Effetto sfocato per i codici segreti */
-.blur-code {
-    filter: blur(5px);
-    transition: filter 0.3s ease;
-    cursor: pointer;
-    user-select: text !important;
-}
-.blur-code:hover, .blur-code:active {
-    filter: blur(0);
-}
-/* ════════════════════════════════════════════
-   RITRATTO CARD EROE
-   ════════════════════════════════════════════ */
-.lux-portrait-wrap {
-  position: relative;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 0.8rem;
-}
+.blur-code { filter: blur(5px); transition: filter 0.3s ease; cursor: pointer; user-select: text !important; }
+.blur-code:hover, .blur-code:active { filter: blur(0); }
 
-.lux-portrait-frame {
-  position: relative;
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid rgba(var(--accent-1), 0.45);
+/* ------- Ritratto eroe nella card */
+.lux-portrait-wrap { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 0.8rem;}
+
+.lux-portrait-frame { position: relative; width: 110px; height: 110px; border-radius: 50%;
+  overflow: hidden; border: 2px solid rgba(var(--accent-1), 0.45);
   box-shadow:
     0 0 0 4px rgba(20,8,4,0.7),
     0 0 18px rgba(var(--accent-1-dark), 0.3),
@@ -256,24 +204,12 @@
   flex-shrink: 0;
 }
 
-.lux-portrait-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top center;
-  display: block;
-  transition: transform 0.4s ease;
-}
+.lux-portrait-img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; transition: transform 0.4s ease;}
 
-.vault-card:hover .lux-portrait-img {
-  transform: scale(1.06);
-}
+.vault-card:hover .lux-portrait-img {transform: scale(1.06);}
 
 /* Riflesso lucido sopra la foto */
-.lux-portrait-shine {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
+.lux-portrait-shine { position: absolute; inset: 0; border-radius: 50%;
   background: linear-gradient(
     135deg,
     rgba(255,255,255,0.10) 0%,
@@ -283,41 +219,4 @@
 }
 
 /* Tag razza sotto il ritratto */
-.lux-species-tag {
-  margin-top: 0.45rem;
-  font-family: 'Cinzel', serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gold-deep, #7a5c20);
-  opacity: 0.85;
-}
-
-
-
-
-
-
-
-.dd-item-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: top center;
-  border: 1px solid rgba(var(--accent-1), 0.4);
-  flex-shrink: 0;
-}
-
-.dd-item-map {
-  width: 36px;
-  height: 26px;
-  border-radius: 3px;
-  object-fit: cover;
-  object-position: center;
-  border: 1px solid rgba(var(--accent-1), 0.35);
-  flex-shrink: 0;
-  opacity: 0.85;
-}
-.blur-code { filter: blur(5px); transition: filter 0.3s ease; cursor: pointer; user-select: text !important; }
-.blur-code:hover, .blur-code:active { filter: blur(0); }
+.lux-species-tag { margin-top: 0.45rem; font-family: 'Cinzel', serif; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-deep, #7a5c20); opacity: 0.85;}
