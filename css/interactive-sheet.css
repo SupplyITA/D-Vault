@@ -85,27 +85,136 @@
 }
 
 /* -------- Gestione sezione Incantesimi */
-.dnd-spells-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; } /* Diviso in 3 colonne asimmetriche (0 1 2...9)*/
-.spell-level-box { display: flex; flex-direction: column; background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--accent-1-dark), 0.3); border-radius: 6px; overflow: hidden; }
-.spell-header { display: flex; align-items: center; background: rgba(var(--accent-1-dark), 0.1); border-bottom: 2px solid var(--gold-mid); padding: 5px 10px; gap: 15px; }
-.spell-level-num { font-family: var(--font-display); font-size: 1.8rem; font-weight: bold; color: var(--gold-bright); background: #111; padding: 5px 15px; border: 1px solid var(--gold-dim); border-radius: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
-.spell-title { font-family: var(--font-display); font-size: 1.2rem; color: var(--gold-mid); letter-spacing: 0.1em; }
-.spell-slots { display: flex; gap: 15px; flex: 1; justify-content: flex-end; }
-.spell-slots label { display: flex; flex-direction: column; font-size: 0.65rem; color: #aaa; align-items: center; font-family: sans-serif; letter-spacing: 0.05em; }
-.spell-slots input { width: 45px; padding: 2px; margin-top: 3px; background: rgba(0,0,0,0.6); border: 1px solid var(--gold-dim); border-radius: 4px; color: white; text-align: center; font-size: 1.1rem; }
+.dnd-spells-grid { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); /* Diviso in 3 colonne asimmetriche (0 1 2...9) perché simula la scheda ufficiale del pdf (e mi piace di più)*/
+  gap: 20px;
+ } 
 
-.spell-list { display: flex; flex-direction: column; padding: 10px; }
-.spell-row { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(var(--accent-1-dark), 0.2); padding: 4px 0; }
+ /* Sezione per la zona del livello (il riquadro) */
+.spell-level-box {  
+  display: flex; 
+  flex-direction: column; 
+  background: rgba(0,0,0,0.4); 
+  border: 1px solid rgba(var(--accent-1-dark), 0.3); 
+  border-radius: 6px; 
+  overflow: hidden; 
+}
+
+.spell-header { display: flex; 
+  align-items: center; 
+  background: rgba(var(--accent-1-dark), 0.1); 
+  border-bottom: 2px solid var(--gold-mid); 
+  padding: 5px 10px; gap: 15px; 
+}
+
+/* numero livello */
+.spell-level-num { 
+  font-family: var(--font-display); 
+  font-size: 1.8rem; 
+  font-weight: bold; 
+  color: var(--gold-bright); 
+  background: #111; 
+  padding: 5px 15px; 
+  border: 1px solid var(--gold-dim); 
+  border-radius: 4px; 
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.8); 
+}
+
+.spell-title { 
+  font-family: var(--font-display); 
+  font-size: 1.2rem; 
+  color: var(--gold-mid); 
+  letter-spacing: 0.1em; 
+}
+
+.spell-slots { 
+  display: flex; 
+  gap: 15px; 
+  flex: 1; 
+  justify-content: flex-end; 
+}
+
+.spell-slots label { 
+  display: flex;
+  flex-direction: column; 
+  font-size: 0.65rem; color: #aaa; 
+  align-items: center; 
+  font-family: sans-serif; 
+  letter-spacing: 0.05em; 
+}
+/* sezione input delle spell */
+.spell-slots input { 
+  width: 45px; 
+  padding: 2px;
+  margin-top: 3px; 
+  background: rgba(0,0,0,0.6); 
+  border: 1px solid var(--gold-dim); 
+  border-radius: 4px; 
+  color: white; 
+  text-align: center; 
+  font-size: 1.1rem; 
+}
+
+.spell-list { 
+  display: flex; 
+  flex-direction: column; 
+  padding: 10px; 
+}
+/* grafica per le varie righe delle spell */
+.spell-row { 
+  display: flex; 
+  align-items: center;
+   gap: 10px; 
+   border-bottom: 1px solid rgba(var(--accent-1-dark), 0.2); 
+   padding: 4px 0;
+}
 .spell-row:last-child { border-bottom: none; }
-.spell-prep-check { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; flex-shrink: 0; background: #111; border: 2px solid var(--gold-dim); border-radius: 50%; cursor: pointer; transition: 0.2s; }
+
+/* sezione per mostrare i vari check per selezionare le spell */
+.spell-prep-check { 
+  appearance: none; 
+  -webkit-appearance: none; 
+  width: 14px; height: 14px; 
+  flex-shrink: 0; background: #111; 
+  border: 2px solid var(--gold-dim); 
+  border-radius: 50%; 
+  cursor: pointer; 
+  transition: 0.2s; 
+}
 
 /* Quando l'incantesimo è selezionato sembra illuminarsi (lucciolina) */
-.spell-prep-check:checked { background: var(--gold-mid); box-shadow: 0 0 8px rgba(var(--accent-1), 0.8); }
-.spell-name-input { flex: 1; background: transparent; border: none; color: #eee; outline: none; font-family: 'Crimson Text', serif; font-size: 1.05rem; }
+.spell-prep-check:checked { 
+  background: var(--gold-mid); 
+  box-shadow: 0 0 8px rgba(var(--accent-1), 0.8); 
+}
+
+.spell-name-input { flex: 1; 
+  background: transparent; 
+  border: none; 
+  color: #eee; 
+  outline: none; 
+  font-family: 'Crimson Text', serif; 
+  font-size: 1.05rem; 
+}
 
 /* --------- Pulsanti di salvataggio */
-.dnd-save-btn { padding: 12px 25px; background: #27ae60; color: white; border: none; cursor: pointer; font-family: var(--font-display); font-weight: bold; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; transition: 0.2s; }
-.dnd-save-btn:hover { background: #2ecc71; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); }
+.dnd-save-btn { 
+  padding: 12px 25px; 
+  background: #27ae60; 
+  color: white; border: none; 
+  cursor: pointer; 
+  font-family: var(--font-display); 
+  font-weight: bold; font-size: 0.9rem; 
+  letter-spacing: 0.1em; 
+  text-transform: uppercase; 
+  transition: 0.2s; 
+}
+
+.dnd-save-btn:hover { 
+  background: #2ecc71; 
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); 
+}
 
 /* Se la scheda viene selezionata dal Master (solo lettura) con la classe .readonly-sheet
     si disattivano i click su tutti gli input e disattiva il bottone salva */
