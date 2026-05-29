@@ -635,67 +635,28 @@ function refreshMap(map) {
     }
 }
 
-// Resizer (linea arancione) per ridimensionare pannello sinistro master/giocatore e mappa
-//Questo è per la chat del master
-const resizer = document.getElementById('chat-resizer');
-if (resizer) {
-  let x = 0, rightW = 0;
-  const layout = resizer.closest('.sheet-layout');
-  const right = layout?.querySelector('.sheet-right');
-
-  resizer.addEventListener('mousedown', e => {
-    x = e.clientX;
-    rightW = right.getBoundingClientRect().width;
-    resizer.classList.add('dragging');
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  });
-
-  const onMove = e => {
-    const dx = x - e.clientX; // invertito: trascini a sinistra = allarga destra
-    const newW = Math.min(Math.max(rightW + dx, 200), 700);
-    right.style.flex = `0 0 ${newW}px`;
-    right.style.width = `${newW}px`;
-  };
-
-  const onUp = () => {
-    resizer.classList.remove('dragging');
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-  };
-}
-
-
-// Resizer per la sezione del giocatore
-const resizer_p = document.getElementById('chat-resizer-p');
-if (resizer_p) {
-  let x = 0, rightW = 0;
-  const layout = resizer_p.closest('.sheet-layout');
-  const right = layout?.querySelector('.sheet-right');
-
-  resizer_p.addEventListener('mousedown', e => {
-    x = e.clientX;
-    rightW = right.getBoundingClientRect().width;
-    resizer_p.classList.add('dragging');
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  });
-
-  const onMove = e => {
-    const dx = x - e.clientX; // invertito: trascini a sinistra = allarga destra
-    const newW = Math.min(Math.max(rightW + dx, 200), 700);
-    right.style.flex = `0 0 ${newW}px`;
-    right.style.width = `${newW}px`;
-  };
-
-  const onUp = () => {
-    resizer_p.classList.remove('dragging');
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-  };
-}
-
 function bindEvents() {
+
+  // Gestione apertura/chiusura chat laterale
+  document.querySelectorAll('.btn-collapse-chat').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Prende il contenitore destro
+          const rightColumn = this.closest('.sheet-right');
+          if (!rightColumn) return;
+          // Aggiunge/toglie la classe collapsed
+          rightColumn.classList.toggle('collapsed');
+          // Aggiorna la mappa aspetta 300ms e leaflet riempie lo spazio
+          setTimeout(() => {
+              if (window.leafletMap) {
+                  window.leafletMap.invalidateSize();
+              }
+              if (window.playerLeafletMap) {
+                  window.playerLeafletMap.invalidateSize();
+              }
+          }, 320); 
+      });
+  });
 
 // tasto pulisci mappa
     $('btn-clear-tokens')?.addEventListener('click', () => {

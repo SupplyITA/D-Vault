@@ -435,11 +435,11 @@
         </div>
       </div>
 
-      <!-- Linea per aumentare chat/pannello sinistro-->
-      <div class="sheet-resizer-master" id="chat-resizer"></div>
-
       <div class="sheet-right" style="flex: 0 0 500px; width: 420px; display: flex; flex-direction: column; height: 100%; padding-right: 10px;">
-        <div class="right-panel-box" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+          <button class="btn-collapse-chat" title="Mostra/Nascondi Chat">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <div class="right-panel-box" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
           <h3 class="panel-box-title" style="flex-shrink: 0;"> Chat Campagna</h3>
           
           <div id="dm-chat-messages" class="chat-messages" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; margin-top: 15px; margin-bottom: 15px; border: 1px solid #333;">
@@ -566,11 +566,11 @@
         </div>
       </div>
 
-      <!-- Linea per aumentare chat/pannello sinistro-->
-      <div class="sheet-resizer-player" id="chat-resizer-p"></div>
-
       <div class="sheet-right" style="flex: 0 0 500px; width: 420px; display: flex; flex-direction: column; overflow-y: auto; height: 100%; padding-right: 10px;">        
-        <div class="right-panel-box" style="padding: 15px; margin-bottom: 50px; text-align: center; flex: 0 0 auto; display: block; overflow: visible;">
+          <button class="btn-collapse-chat" title="Mostra/Nascondi Chat" style="left: 20px;">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <div class="right-panel-box" style="padding: 15px; margin-bottom: 50px; text-align: center; flex: 0 0 auto; display: block; overflow: visible;">
           <p style="margin-top: 0; margin-bottom: 10px; color: #e8c97e; font-family: 'Cinzel', serif; font-size: 0.9rem; text-transform: uppercase;">Ritratto Eroe</p>
           <img id="pc-avatar-img" src="https://via.placeholder.com/150/111111/e8c97e?text=+" 
                style="width: 130px; height: 130px; flex-shrink: 0; object-fit: cover; border-radius: 50%; border: 2px solid #8b1a1a; box-shadow: 0 0 15px rgba(0,0,0,0.8); cursor: pointer; transition: opacity 0.2s; margin: 0 auto; display: block;">

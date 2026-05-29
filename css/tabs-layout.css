@@ -143,33 +143,6 @@
   .lux-map-thumb { width: 68px; height: 44px; }
 }
 
-/* ----------- Resizer: in modo tale da ottimizzare lo spazio delle campagne tra chat e pannello sinistro */
-/* Resizer delle campagne da master*/
-.sheet-resizer-master {
-  width: 6px;
-  cursor: col-resize;
-  background: rgba(var(--accent-1-dark), 0.2);
-  border-radius: 3px;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-.sheet-resizer-master:hover, .sheet-resizer.dragging {
-  background: rgba(var(--accent-1), 0.5);
-}
-
-/* Resizer delle campagne da player*/
-.sheet-resizer-player {
-  width: 6px;
-  cursor: col-resize;
-  background: rgba(var(--accent-1-dark), 0.2);
-  border-radius: 3px;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-.sheet-resizer-player:hover, .sheet-resizer.dragging {
-  background: rgba(var(--accent-1), 0.5);
-}
-
 /* --------------- Freccia per chiudere i pannelli accanto alle mappe, sempre per risparmiare spazio */
 /* Questo è per chiudere l'archio delle mappe per il master*/
 #map-history-sidebar {
@@ -217,4 +190,53 @@
 }
 #player-token-sidebar.collapsed .sidebar-collapse-btn {
   transform: rotate(180deg);
+}
+
+/* Bottone per chiudere la chat - sempre visibile*/
+/* Transizione fluida di base per la colonna */
+.sheet-right {
+  transition: flex 0.3s ease, width 0.3s ease, min-width 0.3s ease;
+  position: relative; /* Necessario per il bottone */
+}
+
+/* Usiamo "body .sheet-layout" per avere la priorità massima su tutto */
+body .sheet-layout .sheet-right.collapsed {
+  flex: 0 0 35px !important;
+  width: 35px !important;
+  min-width: 35px !important;
+  max-width: 35px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+/* Spegniamo l'intero box */
+body .sheet-layout .sheet-right.collapsed .right-panel-box {
+  display: none !important;
+}
+
+/* Il bottone (sempre visibile) */
+.btn-collapse-chat {
+  background: rgba(14, 5, 5, 0.95);
+  border: 1px solid rgba(var(--accent-1-dark), 0.4);
+  color: var(--gold-mid);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 6px 8px;
+  transition: transform 0.3s ease, left 0.3s ease, color 0.2s;
+  position: absolute;
+  top: 15px;
+  left: -15px; /* Sporge fuori verso la mappa */
+  z-index: 100;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+}
+
+.btn-collapse-chat:hover {
+  color: var(--gold-bright);
+}
+
+/* Quando è chiuso, ruota e si posiziona al centro della barretta */
+body .sheet-layout .sheet-right.collapsed .btn-collapse-chat {
+  transform: rotate(180deg) !important;
+  left: 2px !important; 
 }
