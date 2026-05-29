@@ -129,6 +129,7 @@ export const AudioManager = {
         }
    },
 
+    //Barra volume suoni
     setSfxVolume(v) {
         localStorage.setItem('dvault_sfx_vol', v);
         this.sfxClick.volume     = v * 0.4;
@@ -138,6 +139,7 @@ export const AudioManager = {
         this.sfxEnter.volume     = v * 0.5;
     },
 
+    //Barra volume musica
     setBgmVolume(v) {
         localStorage.setItem('dvault_bgm_vol', v);
         this.bgmFire.volume     = v * 0.4;
