@@ -334,8 +334,8 @@ aggiornaTuttiICalcoli();
                 const profBonus = "+" + (Math.ceil(livello / 4) + 1);
 
                 // Compila i campi leggendo il JSON salvato nel database
-                // questo è il ciò che ci permette di far funzionare la scheda interattiva, controlla OGNI SINGOLO SLOT DEL PDF (sono circa 300 caselle o più), le mappa
-                // e capisce come fare per inserirli 
+                // questo è il ciò che ci permette di far funzionare la scheda interattiva, controlla OGNI SINGOLO SLOT DEL PDF (sono circa 300 caselle o più), 
+                // le mappa e capisce come fare per inserirli 
                 try {
                     // Info Base
                     formPdf.getTextField('CharacterName').setText(sheetData.charName || '');
