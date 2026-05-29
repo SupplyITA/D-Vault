@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <xsl:template match="/">
-        <table class="bestiario-table" style="width: 100%; border-collapse: collapse;">
+        <table class="bestiario-table" style="width: 98%; border-collapse: collapse;">
             <tr>
                 <th style="padding: 10px; background: #8b1a1a; color: white; border: 1px solid #444;">Mostro (Clicca per espandere)</th>
                 <th style="padding: 10px; background: #8b1a1a; color: white; border: 1px solid #444; width: 100px;">GS</th>
